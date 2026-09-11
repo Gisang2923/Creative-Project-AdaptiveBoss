@@ -1,0 +1,135 @@
+# =========================
+# Unity generated folders
+# =========================
+
+.utmp/
+
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+
+*.log
+.vsconfig
+
+# =========================
+# Unity / Asset generated
+# =========================
+
+# Blender backup files
+*.blend1
+*.blend1.meta
+
+# Unity generated Rider plugin
+/[Aa]ssets/Plugins/Editor/JetBrains*
+
+# Visual Scripting generated files
+/[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Flow/UnitOptions.db
+/[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Flow/UnitOptions.db.meta
+/[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Core/Property Providers
+/[Aa]ssets/Unity.VisualScripting.Generated/VisualScripting.Core/Property Providers.meta
+
+# Test Runner generated scenes
+InitTestScene*.unity*
+/[Aa]ssets/[Ii]nit[Tt]est[Ss]cene*.unity*
+
+# Auto-generated scene dependency cache
+/[Aa]ssets/[Ss]ceneDependencyCache*
+
+
+# =========================
+# IDE
+# =========================
+
+# Visual Studio
+.vs/
+
+# Rider / IntelliJ
+.idea/
+*.DotSettings.user
+
+# VS Code
+.vscode/
+
+# Generated solution/project files
+ExportedObj/
+.consulo/
+
+*.csproj
+*.unityproj
+*.sln
+*.slnx
+*.suo
+*.tmp
+*.user
+*.userprefs
+*.pidb
+*.booproj
+*.svd
+*.pdb
+*.mdb
+*.opendb
+*.VC.db
+
+
+# =========================
+# Unity generated meta files
+# =========================
+
+*.pidb.meta
+*.pdb.meta
+*.mdb.meta
+
+
+# =========================
+# Crash / system files
+# =========================
+
+sysinfo.txt
+mono_crash.*
+
+.DS_Store
+Thumbs.db
+
+
+# =========================
+# Build outputs
+# =========================
+
+*.apk
+*.aab
+*.app
+*.unitypackage
+*.unitypackage.meta
+
+
+# =========================
+# Gradle
+# =========================
+
+.gradle/
+
+
+# =========================
+# Addressables
+# =========================
+
+/ServerData
+
+/[Aa]ssets/StreamingAssets/aa*
+/[Aa]ssets/AddressableAssetsData/link.xml*
+/[Aa]ssets/Addressables_Temp*
+/[Aa]ssets/AddressableAssetsData/*/*.bin*
+
+
+# =========================
+# Crashlytics
+# =========================
+
+crashlytics-build.properties
