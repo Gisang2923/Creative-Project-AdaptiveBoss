@@ -1,0 +1,99 @@
+using System.Collections;
+using UnityEngine;
+using UnityEngine.InputSystem;
+
+public class PlayerDash : MonoBehaviour
+{
+    [Header("Dash")]
+    [SerializeField] private float dashSpeed = 14f;
+    [SerializeField] private float dashDuration = 0.15f;
+    [SerializeField] private float dashCooldown = 0.4f;
+
+    [Header("Ground Check")]
+    [SerializeField] private Transform groundCheck;
+    [SerializeField] private float groundCheckRadius = 0.15f;
+    [SerializeField] private LayerMask groundLayer;
+
+    private Rigidbody2D rb;
+
+    private bool isDashing;
+    private bool canDash = true;
+    private bool airDashAvailable = true;
+
+    private float dashDirection = 1f;
+
+    public bool IsDashing => isDashing;
+
+    private void Awake()
+    {
+        rb = GetComponent<Rigidbody2D>();
+    }
+
+    private void Update()
+    {
+        if (IsGrounded())
+        {
+            airDashAvailable = true;
+        }
+    }
+
+    public void SetDirection(float direction)
+    {
+        if (direction != 0f)
+        {
+            dashDirection = Mathf.Sign(direction);
+        }
+    }
+
+    public void OnDash(InputAction.CallbackContext context)
+    {
+        if (!context.performed)
+            return;
+
+        if (!canDash)
+            return;
+
+        if (!IsGrounded() && !airDashAvailable)
+            return;
+
+        StartCoroutine(Dash());
+    }
+
+    private IEnumerator Dash()
+    {
+        isDashing = true;
+        canDash = false;
+
+        if (!IsGrounded())
+        {
+            airDashAvailable = false;
+        }
+
+        float originalGravity = rb.gravityScale;
+
+        rb.gravityScale = 0f;
+
+        rb.linearVelocity = new Vector2(
+            dashDirection * dashSpeed,
+            0f
+        );
+
+        yield return new WaitForSeconds(dashDuration);
+
+        rb.gravityScale = originalGravity;
+        isDashing = false;
+
+        yield return new WaitForSeconds(dashCooldown);
+
+        canDash = true;
+    }
+
+    private bool IsGrounded()
+    {
+        return Physics2D.OverlapCircle(
+            groundCheck.position,
+            groundCheckRadius,
+            groundLayer
+        );
+    }
+}
