@@ -24,7 +24,14 @@ public class BossAction : MonoBehaviour
 
         StartCoroutine(AttackRoutine());
     }
+    public void ForceCancelAttack()
+    {
+        StopAllCoroutines();
 
+        attackHitbox.Deactivate();
+
+        isAttacking = false;
+    }
     private IEnumerator AttackRoutine()
     {
         isAttacking = true;

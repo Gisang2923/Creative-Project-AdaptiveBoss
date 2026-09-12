@@ -36,11 +36,13 @@ public class PlayerMovement : MonoBehaviour
 
     private PlayerDamageReceiver damageReceiver;
 
+    private PlayerCounter playerCounter;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         playerDash = GetComponent<PlayerDash>();
         damageReceiver = GetComponent<PlayerDamageReceiver>();
+        playerCounter = GetComponent<PlayerCounter>();
     }
 
     private void Update()
@@ -53,6 +55,13 @@ public class PlayerMovement : MonoBehaviour
     {
         if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
         {
+            return;
+        }
+        if (playerCounter != null && playerCounter.IsCountering)
+        {
+            rb.linearVelocity =
+                new Vector2(0f, rb.linearVelocity.y);
+
             return;
         }
         if (playerDash != null && playerDash.IsDashing)
@@ -88,6 +97,8 @@ public class PlayerMovement : MonoBehaviour
     {
         if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
             return;
+        if (playerCounter != null && playerCounter.IsCountering)
+            return;    
         if (context.performed)
         {
             jumpBufferCounter = jumpBufferTime;

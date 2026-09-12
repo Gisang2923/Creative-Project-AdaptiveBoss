@@ -24,33 +24,51 @@ public class Hitbox : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
+        ParryBox parryBox = other.GetComponent<ParryBox>();
+
+        if (parryBox != null)
+        {
+            Vector2 hitDirection =
+                (other.transform.position - owner.transform.position).normalized;
+
+            DamageInfo damageInfo = new DamageInfo(
+                attackData.damage,
+                hitDirection,
+                attackData.knockbackForce,
+                owner,
+                attackData.attackId,
+                attackData.parryable
+            );
+
+            parryBox.ReceiveHit(damageInfo);
+            return;
+        }
+
         Hurtbox hurtbox = other.GetComponent<Hurtbox>();
 
         if (hurtbox == null)
             return;
 
-        // 자기 자신 공격 방지
         if (hurtbox.transform.root.gameObject == owner)
             return;
 
-        // 한 번의 공격에서 같은 대상 여러 번 타격 방지
         if (hitTargets.Contains(hurtbox))
             return;
 
         hitTargets.Add(hurtbox);
 
-        Vector2 hitDirection =
+        Vector2 direction =
             (other.transform.position - owner.transform.position).normalized;
 
-        DamageInfo damageInfo = new DamageInfo(
+        DamageInfo info = new DamageInfo(
             attackData.damage,
-            hitDirection,
+            direction,
             attackData.knockbackForce,
             owner,
             attackData.attackId,
             attackData.parryable
         );
 
-        hurtbox.ReceiveDamage(damageInfo);
+        hurtbox.ReceiveDamage(info);
     }
 }

@@ -29,11 +29,13 @@ public class PlayerDash : MonoBehaviour
     private PlayerDamageReceiver damageReceiver;
     private Coroutine dashCoroutine;
     private float originalGravity;
+    private PlayerCounter playerCounter;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         playerCombat = GetComponent<PlayerCombat>();
         damageReceiver = GetComponent<PlayerDamageReceiver>();
+        playerCounter = GetComponent<PlayerCounter>();
     }
 
     private void Update()
@@ -56,7 +58,8 @@ public class PlayerDash : MonoBehaviour
     {
         if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
             return;
-
+        if (playerCounter != null && playerCounter.IsCountering)
+            return;
         if (!context.performed)
             return;
 

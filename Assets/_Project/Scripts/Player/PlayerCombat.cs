@@ -27,16 +27,18 @@ public class PlayerCombat : MonoBehaviour
         currentPhase == AttackPhase.Recovery;
 
     private PlayerDamageReceiver damageReceiver;
-
+    private PlayerCounter playerCounter;
     private void Awake()
     {
         damageReceiver = GetComponent<PlayerDamageReceiver>();
+        playerCounter = GetComponent<PlayerCounter>();
     }
     public void OnAttack(InputAction.CallbackContext context)
     {
         if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
             return;
-
+        if (playerCounter != null && playerCounter.IsCountering)
+            return;
         if (!context.performed)
             return;
 
