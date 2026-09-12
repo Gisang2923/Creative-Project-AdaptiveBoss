@@ -26,8 +26,17 @@ public class PlayerCombat : MonoBehaviour
         currentPhase == AttackPhase.None ||
         currentPhase == AttackPhase.Recovery;
 
+    private PlayerDamageReceiver damageReceiver;
+
+    private void Awake()
+    {
+        damageReceiver = GetComponent<PlayerDamageReceiver>();
+    }
     public void OnAttack(InputAction.CallbackContext context)
     {
+        if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
+            return;
+
         if (!context.performed)
             return;
 
@@ -49,6 +58,14 @@ public class PlayerCombat : MonoBehaviour
         currentPhase = AttackPhase.None;
     }
     
+    public void ForceCancelAttack()
+    {
+        StopAllCoroutines();
+
+        normalAttackHitbox.Deactivate();
+
+        currentPhase = AttackPhase.None;
+    }
     private IEnumerator NormalAttack()
     {
         currentPhase = AttackPhase.Startup;

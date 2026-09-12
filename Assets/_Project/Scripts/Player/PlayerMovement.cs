@@ -33,10 +33,14 @@ public class PlayerMovement : MonoBehaviour
 
     private float facingDirection = 1f;
     public float FacingDirection => facingDirection;
+
+    private PlayerDamageReceiver damageReceiver;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         playerDash = GetComponent<PlayerDash>();
+        damageReceiver = GetComponent<PlayerDamageReceiver>();
     }
 
     private void Update()
@@ -47,6 +51,10 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
+        {
+            return;
+        }
         if (playerDash != null && playerDash.IsDashing)
             return;
 
@@ -78,6 +86,8 @@ public class PlayerMovement : MonoBehaviour
 
     public void OnJump(InputAction.CallbackContext context)
     {
+        if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
+            return;
         if (context.performed)
         {
             jumpBufferCounter = jumpBufferTime;

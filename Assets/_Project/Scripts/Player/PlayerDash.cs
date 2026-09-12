@@ -26,10 +26,14 @@ public class PlayerDash : MonoBehaviour
 
     private PlayerCombat playerCombat;
 
+    private PlayerDamageReceiver damageReceiver;
+    private Coroutine dashCoroutine;
+    private float originalGravity;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         playerCombat = GetComponent<PlayerCombat>();
+        damageReceiver = GetComponent<PlayerDamageReceiver>();
     }
 
     private void Update()
@@ -50,6 +54,9 @@ public class PlayerDash : MonoBehaviour
 
     public void OnDash(InputAction.CallbackContext context)
     {
+        if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
+            return;
+
         if (!context.performed)
             return;
 
@@ -65,7 +72,7 @@ public class PlayerDash : MonoBehaviour
             playerCombat.CancelAttack();
         }
 
-        StartCoroutine(Dash());
+        dashCoroutine = StartCoroutine(Dash());
     }
 
     private IEnumerator Dash()
@@ -74,12 +81,9 @@ public class PlayerDash : MonoBehaviour
         canDash = false;
 
         if (!IsGrounded())
-        {
             airDashAvailable = false;
-        }
 
-        float originalGravity = rb.gravityScale;
-
+        originalGravity = rb.gravityScale;
         rb.gravityScale = 0f;
 
         rb.linearVelocity = new Vector2(
@@ -95,6 +99,7 @@ public class PlayerDash : MonoBehaviour
         yield return new WaitForSeconds(dashCooldown);
 
         canDash = true;
+        dashCoroutine = null;
     }
 
     private bool IsGrounded()
@@ -105,4 +110,30 @@ public class PlayerDash : MonoBehaviour
             groundLayer
         );
     }
-}
+
+    public void ForceCancelDash()
+    {
+        if (!isDashing)
+            return;
+
+        if (dashCoroutine != null)
+        {
+            StopCoroutine(dashCoroutine);
+            dashCoroutine = null;
+        }
+
+        rb.gravityScale = originalGravity;
+        isDashing = false;
+
+        // 피격 직후 다시 대시하지 못하도록
+        canDash = false;
+
+        StartCoroutine(ResetDashCooldown());
+    }
+
+    private IEnumerator ResetDashCooldown()
+    {
+        yield return new WaitForSeconds(dashCooldown);
+        canDash = true;
+    }
+    }
