@@ -24,9 +24,12 @@ public class PlayerDash : MonoBehaviour
 
     public bool IsDashing => isDashing;
 
+    private PlayerCombat playerCombat;
+
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
+        playerCombat = GetComponent<PlayerCombat>();
     }
 
     private void Update()
@@ -50,11 +53,17 @@ public class PlayerDash : MonoBehaviour
         if (!context.performed)
             return;
 
+        if (playerCombat != null && !playerCombat.CanDashCancel)
+            return;
+
         if (!canDash)
             return;
 
-        if (!IsGrounded() && !airDashAvailable)
-            return;
+        if (playerCombat != null &&
+            playerCombat.CurrentPhase == PlayerCombat.AttackPhase.Recovery)
+        {
+            playerCombat.CancelAttack();
+        }
 
         StartCoroutine(Dash());
     }

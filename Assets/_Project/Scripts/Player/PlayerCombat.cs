@@ -4,35 +4,61 @@ using UnityEngine.InputSystem;
 
 public class PlayerCombat : MonoBehaviour
 {
+    public enum AttackPhase
+    {
+        None,
+        Startup,
+        Active,
+        Recovery
+    }
+
     [Header("Normal Attack")]
     [SerializeField] private AttackData normalAttackData;
     [SerializeField] private Hitbox normalAttackHitbox;
 
-    private bool isAttacking;
+    private AttackPhase currentPhase = AttackPhase.None;
 
-    public bool IsAttacking => isAttacking;
+    public AttackPhase CurrentPhase => currentPhase;
+    public bool IsAttacking => currentPhase != AttackPhase.None;
+
+    // Active가 끝난 이후에는 대시 캔슬 허용
+    public bool CanDashCancel =>
+        currentPhase == AttackPhase.None ||
+        currentPhase == AttackPhase.Recovery;
 
     public void OnAttack(InputAction.CallbackContext context)
     {
         if (!context.performed)
             return;
 
-        if (isAttacking)
+        if (IsAttacking)
             return;
 
         StartCoroutine(NormalAttack());
     }
 
+    public void CancelAttack()
+    {
+        if (currentPhase != AttackPhase.Recovery)
+            return;
+
+        StopAllCoroutines();
+
+        normalAttackHitbox.Deactivate();
+
+        currentPhase = AttackPhase.None;
+    }
+    
     private IEnumerator NormalAttack()
     {
-        isAttacking = true;
+        currentPhase = AttackPhase.Startup;
 
-        // Startup
         yield return new WaitForSeconds(
             normalAttackData.startupTime
         );
 
-        // Active
+        currentPhase = AttackPhase.Active;
+
         normalAttackHitbox.Activate(normalAttackData);
 
         yield return new WaitForSeconds(
@@ -41,11 +67,12 @@ public class PlayerCombat : MonoBehaviour
 
         normalAttackHitbox.Deactivate();
 
-        // Recovery
+        currentPhase = AttackPhase.Recovery;
+
         yield return new WaitForSeconds(
             normalAttackData.recoveryTime
         );
 
-        isAttacking = false;
+        currentPhase = AttackPhase.None;
     }
 }
