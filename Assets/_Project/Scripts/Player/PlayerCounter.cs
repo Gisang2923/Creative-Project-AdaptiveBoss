@@ -47,7 +47,8 @@ public class PlayerCounter : MonoBehaviour
 
         if (playerCombat != null && playerCombat.IsAttacking)
             return;
-
+        if (playerCombat != null && playerCombat.IsCharging)
+            return;
         counterRoutine = StartCoroutine(CounterRoutine());
     }
 

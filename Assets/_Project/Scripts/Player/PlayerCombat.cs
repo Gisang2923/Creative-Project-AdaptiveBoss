@@ -16,6 +16,18 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private AttackData normalAttackData;
     [SerializeField] private Hitbox normalAttackHitbox;
 
+    public enum ChargeState
+    {
+        None,
+        Charging,
+        Charged
+    }
+    [SerializeField] private AttackData chargeAttackData;
+    [SerializeField] private Hitbox chargeAttackHitbox;
+    [SerializeField] private float chargeTime = 0.7f;
+
+    private ChargeState chargeState = ChargeState.None;
+    private float chargeTimer;
     private AttackPhase currentPhase = AttackPhase.None;
 
     public AttackPhase CurrentPhase => currentPhase;
@@ -26,12 +38,29 @@ public class PlayerCombat : MonoBehaviour
         currentPhase == AttackPhase.None ||
         currentPhase == AttackPhase.Recovery;
 
+    public bool IsCharging =>
+        chargeState == ChargeState.Charging ||
+        chargeState == ChargeState.Charged;
+
     private PlayerDamageReceiver damageReceiver;
     private PlayerCounter playerCounter;
     private void Awake()
     {
         damageReceiver = GetComponent<PlayerDamageReceiver>();
         playerCounter = GetComponent<PlayerCounter>();
+    }
+
+    private void Update()
+    {
+        if (chargeState != ChargeState.Charging)
+            return;
+
+        chargeTimer += Time.deltaTime;
+
+        if (chargeTimer >= chargeTime)
+        {
+            chargeState = ChargeState.Charged;
+        }
     }
     public void OnAttack(InputAction.CallbackContext context)
     {
@@ -65,7 +94,10 @@ public class PlayerCombat : MonoBehaviour
         StopAllCoroutines();
 
         normalAttackHitbox.Deactivate();
-
+        
+        chargeTimer = 0f;
+        
+        chargeState = ChargeState.None;
         currentPhase = AttackPhase.None;
     }
     private IEnumerator NormalAttack()
@@ -90,6 +122,73 @@ public class PlayerCombat : MonoBehaviour
 
         yield return new WaitForSeconds(
             normalAttackData.recoveryTime
+        );
+
+        currentPhase = AttackPhase.None;
+    }
+    public void OnChargeAttack(InputAction.CallbackContext context)
+    {
+        if (context.performed)
+        {
+            StartCharge();
+        }
+
+        if (context.canceled)
+        {
+            ReleaseCharge();
+        }
+    }
+    private void StartCharge()
+    {
+        if (IsAttacking)
+            return;
+
+        if (playerCounter != null && playerCounter.IsCountering)
+            return;
+
+        if (damageReceiver != null &&
+            (damageReceiver.IsStunned || damageReceiver.IsDead))
+            return;
+
+        chargeState = ChargeState.Charging;
+        chargeTimer = 0f;
+    }
+    private void ReleaseCharge()
+    {
+        if (chargeState == ChargeState.None)
+            return;
+
+        if (chargeState == ChargeState.Charged)
+        {
+            StartCoroutine(ChargeAttack());
+        }
+
+        chargeState = ChargeState.None;
+        chargeTimer = 0f;
+    }
+
+    private IEnumerator ChargeAttack()
+    {
+        currentPhase = AttackPhase.Startup;
+
+        yield return new WaitForSeconds(
+            chargeAttackData.startupTime
+        );
+
+        currentPhase = AttackPhase.Active;
+
+        chargeAttackHitbox.Activate(chargeAttackData);
+
+        yield return new WaitForSeconds(
+            chargeAttackData.activeTime
+        );
+
+        chargeAttackHitbox.Deactivate();
+
+        currentPhase = AttackPhase.Recovery;
+
+        yield return new WaitForSeconds(
+            chargeAttackData.recoveryTime
         );
 
         currentPhase = AttackPhase.None;

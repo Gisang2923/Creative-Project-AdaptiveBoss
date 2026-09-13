@@ -1020,7 +1020,7 @@ MonoBehaviour:
   parryBox: {fileID: 1695386534}
   hurtbox: {fileID: 722405369}
   startupTime: 0.03
-  parryWindow: 0.15
+  parryWindow: 0.5
   failRecovery: 0.4
 --- !u!1 &687523293
 GameObject:

@@ -74,7 +74,8 @@ public class PlayerDash : MonoBehaviour
         {
             playerCombat.CancelAttack();
         }
-
+        if (playerCombat != null && playerCombat.IsCharging)
+            return;
         dashCoroutine = StartCoroutine(Dash());
     }
 
