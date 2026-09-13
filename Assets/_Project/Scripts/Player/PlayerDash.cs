@@ -30,12 +30,14 @@ public class PlayerDash : MonoBehaviour
     private Coroutine dashCoroutine;
     private float originalGravity;
     private PlayerCounter playerCounter;
+    private PlayerHeal playerHeal;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         playerCombat = GetComponent<PlayerCombat>();
         damageReceiver = GetComponent<PlayerDamageReceiver>();
         playerCounter = GetComponent<PlayerCounter>();
+        playerHeal = GetComponent<PlayerHeal>();
     }
 
     private void Update()
@@ -75,6 +77,9 @@ public class PlayerDash : MonoBehaviour
             playerCombat.CancelAttack();
         }
         if (playerCombat != null && playerCombat.IsCharging)
+            return;
+
+        if (playerHeal != null && playerHeal.IsHealing)
             return;
         dashCoroutine = StartCoroutine(Dash());
     }

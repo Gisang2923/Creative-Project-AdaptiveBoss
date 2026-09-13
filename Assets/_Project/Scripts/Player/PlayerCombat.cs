@@ -44,10 +44,12 @@ public class PlayerCombat : MonoBehaviour
 
     private PlayerDamageReceiver damageReceiver;
     private PlayerCounter playerCounter;
+    private PlayerHeal playerHeal;
     private void Awake()
     {
         damageReceiver = GetComponent<PlayerDamageReceiver>();
         playerCounter = GetComponent<PlayerCounter>();
+        playerHeal = GetComponent<PlayerHeal>();
     }
 
     private void Update()
@@ -64,6 +66,8 @@ public class PlayerCombat : MonoBehaviour
     }
     public void OnAttack(InputAction.CallbackContext context)
     {
+        if (playerHeal != null && playerHeal.IsHealing)
+            return;
         if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
             return;
         if (playerCounter != null && playerCounter.IsCountering)
@@ -96,7 +100,7 @@ public class PlayerCombat : MonoBehaviour
         normalAttackHitbox.Deactivate();
         
         chargeTimer = 0f;
-        
+
         chargeState = ChargeState.None;
         currentPhase = AttackPhase.None;
     }
@@ -128,6 +132,8 @@ public class PlayerCombat : MonoBehaviour
     }
     public void OnChargeAttack(InputAction.CallbackContext context)
     {
+        if (playerHeal != null && playerHeal.IsHealing)
+            return;
         if (context.performed)
         {
             StartCharge();

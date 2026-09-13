@@ -21,7 +21,7 @@ public class PlayerCounter : MonoBehaviour
 
     private bool isCountering;
     private bool counterSucceeded;
-
+    private PlayerHeal playerHeal;
     public bool IsCountering => isCountering;
     private Coroutine counterRoutine;
     private void Awake()
@@ -29,7 +29,7 @@ public class PlayerCounter : MonoBehaviour
         damageReceiver = GetComponent<PlayerDamageReceiver>();
         playerCombat = GetComponent<PlayerCombat>();
         playerDash = GetComponent<PlayerDash>();
-
+        playerHeal = GetComponent<PlayerHeal>();
         parryBox.SetActive(false);
     }
 
@@ -49,6 +49,8 @@ public class PlayerCounter : MonoBehaviour
             return;
         if (playerCombat != null && playerCombat.IsCharging)
             return;
+        if (playerHeal != null && playerHeal.IsHealing)
+            return;    
         counterRoutine = StartCoroutine(CounterRoutine());
     }
 

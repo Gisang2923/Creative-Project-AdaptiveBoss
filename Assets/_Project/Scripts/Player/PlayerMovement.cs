@@ -38,6 +38,7 @@ public class PlayerMovement : MonoBehaviour
 
     private PlayerCounter playerCounter;
     private PlayerCombat playerCombat;
+    private PlayerHeal playerHeal;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -45,6 +46,7 @@ public class PlayerMovement : MonoBehaviour
         damageReceiver = GetComponent<PlayerDamageReceiver>();
         playerCounter = GetComponent<PlayerCounter>();
         playerCombat = GetComponent<PlayerCombat>();
+        playerHeal = GetComponent<PlayerHeal>();
     }
 
     private void Update()
@@ -69,6 +71,13 @@ public class PlayerMovement : MonoBehaviour
         if (playerDash != null && playerDash.IsDashing)
             return;
         if (playerCombat != null && playerCombat.IsCharging)
+        {
+            rb.linearVelocity =
+                new Vector2(0f, rb.linearVelocity.y);
+
+            return;
+        }
+        if (playerHeal != null && playerHeal.IsHealing)
         {
             rb.linearVelocity =
                 new Vector2(0f, rb.linearVelocity.y);
@@ -110,6 +119,8 @@ public class PlayerMovement : MonoBehaviour
 
         if (playerCombat != null && playerCombat.IsCharging)
             return;      
+        if (playerHeal != null && playerHeal.IsHealing)
+            return;
         if (context.performed)
         {
             jumpBufferCounter = jumpBufferTime;

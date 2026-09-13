@@ -16,13 +16,14 @@ public class PlayerDamageReceiver : DamageReceiver
 
     private Rigidbody2D rb;
     private PlayerDash playerDash;
-
+    private PlayerHeal playerHeal;
     public bool IsDead => health != null && health.IsDead;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
         playerCombat = GetComponent<PlayerCombat>();
         playerDash = GetComponent<PlayerDash>();
+        playerHeal = GetComponent<PlayerHeal>();
     }
     private void ApplyKnockback(DamageInfo damageInfo)
     {
@@ -39,6 +40,7 @@ public class PlayerDamageReceiver : DamageReceiver
         if (isInvincible || health == null || health.IsDead)
             return;
 
+        playerHeal?.ForceCancelHeal();
         playerCombat?.ForceCancelAttack();
         playerDash?.ForceCancelDash();
 
@@ -49,7 +51,6 @@ public class PlayerDamageReceiver : DamageReceiver
             HandleDeath();
             return;
         }
-            
 
         ApplyKnockback(damageInfo);
         StartCoroutine(HitRoutine());

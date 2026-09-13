@@ -36,4 +36,16 @@ public class Health : MonoBehaviour
             OnDied?.Invoke();
         }
     }
+    public void Heal(int amount)
+    {
+        if (IsDead)
+            return;
+
+        currentHealth += amount;
+        currentHealth = Mathf.Min(currentHealth, maxHealth);
+
+        OnHealthChanged?.Invoke(currentHealth, maxHealth);
+
+        Debug.Log($"{gameObject.name} HP: {currentHealth}/{maxHealth}");
+    }
 }
