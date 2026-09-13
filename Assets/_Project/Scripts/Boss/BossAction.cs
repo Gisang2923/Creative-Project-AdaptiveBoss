@@ -3,37 +3,42 @@ using UnityEngine;
 
 public class BossAction : MonoBehaviour
 {
-    [SerializeField] private Hitbox attackHitbox;
-
     private bool isAttacking;
+    private Hitbox currentHitbox;
 
     public bool IsAttacking => isAttacking;
 
-    public void ExecuteAttack(AttackData attackData)
+    public void ExecuteAttack(BossAttack attack)
     {
-        if (isAttacking || attackData == null)
+        if (isAttacking || attack == null)
             return;
 
-        StartCoroutine(AttackRoutine(attackData));
+        StartCoroutine(AttackRoutine(attack));
     }
 
-    private IEnumerator AttackRoutine(AttackData attackData)
+    private IEnumerator AttackRoutine(BossAttack attack)
     {
         isAttacking = true;
 
+        AttackData data = attack.attackData;
+        Hitbox hitbox = attack.hitbox;
+
+        currentHitbox = hitbox;
+
         // Startup
-        yield return new WaitForSeconds(attackData.startupTime);
+        yield return new WaitForSeconds(data.startupTime);
 
         // Active
-        attackHitbox.Activate(attackData);
+        hitbox.Activate(data);
 
-        yield return new WaitForSeconds(attackData.activeTime);
+        yield return new WaitForSeconds(data.activeTime);
 
-        attackHitbox.Deactivate();
+        hitbox.Deactivate();
 
         // Recovery
-        yield return new WaitForSeconds(attackData.recoveryTime);
+        yield return new WaitForSeconds(data.recoveryTime);
 
+        currentHitbox = null;
         isAttacking = false;
     }
 
@@ -41,7 +46,11 @@ public class BossAction : MonoBehaviour
     {
         StopAllCoroutines();
 
-        attackHitbox.Deactivate();
+        if (currentHitbox != null)
+        {
+            currentHitbox.Deactivate();
+            currentHitbox = null;
+        }
 
         isAttacking = false;
     }

@@ -2,11 +2,11 @@ using UnityEngine;
 
 public class BossAttackSelector : MonoBehaviour
 {
-    [SerializeField] private AttackData[] attacks;
+    [SerializeField] private BossAttack[] attacks;
 
     private int lastAttackIndex = -1;
 
-    public AttackData SelectAttack()
+    public BossAttack SelectAttack()
     {
         if (attacks == null || attacks.Length == 0)
             return null;

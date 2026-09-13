@@ -95,7 +95,7 @@ public class BossController : MonoBehaviour
         movement.Stop();
         movement.FaceTarget();
 
-        AttackData selectedAttack =
+        BossAttack selectedAttack =
             attackSelector.SelectAttack();
 
         if (selectedAttack == null)
