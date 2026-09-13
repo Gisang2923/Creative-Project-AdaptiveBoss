@@ -3,36 +3,21 @@ using UnityEngine;
 
 public class BossAction : MonoBehaviour
 {
-    [Header("Attack")]
-    [SerializeField] private AttackData attackData;
     [SerializeField] private Hitbox attackHitbox;
-    
+
     private bool isAttacking;
 
     public bool IsAttacking => isAttacking;
 
-    [ContextMenu("Test Attack")]
-    private void TestAttack()
+    public void ExecuteAttack(AttackData attackData)
     {
-        ExecuteAttack();
-    }
-
-    public void ExecuteAttack()
-    {
-        if (isAttacking)
+        if (isAttacking || attackData == null)
             return;
 
-        StartCoroutine(AttackRoutine());
+        StartCoroutine(AttackRoutine(attackData));
     }
-    public void ForceCancelAttack()
-    {
-        StopAllCoroutines();
 
-        attackHitbox.Deactivate();
-
-        isAttacking = false;
-    }
-    private IEnumerator AttackRoutine()
+    private IEnumerator AttackRoutine(AttackData attackData)
     {
         isAttacking = true;
 
@@ -52,5 +37,12 @@ public class BossAction : MonoBehaviour
         isAttacking = false;
     }
 
+    public void ForceCancelAttack()
+    {
+        StopAllCoroutines();
 
+        attackHitbox.Deactivate();
+
+        isAttacking = false;
+    }
 }
