@@ -84,8 +84,11 @@ public class BossController : MonoBehaviour
                 break;
 
             case BossState.Idle:
-            case BossState.Attack:
                 movement.Stop();
+                break;
+
+            case BossState.Attack:
+                // 공격 중 이동은 BossAction이 직접 제어
                 break;
         }
     }
