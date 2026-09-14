@@ -504,7 +504,7 @@ GameObject:
   m_Component:
   - component: {fileID: 402595756}
   - component: {fileID: 402595755}
-  - component: {fileID: 402595757}
+  - component: {fileID: 402595764}
   - component: {fileID: 402595762}
   - component: {fileID: 402595758}
   - component: {fileID: 402595761}
@@ -548,19 +548,6 @@ Transform:
   - {fileID: 214384419}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &402595757
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 402595753}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 7024cf9e400606946847b221fcb34ba6, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Assembly-CSharp::DamageReceiver
-  health: {fileID: 402595755}
 --- !u!114 &402595758
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -583,6 +570,11 @@ MonoBehaviour:
   jumpSlamSpawnHeight: 5
   jumpSlamFallSpeed: 18
   jumpSlamGroundY: 0
+  groundLayer:
+    serializedVersion: 2
+    m_Bits: 64
+  groundCheckDistance: 10
+  groundOffset: 0.7
 --- !u!50 &402595759
 Rigidbody2D:
   serializedVersion: 5
@@ -624,9 +616,12 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossController
   movement: {fileID: 402595762}
   bossAction: {fileID: 402595758}
-  attackDistance: 1.5
-  attackCooldown: 0.6
   attackSelector: {fileID: 402595761}
+  attackCooldown: 0.6
+  damageReceiver: {fileID: 0}
+  repositionDuration: 0.4
+  retreatChance: 0.4
+  approachChance: 0.25
 --- !u!114 &402595761
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -640,18 +635,26 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossAttackSelector
   attacks:
-  - attackType: 3
-    attackData: {fileID: 11400000, guid: abc2b63f31dde2340aa5201cd19204eb, type: 2}
-    hitbox: {fileID: 630531844}
   - attackType: 0
     attackData: {fileID: 11400000, guid: 63406c358d8650b40b54ce814997bd56, type: 2}
     hitbox: {fileID: 234565048}
+    minRange: 0
+    maxRange: 1.6
   - attackType: 1
     attackData: {fileID: 11400000, guid: 63406c358d8650b40b54ce814997bd56, type: 2}
     hitbox: {fileID: 1563451150}
+    minRange: 0.5
+    maxRange: 2.3
   - attackType: 2
     attackData: {fileID: 11400000, guid: 63406c358d8650b40b54ce814997bd56, type: 2}
     hitbox: {fileID: 222304603}
+    minRange: 2
+    maxRange: 4.5
+  - attackType: 3
+    attackData: {fileID: 11400000, guid: abc2b63f31dde2340aa5201cd19204eb, type: 2}
+    hitbox: {fileID: 630531844}
+    minRange: 2.5
+    maxRange: 5.5
 --- !u!114 &402595762
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -667,7 +670,6 @@ MonoBehaviour:
   target: {fileID: 685367515}
   facingRoot: {fileID: 298533617}
   moveSpeed: 3
-  stopDistance: 2.5
 --- !u!70 &402595763
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -705,6 +707,23 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: 0}
   m_Size: {x: 0.5, y: 1}
   m_Direction: 0
+--- !u!114 &402595764
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 402595753}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d1ff2a7572e6e1345adb6b8ef19652e9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossDamageReceiver
+  health: {fileID: 402595755}
+  bossAction: {fileID: 402595758}
+  bossMovement: {fileID: 402595762}
+  rb: {fileID: 402595759}
+  bossController: {fileID: 0}
 --- !u!1 &519420028
 GameObject:
   m_ObjectHideFlags: 0
@@ -836,7 +855,7 @@ Transform:
   m_GameObject: {fileID: 519420028}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: -10}
+  m_LocalPosition: {x: 0, y: 0, z: -1}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1747,7 +1766,7 @@ SpriteRenderer:
   m_SortingOrder: 0
   m_MaskInteraction: 0
   m_Sprite: {fileID: 7482667652216324306, guid: 311925a002f4447b3a28927169b83ea6, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 1, g: 0.07738829, b: 0, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0

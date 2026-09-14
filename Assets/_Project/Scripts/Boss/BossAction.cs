@@ -17,6 +17,10 @@ public class BossAction : MonoBehaviour
     [SerializeField] private float jumpSlamFallSpeed = 12f;
     [SerializeField] private float jumpSlamGroundY = 0f;
 
+    [Header("Jump Slam Ground Check")]
+    [SerializeField] private LayerMask groundLayer;
+    [SerializeField] private float groundCheckDistance = 10f;
+    [SerializeField] private float groundOffset = 0.7f;
     private bool isAttacking;
     private Hitbox currentHitbox;
 
@@ -174,24 +178,42 @@ public class BossAction : MonoBehaviour
             visual.gameObject.SetActive(true);
 
         // 5. 아래로 낙하
-        while (transform.position.y > jumpSlamGroundY)
+        while (true)
         {
             rb.linearVelocity = new Vector2(
                 0f,
                 -jumpSlamFallSpeed
             );
 
+            RaycastHit2D hit = Physics2D.Raycast(
+                transform.position,
+                Vector2.down,
+                groundCheckDistance,
+                groundLayer
+            );
+
+            if (hit.collider != null)
+            {
+                float distanceToGround =
+                    transform.position.y - hit.point.y;
+
+                // 거의 착지한 상태
+                if (distanceToGround <= groundOffset)
+                {
+                    rb.linearVelocity = Vector2.zero;
+
+                    transform.position = new Vector3(
+                        transform.position.x,
+                        hit.point.y + groundOffset,
+                        transform.position.z
+                    );
+
+                    break;
+                }
+            }
+
             yield return new WaitForFixedUpdate();
         }
-
-        // 6. 착지 위치 보정
-        rb.linearVelocity = Vector2.zero;
-
-        transform.position = new Vector3(
-            transform.position.x,
-            jumpSlamGroundY,
-            transform.position.z
-        );
 
         if (bodyCollider != null)
             bodyCollider.enabled = true;

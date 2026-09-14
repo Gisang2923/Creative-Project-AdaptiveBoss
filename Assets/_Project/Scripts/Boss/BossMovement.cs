@@ -8,7 +8,7 @@ public class BossMovement : MonoBehaviour
 
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 3f;
-    [SerializeField] private float stopDistance = 2.5f;
+    
 
     private Rigidbody2D rb;
 
@@ -22,8 +22,6 @@ public class BossMovement : MonoBehaviour
             return Mathf.Abs(target.position.x - transform.position.x);
         }
     }
-
-    public bool IsInAttackRange => DistanceToTarget <= stopDistance;
 
     private void Awake()
     {
@@ -46,7 +44,21 @@ public class BossMovement : MonoBehaviour
 
         UpdateFacing(direction);
     }
+    public void MoveAwayFromTarget()
+    {
+        if (target == null)
+        {
+            Stop();
+            return;
+        }
+        float direction =
+            Mathf.Sign(transform.position.x - target.position.x);
 
+        rb.linearVelocity =
+            new Vector2(direction * moveSpeed, rb.linearVelocity.y);
+
+        FaceTarget();
+    }
     public void Stop()
     {
         rb.linearVelocity =
