@@ -4,6 +4,7 @@ using UnityEngine;
 public class Hitbox : MonoBehaviour
 {
     [SerializeField] private GameObject owner;
+    [SerializeField] private BoxCollider2D hitCollider;
 
     private AttackData attackData;
 
@@ -15,6 +16,9 @@ public class Hitbox : MonoBehaviour
         hitTargets.Clear();
 
         gameObject.SetActive(true);
+
+        // 활성화되는 순간 이미 범위 안에 있는 대상 검사
+        CheckInitialOverlap();
     }
 
     public void Deactivate()
@@ -22,24 +26,33 @@ public class Hitbox : MonoBehaviour
         gameObject.SetActive(false);
     }
 
+    private void CheckInitialOverlap()
+    {
+        Collider2D[] overlaps = Physics2D.OverlapBoxAll(
+            hitCollider.bounds.center,
+            hitCollider.bounds.size,
+            transform.eulerAngles.z
+        );
+
+        foreach (Collider2D other in overlaps)
+        {
+            ProcessCollision(other);
+        }
+    }
+
     private void OnTriggerEnter2D(Collider2D other)
     {
+        ProcessCollision(other);
+    }
+
+    private void ProcessCollision(Collider2D other)
+    {
+        // Counter 먼저 확인
         ParryBox parryBox = other.GetComponent<ParryBox>();
 
         if (parryBox != null)
         {
-            Vector2 hitDirection =
-                (other.transform.position - owner.transform.position).normalized;
-
-            DamageInfo damageInfo = new DamageInfo(
-                attackData.damage,
-                hitDirection,
-                attackData.knockbackForce,
-                owner,
-                attackData.attackId,
-                attackData.parryable
-            );
-
+            DamageInfo damageInfo = CreateDamageInfo(other);
             parryBox.ReceiveHit(damageInfo);
             return;
         }
@@ -52,23 +65,29 @@ public class Hitbox : MonoBehaviour
         if (hurtbox.transform.root.gameObject == owner)
             return;
 
+        // 한 번의 공격에서 같은 Hurtbox 중복 타격 방지
         if (hitTargets.Contains(hurtbox))
             return;
 
         hitTargets.Add(hurtbox);
 
-        Vector2 direction =
+        DamageInfo info = CreateDamageInfo(other);
+
+        hurtbox.ReceiveDamage(info);
+    }
+
+    private DamageInfo CreateDamageInfo(Collider2D other)
+    {
+        Vector2 hitDirection =
             (other.transform.position - owner.transform.position).normalized;
 
-        DamageInfo info = new DamageInfo(
+        return new DamageInfo(
             attackData.damage,
-            direction,
+            hitDirection,
             attackData.knockbackForce,
             owner,
             attackData.attackId,
             attackData.parryable
         );
-
-        hurtbox.ReceiveDamage(info);
     }
 }
