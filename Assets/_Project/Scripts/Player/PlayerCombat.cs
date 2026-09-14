@@ -98,10 +98,11 @@ public class PlayerCombat : MonoBehaviour
         StopAllCoroutines();
 
         normalAttackHitbox.Deactivate();
-        
-        chargeTimer = 0f;
+        chargeAttackHitbox.Deactivate();
 
         chargeState = ChargeState.None;
+        chargeTimer = 0f;
+
         currentPhase = AttackPhase.None;
     }
     private IEnumerator NormalAttack()

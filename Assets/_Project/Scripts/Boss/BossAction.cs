@@ -9,6 +9,14 @@ public class BossAction : MonoBehaviour
     [SerializeField] private float chargeSpeed = 8f;
     [SerializeField] private float chargeDuration = 0.35f;
     [SerializeField] private Transform player;
+    [SerializeField] private Transform visual;
+    [SerializeField] private Collider2D bodyCollider;
+
+    [SerializeField] private float jumpSlamVanishTime = 0.35f;
+    [SerializeField] private float jumpSlamSpawnHeight = 5f;
+    [SerializeField] private float jumpSlamFallSpeed = 12f;
+    [SerializeField] private float jumpSlamGroundY = 0f;
+
     private bool isAttacking;
     private Hitbox currentHitbox;
 
@@ -33,6 +41,10 @@ public class BossAction : MonoBehaviour
             case BossAttackType.ChargeSlash:
                 StartCoroutine(ChargeSlashRoutine(attack));
                 break;
+
+            case BossAttackType.JumpSlam:
+                StartCoroutine(JumpSlamRoutine(attack));
+                break;    
         }
     }
 
@@ -71,6 +83,9 @@ public class BossAction : MonoBehaviour
             currentHitbox.Deactivate();
             currentHitbox = null;
         }
+
+        rb.linearVelocity =
+            new Vector2(0f, rb.linearVelocity.y);
 
         isAttacking = false;
     }
@@ -117,6 +132,84 @@ public class BossAction : MonoBehaviour
 
         // Recovery
         yield return new WaitForSeconds(data.recoveryTime);
+
+        isAttacking = false;
+    }
+    private IEnumerator JumpSlamRoutine(BossAttack attack)
+    {
+        isAttacking = true;
+
+        AttackData data = attack.attackData;
+        Hitbox hitbox = attack.hitbox;
+
+        currentHitbox = hitbox;
+
+        // 1. 준비 동작
+        rb.linearVelocity = Vector2.zero;
+
+        yield return new WaitForSeconds(data.startupTime);
+
+        // 2. 사라짐
+        if (visual != null)
+            visual.gameObject.SetActive(false);
+
+        if (bodyCollider != null)
+            bodyCollider.enabled = false;
+
+        rb.linearVelocity = Vector2.zero;
+
+        yield return new WaitForSeconds(jumpSlamVanishTime);
+
+        // 3. 플레이어 위쪽으로 위치 이동
+        float targetX = player.position.x;
+
+        transform.position = new Vector3(
+            targetX,
+            jumpSlamGroundY + jumpSlamSpawnHeight,
+            transform.position.z
+        );
+
+        // 4. 재등장
+        if (visual != null)
+            visual.gameObject.SetActive(true);
+
+        // 5. 아래로 낙하
+        while (transform.position.y > jumpSlamGroundY)
+        {
+            rb.linearVelocity = new Vector2(
+                0f,
+                -jumpSlamFallSpeed
+            );
+
+            yield return new WaitForFixedUpdate();
+        }
+
+        // 6. 착지 위치 보정
+        rb.linearVelocity = Vector2.zero;
+
+        transform.position = new Vector3(
+            transform.position.x,
+            jumpSlamGroundY,
+            transform.position.z
+        );
+
+        if (bodyCollider != null)
+            bodyCollider.enabled = true;
+
+        // 7. 착지 공격 판정
+        hitbox.Activate(data);
+
+        yield return new WaitForSeconds(
+            data.activeTime
+        );
+
+        hitbox.Deactivate();
+        currentHitbox = null;
+
+        // 8. 후딜
+        yield return new WaitForSeconds(
+            data.recoveryTime
+        );
 
         isAttacking = false;
     }
