@@ -44,6 +44,7 @@ public class BossMovement : MonoBehaviour
 
         UpdateFacing(direction);
     }
+
     public void MoveAwayFromTarget()
     {
         if (target == null)
@@ -51,6 +52,7 @@ public class BossMovement : MonoBehaviour
             Stop();
             return;
         }
+
         float direction =
             Mathf.Sign(transform.position.x - target.position.x);
 

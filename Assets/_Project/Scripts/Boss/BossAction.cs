@@ -21,6 +21,15 @@ public class BossAction : MonoBehaviour
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float groundCheckDistance = 10f;
     [SerializeField] private float groundOffset = 0.7f;
+
+    [Header("Back Dodge")]
+    [SerializeField] private float backDodgeDistance = 5f;
+    [SerializeField] private float backDodgeDuration = 0.6f;
+
+    private bool isDodging;
+
+    public bool IsDodging => isDodging;
+    public bool IsBusy => isAttacking || isDodging;
     private bool isAttacking;
     private Hitbox currentHitbox;
 
@@ -92,6 +101,7 @@ public class BossAction : MonoBehaviour
             new Vector2(0f, rb.linearVelocity.y);
 
         isAttacking = false;
+        isDodging = false;
     }
     private IEnumerator ChargeSlashRoutine(BossAttack attack)
     {
@@ -234,5 +244,54 @@ public class BossAction : MonoBehaviour
         );
 
         isAttacking = false;
+    }
+
+    public void ExecuteBackDodge()
+    {
+        if (IsBusy)
+            return;
+
+        StartCoroutine(BackDodgeRoutine());
+    }
+
+    private IEnumerator BackDodgeRoutine()
+    {
+        isDodging = true;
+
+        // 시작 순간 플레이어 반대 방향 고정
+        float direction =
+            Mathf.Sign(transform.position.x - player.position.x);
+
+        float speed =
+            backDodgeDistance / backDodgeDuration;
+
+        float movedDistance = 0f;
+
+        while (movedDistance < backDodgeDistance)
+        {
+            float moveThisFrame =
+                speed * Time.fixedDeltaTime;
+
+            // 목표 거리 초과 방지
+            moveThisFrame = Mathf.Min(
+                moveThisFrame,
+                backDodgeDistance - movedDistance
+            );
+
+            rb.linearVelocity =
+                new Vector2(
+                    direction * speed,
+                    rb.linearVelocity.y
+                );
+
+            movedDistance += moveThisFrame;
+
+            yield return new WaitForFixedUpdate();
+        }
+
+        rb.linearVelocity =
+            new Vector2(0f, rb.linearVelocity.y);
+
+        isDodging = false;
     }
 }

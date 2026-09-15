@@ -8,6 +8,7 @@ public class BossController : MonoBehaviour
         Approach,
         Reposition,
         Attack,
+        BackDodge,
         Dead
     }
 
@@ -42,10 +43,21 @@ public class BossController : MonoBehaviour
     private float attackCooldownTimer;
     private bool wasAttacking;
 
+    [Header("Back Dodge")]
+    [SerializeField] private float backDodgeTriggerDistance = 1.5f;
+    [SerializeField] private float backDodgeCooldown = 3f;
+    [SerializeField, Range(0f, 1f)]
+    private float backDodgeChance = 0.35f;
+
+    private float backDodgeCooldownTimer;
+
     public BossState CurrentState => currentState;
 
     private void Update()
     {
+        if (backDodgeCooldownTimer > 0f)
+            backDodgeCooldownTimer -= Time.deltaTime;
+
         if (repositionTimer > 0f)
             repositionTimer -= Time.deltaTime;
 
@@ -66,20 +78,18 @@ public class BossController : MonoBehaviour
 
     private void UpdateState()
     {
-        if (damageReceiver != null && damageReceiver.IsDead)
-        {
-            ChangeState(BossState.Dead);
-            return;
-        }
         float distance = movement.DistanceToTarget;
 
-        if (bossAction.IsAttacking)
+        if (bossAction.IsBusy)
         {
-            ChangeState(BossState.Attack);
+            if (bossAction.IsDodging)
+                ChangeState(BossState.BackDodge);
+            else
+                ChangeState(BossState.Attack);
+
             return;
         }
 
-        // 공격 종료 후 위치 조정
         if (repositionTimer > 0f)
         {
             if (currentReposition == RepositionType.Hold)
@@ -90,14 +100,16 @@ public class BossController : MonoBehaviour
             return;
         }
 
-        // 현재 거리에서 공격 가능한지 확인
+        if (TryBackDodge(distance))
+            return;
+            
         if (attackSelector.HasValidAttack(distance))
         {
             StartAttack(distance);
             return;
         }
+        
 
-        // 공격 가능한 거리가 아니면 접근
         ChangeState(BossState.Approach);
     }
 
@@ -130,6 +142,9 @@ public class BossController : MonoBehaviour
 
             case BossState.Attack:
                 // 공격 중 이동은 BossAction 담당
+                break;
+            case BossState.BackDodge:
+                // 이동은 BossAction이 직접 제어
                 break;
 
             case BossState.Dead:
@@ -183,6 +198,25 @@ public class BossController : MonoBehaviour
         }
 
         Debug.Log($"Reposition → {currentReposition}");
+    }
+    private bool TryBackDodge(float distance)
+    {
+        if (distance > backDodgeTriggerDistance)
+            return false;
+
+        if (backDodgeCooldownTimer > 0f)
+            return false;
+
+        if (Random.value > backDodgeChance)
+            return false;
+
+        bossAction.ExecuteBackDodge();
+
+        backDodgeCooldownTimer = backDodgeCooldown;
+
+        ChangeState(BossState.BackDodge);
+
+        return true;
     }
     public void SetDead()
     {

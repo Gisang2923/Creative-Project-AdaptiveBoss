@@ -575,6 +575,8 @@ MonoBehaviour:
     m_Bits: 64
   groundCheckDistance: 10
   groundOffset: 0.7
+  backDodgeDistance: 5
+  backDodgeDuration: 0.8
 --- !u!50 &402595759
 Rigidbody2D:
   serializedVersion: 5
@@ -622,6 +624,9 @@ MonoBehaviour:
   repositionDuration: 0.4
   retreatChance: 0.4
   approachChance: 0.25
+  backDodgeTriggerDistance: 1.5
+  backDodgeCooldown: 3
+  backDodgeChance: 0.35
 --- !u!114 &402595761
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1386,7 +1391,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe54fb2faef0c2e4a9a2124833e8eb0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
-  maxHealth: 100
+  maxHealth: 500
 --- !u!114 &685367523
 MonoBehaviour:
   m_ObjectHideFlags: 0
