@@ -47,6 +47,9 @@ public class BossController : MonoBehaviour
     [SerializeField] private float backDodgeTriggerDistance = 1.5f;
     [SerializeField] private float backDodgeCooldown = 3f;
     [SerializeField, Range(0f, 1f)]
+    private bool wasDodging;
+
+    [SerializeField] private float backDodgeRecoveryTime = 0.5f;
     private float backDodgeChance = 0.35f;
 
     private float backDodgeCooldownTimer;
@@ -66,7 +69,13 @@ public class BossController : MonoBehaviour
             StartReposition();
         }
 
+        if (wasDodging && !bossAction.IsDodging)
+        {
+            StartBackDodgeRecovery();
+        }
+
         wasAttacking = bossAction.IsAttacking;
+        wasDodging = bossAction.IsDodging;
 
         UpdateState();
     }
@@ -217,6 +226,13 @@ public class BossController : MonoBehaviour
         ChangeState(BossState.BackDodge);
 
         return true;
+    }
+    private void StartBackDodgeRecovery()
+    {
+        repositionTimer = backDodgeRecoveryTime;
+        currentReposition = RepositionType.Hold;
+
+        Debug.Log("BackDodge Recovery → Hold");
     }
     public void SetDead()
     {

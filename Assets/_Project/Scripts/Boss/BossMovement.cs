@@ -9,7 +9,7 @@ public class BossMovement : MonoBehaviour
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 3f;
     
-
+    [SerializeField] private BossAnimator bossAnimator;
     private Rigidbody2D rb;
 
     public float DistanceToTarget
@@ -43,6 +43,8 @@ public class BossMovement : MonoBehaviour
             new Vector2(direction * moveSpeed, rb.linearVelocity.y);
 
         UpdateFacing(direction);
+
+        bossAnimator?.SetMoving(true);
     }
 
     public void MoveAwayFromTarget()
@@ -60,11 +62,14 @@ public class BossMovement : MonoBehaviour
             new Vector2(direction * moveSpeed, rb.linearVelocity.y);
 
         FaceTarget();
+        bossAnimator?.SetMoving(true);
     }
     public void Stop()
     {
         rb.linearVelocity =
             new Vector2(0f, rb.linearVelocity.y);
+
+        bossAnimator?.SetMoving(false);
     }
 
     public void FaceTarget()
@@ -84,6 +89,6 @@ public class BossMovement : MonoBehaviour
             return;
 
         facingRoot.localScale =
-            new Vector3(-direction, 1f, 1f);
+            new Vector3(direction, 1f, 1f);
     }
 }

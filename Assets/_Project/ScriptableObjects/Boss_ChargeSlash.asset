@@ -16,6 +16,6 @@ MonoBehaviour:
   damage: 30
   startupTime: 0.4
   activeTime: 0.35
-  recoveryTime: 0.5
+  recoveryTime: 1
   knockbackForce: 6
   parryable: 1

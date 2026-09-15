@@ -10,12 +10,12 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 8c98f8f5d37a387429c2611fb2b799f7, type: 3}
-  m_Name: Boss_BasicSlash
+  m_Name: Boss_Light_01
   m_EditorClassIdentifier: Assembly-CSharp::AttackData
   attackId: 
-  damage: 20
-  startupTime: 0.15
-  activeTime: 0.15
-  recoveryTime: 0.35
+  damage: 15
+  startupTime: 0.18
+  activeTime: 0.1
+  recoveryTime: 0.22
   knockbackForce: 2
   parryable: 1

@@ -25,7 +25,7 @@ public class BossAction : MonoBehaviour
     [Header("Back Dodge")]
     [SerializeField] private float backDodgeDistance = 5f;
     [SerializeField] private float backDodgeDuration = 0.6f;
-
+    [SerializeField] private BossAnimator bossAnimator;
     private bool isDodging;
 
     public bool IsDodging => isDodging;
@@ -47,17 +47,23 @@ public class BossAction : MonoBehaviour
         switch (attack.attackType)
         {
             case BossAttackType.BasicSlash:
+                bossAnimator?.PlayLightAttack();
+                StartCoroutine(SlashRoutine(attack));
+                break;
+
             case BossAttackType.HeavySlash:
+                bossAnimator?.PlayHeavyAttack();
                 StartCoroutine(SlashRoutine(attack));
                 break;
 
             case BossAttackType.ChargeSlash:
+                bossAnimator?.PlayRushAttack();
                 StartCoroutine(ChargeSlashRoutine(attack));
                 break;
 
             case BossAttackType.JumpSlam:
                 StartCoroutine(JumpSlamRoutine(attack));
-                break;    
+                break;
         }
     }
 
@@ -97,8 +103,13 @@ public class BossAction : MonoBehaviour
             currentHitbox = null;
         }
 
-        rb.linearVelocity =
-            new Vector2(0f, rb.linearVelocity.y);
+        if (rb != null)
+        {
+            rb.linearVelocity =
+                new Vector2(0f, rb.linearVelocity.y);
+        }
+
+        RestoreBossState();
 
         isAttacking = false;
         isDodging = false;
@@ -257,7 +268,7 @@ public class BossAction : MonoBehaviour
     private IEnumerator BackDodgeRoutine()
     {
         isDodging = true;
-
+        bossAnimator?.PlayBackDodge();
         // 시작 순간 플레이어 반대 방향 고정
         float direction =
             Mathf.Sign(transform.position.x - player.position.x);
@@ -293,5 +304,13 @@ public class BossAction : MonoBehaviour
             new Vector2(0f, rb.linearVelocity.y);
 
         isDodging = false;
+    }
+    private void RestoreBossState()
+    {
+        if (visual != null)
+            visual.gameObject.SetActive(true);
+
+        if (bodyCollider != null)
+            bodyCollider.enabled = true;
     }
 }
