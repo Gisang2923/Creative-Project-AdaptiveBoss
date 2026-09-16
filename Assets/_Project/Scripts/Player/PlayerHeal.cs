@@ -100,28 +100,17 @@ public class PlayerHeal : MonoBehaviour
 
     private void CancelHeal()
     {
-        healButtonHeld = false;
-
-        if (!isHealing)
-            return;
-
-        if (healRoutine != null)
-        {
-            StopCoroutine(healRoutine);
-            healRoutine = null;
-        }
-
-        isHealing = false;
-
-        Debug.Log("Heal Cancelled");
+        EndHeal();
     }
 
     public void ForceCancelHeal()
     {
-        healButtonHeld = false;
+        EndHeal();
+    }
 
-        if (!isHealing)
-            return;
+    private void EndHeal()
+    {
+        healButtonHeld = false;
 
         if (healRoutine != null)
         {
@@ -130,7 +119,5 @@ public class PlayerHeal : MonoBehaviour
         }
 
         isHealing = false;
-
-        Debug.Log("Heal Cancelled");
     }
 }

@@ -17,10 +17,8 @@ public class PlayerCounter : MonoBehaviour
 
     private PlayerDamageReceiver damageReceiver;
     private PlayerCombat playerCombat;
-    private PlayerDash playerDash;
 
     private bool isCountering;
-    private bool counterSucceeded;
     private PlayerHeal playerHeal;
     public bool IsCountering => isCountering;
     private Coroutine counterRoutine;
@@ -28,9 +26,10 @@ public class PlayerCounter : MonoBehaviour
     {
         damageReceiver = GetComponent<PlayerDamageReceiver>();
         playerCombat = GetComponent<PlayerCombat>();
-        playerDash = GetComponent<PlayerDash>();
         playerHeal = GetComponent<PlayerHeal>();
+
         parryBox.SetActive(false);
+        hurtbox.SetActive(true);
     }
 
     public void OnCounter(InputAction.CallbackContext context)
@@ -130,12 +129,5 @@ public class PlayerCounter : MonoBehaviour
         hurtbox.SetActive(true);
 
         isCountering = false;
-    }
-    private void FailAgainstUnparryableAttack(DamageInfo damageInfo)
-    {
-        parryBox.SetActive(false);
-        hurtbox.SetActive(true);
-
-        damageReceiver.TakeDamage(damageInfo);
     }
 }

@@ -39,6 +39,11 @@ public class PlayerMovement : MonoBehaviour
     private PlayerCounter playerCounter;
     private PlayerCombat playerCombat;
     private PlayerHeal playerHeal;
+    private bool isGrounded;
+
+    public bool IsGroundedState => isGrounded;
+    public float VerticalVelocity => rb.linearVelocity.y;
+    public float HorizontalVelocity => rb.linearVelocity.x;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -93,23 +98,42 @@ public class PlayerMovement : MonoBehaviour
     {
         moveInput = context.ReadValue<Vector2>();
 
-        if (moveInput.x != 0f)
-        {
-            facingDirection = Mathf.Sign(moveInput.x);
+        if (moveInput.x == 0f)
+            return;
 
-            facingRoot.localScale = new Vector3(
-                facingDirection,
-                1f,
-                1f
-            );
+        if (!CanChangeFacing())
+            return;
 
-            if (playerDash != null)
-            {
-                playerDash.SetDirection(facingDirection);
-            }
-        }
+        facingDirection = Mathf.Sign(moveInput.x);
+
+        facingRoot.localScale = new Vector3(
+            facingDirection,
+            1f,
+            1f
+        );
+
+        playerDash?.SetDirection(facingDirection);
     }
+    private bool CanChangeFacing()
+    {
+        if (damageReceiver != null &&
+            (damageReceiver.IsStunned || damageReceiver.IsDead))
+            return false;
 
+        if (playerCounter != null && playerCounter.IsCountering)
+            return false;
+
+        if (playerDash != null && playerDash.IsDashing)
+            return false;
+
+        if (playerCombat != null && playerCombat.IsCharging)
+            return false;
+
+        if (playerHeal != null && playerHeal.IsHealing)
+            return false;
+
+        return true;
+    }
     public void OnJump(InputAction.CallbackContext context)
     {
         if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
@@ -143,7 +167,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateGroundState()
     {
-        if (IsGrounded())
+        isGrounded = IsGrounded();
+
+        if (isGrounded)
         {
             coyoteTimeCounter = coyoteTime;
         }
@@ -155,7 +181,10 @@ public class PlayerMovement : MonoBehaviour
 
     private void UpdateJumpBuffer()
     {
-        jumpBufferCounter -= Time.deltaTime;
+        if (jumpBufferCounter > 0f)
+        {
+            jumpBufferCounter -= Time.deltaTime;
+        }
     }
 
     private void HandleJump()

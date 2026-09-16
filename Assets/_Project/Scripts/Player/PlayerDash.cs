@@ -70,7 +70,9 @@ public class PlayerDash : MonoBehaviour
 
         if (!canDash)
             return;
-
+        if (!IsGrounded() && !airDashAvailable)
+            return;
+            
         if (playerCombat != null &&
             playerCombat.CurrentPhase == PlayerCombat.AttackPhase.Recovery)
         {

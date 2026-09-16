@@ -11,7 +11,8 @@ public class PlayerCombat : MonoBehaviour
         Active,
         Recovery
     }
-
+    public ChargeState CurrentChargeState => chargeState;
+    
     [Header("Normal Attack")]
     [SerializeField] private AttackData normalAttackData;
     [SerializeField] private Hitbox normalAttackHitbox;
@@ -75,7 +76,7 @@ public class PlayerCombat : MonoBehaviour
         if (!context.performed)
             return;
 
-        if (IsAttacking)
+        if (IsAttacking || IsCharging)
             return;
 
         StartCoroutine(NormalAttack());
@@ -89,6 +90,7 @@ public class PlayerCombat : MonoBehaviour
         StopAllCoroutines();
 
         normalAttackHitbox.Deactivate();
+        chargeAttackHitbox.Deactivate();
 
         currentPhase = AttackPhase.None;
     }
@@ -133,14 +135,21 @@ public class PlayerCombat : MonoBehaviour
     }
     public void OnChargeAttack(InputAction.CallbackContext context)
     {
+        if (damageReceiver != null &&
+            (damageReceiver.IsStunned || damageReceiver.IsDead))
+            return;
+
         if (playerHeal != null && playerHeal.IsHealing)
             return;
+
+        if (playerCounter != null && playerCounter.IsCountering)
+            return;
+
         if (context.performed)
         {
             StartCharge();
         }
-
-        if (context.canceled)
+        else if (context.canceled)
         {
             ReleaseCharge();
         }
