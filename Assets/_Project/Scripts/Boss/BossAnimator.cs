@@ -10,6 +10,12 @@ public class BossAnimator : MonoBehaviour
     private static readonly int BackDash =
         Animator.StringToHash("BackDash");
 
+    private static readonly int Dash =
+        Animator.StringToHash("Dash");
+
+    private static readonly int DashAttack =
+        Animator.StringToHash("DashAtk");
+
     public void SetMoving(bool isMoving)
     {
         animator.SetBool(IsMoving, isMoving);
@@ -17,11 +23,20 @@ public class BossAnimator : MonoBehaviour
 
     public void PlayBackDodge()
     {
-        // 이동 애니메이션 먼저 종료
         animator.SetBool(IsMoving, false);
-
-        // 현재 Transition 여부와 관계없이 BackDash를 처음부터 재생
         animator.CrossFade(BackDash, 0.02f, 0, 0f);
+    }
+
+    public void PlayDash()
+    {
+        animator.SetBool(IsMoving, false);
+        animator.CrossFade(Dash, 0.02f, 0, 0f);
+    }
+
+    public void PlayDashAttack()
+    {
+        animator.SetBool(IsMoving, false);
+        animator.CrossFade(DashAttack, 0.02f, 0, 0f);
     }
 
     public void PlayLightAttack()

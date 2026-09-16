@@ -6,8 +6,14 @@ public class BossAction : MonoBehaviour
     [SerializeField] private Rigidbody2D rb;
 
     [Header("Charge Slash")]
-    [SerializeField] private float chargeSpeed = 8f;
-    [SerializeField] private float chargeDuration = 0.35f;
+    [SerializeField] private float dashSpeed = 12f;
+
+    // 공격을 결정한 순간 플레이어 위치 기준,
+    // 플레이어 뒤로 얼마나 넘어갈지
+    [SerializeField] private float dashBehindDistance = 1.5f;
+
+    // 벽 등에 막혔을 때 무한 Dash 방지
+    [SerializeField] private float maxDashDuration = 0.6f;
     [SerializeField] private Transform player;
     [SerializeField] private Transform visual;
     [SerializeField] private Collider2D bodyCollider;
@@ -33,7 +39,9 @@ public class BossAction : MonoBehaviour
     private bool isAttacking;
     private Hitbox currentHitbox;
 
+    [SerializeField] private LayerMask playerLayer;
     public bool IsAttacking => isAttacking;
+    [SerializeField] private BossMovement movement;
     private void Awake()
     {
         if (rb == null)
@@ -57,7 +65,6 @@ public class BossAction : MonoBehaviour
                 break;
 
             case BossAttackType.ChargeSlash:
-                bossAnimator?.PlayRushAttack();
                 StartCoroutine(ChargeSlashRoutine(attack));
                 break;
 
@@ -117,34 +124,49 @@ public class BossAction : MonoBehaviour
     private IEnumerator ChargeSlashRoutine(BossAttack attack)
     {
         isAttacking = true;
+        currentHitbox = attack.hitbox;
 
         AttackData data = attack.attackData;
-        Hitbox hitbox = attack.hitbox;
 
-        currentHitbox = hitbox;
-
-        // Startup
-        yield return new WaitForSeconds(data.startupTime);
-
+        // 공격을 결정한 순간 방향 고정
         float direction =
-            Mathf.Sign(
-                player.position.x - transform.position.x
-            );
+            Mathf.Sign(player.position.x - transform.position.x);
 
-        // Active
-        hitbox.Activate(data);
+        // 공격 결정 당시 플레이어 위치
+        float playerXAtStart = player.position.x;
 
-        float timer = 0f;
+        // 플레이어 뒤쪽까지 통과
+        float targetX =
+            playerXAtStart + direction * dashBehindDistance;
 
-        while (timer < chargeDuration)
+        // ==========================================
+        // 1. Dash 시작 위치 저장
+        // ==========================================
+
+        Vector2 dashStartCenter =
+            currentHitbox.GetWorldCenter();
+
+        bossAnimator?.PlayDash();
+
+        float elapsed = 0f;
+
+        // ==========================================
+        // 2. Dash
+        // 노데미지
+        // ==========================================
+
+        while (
+            (targetX - transform.position.x) * direction > 0f &&
+            elapsed < maxDashDuration
+        )
         {
             rb.linearVelocity =
                 new Vector2(
-                    direction * chargeSpeed,
+                    direction * dashSpeed,
                     rb.linearVelocity.y
                 );
 
-            timer += Time.fixedDeltaTime;
+            elapsed += Time.fixedDeltaTime;
 
             yield return new WaitForFixedUpdate();
         }
@@ -152,12 +174,52 @@ public class BossAction : MonoBehaviour
         rb.linearVelocity =
             new Vector2(0f, rb.linearVelocity.y);
 
-        hitbox.Deactivate();
+        // 중요:
+        // 플레이어를 지나쳤어도 뒤돌지 않는다.
+
+        // Dash 종료 위치
+        Vector2 dashEndCenter =
+            currentHitbox.GetWorldCenter();
+
+        // ==========================================
+        // 3. 제자리에서 DashAttack 모션
+        // ==========================================
+
+        bossAnimator?.PlayDashAttack();
+
+        // 실제 검을 휘두르는 프레임까지 기다림
+        yield return new WaitForSeconds(
+            data.startupTime
+        );
+
+        // ==========================================
+        // 4. 일섬 판정
+        // 지금 이 순간 대시 궤적 전체 공격
+        // ==========================================
+
+        currentHitbox.Activate(data);
+
+        currentHitbox.SweepFromTo(
+            dashStartCenter,
+            dashEndCenter
+        );
+
+        // 검이 실제로 베고 있는 짧은 시간
+        yield return new WaitForSeconds(
+            data.activeTime
+        );
+
+        currentHitbox.Deactivate();
+
+        // ==========================================
+        // 5. Recovery
+        // ==========================================
+
+        yield return new WaitForSeconds(
+            data.recoveryTime
+        );
+
         currentHitbox = null;
-
-        // Recovery
-        yield return new WaitForSeconds(data.recoveryTime);
-
         isAttacking = false;
     }
     private IEnumerator JumpSlamRoutine(BossAttack attack)

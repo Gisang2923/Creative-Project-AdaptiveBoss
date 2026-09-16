@@ -9,11 +9,14 @@ public class Hitbox : MonoBehaviour
     private AttackData attackData;
 
     private readonly HashSet<Hurtbox> hitTargets = new();
+    private readonly HashSet<ParryBox> parriedTargets = new();
 
     public void Activate(AttackData data)
     {
         attackData = data;
+
         hitTargets.Clear();
+        parriedTargets.Clear();
 
         gameObject.SetActive(true);
 
@@ -45,6 +48,48 @@ public class Hitbox : MonoBehaviour
         ProcessCollision(other);
     }
 
+    public void SweepFromTo(
+        Vector2 from,
+        Vector2 to)
+    {
+        if (attackData == null || hitCollider == null)
+            return;
+
+        Vector2 delta = to - from;
+        float distance = delta.magnitude;
+
+        if (distance <= Mathf.Epsilon)
+            return;
+
+        Vector2 direction = delta.normalized;
+
+        RaycastHit2D[] hits =
+            Physics2D.BoxCastAll(
+                from,
+                hitCollider.bounds.size,
+                transform.eulerAngles.z,
+                direction,
+                distance
+            );
+
+        Debug.Log($"Sweep Hit Count: {hits.Length}");
+
+        foreach (RaycastHit2D hit in hits)
+        {
+            if (hit.collider == null)
+                continue;
+
+            ProcessCollision(hit.collider);
+        }
+    }
+
+    public Vector2 GetWorldCenter()
+    {
+        return hitCollider.transform.TransformPoint(
+            hitCollider.offset
+        );
+    }
+
     private void ProcessCollision(Collider2D other)
     {
         // Counter 먼저 확인
@@ -52,8 +97,14 @@ public class Hitbox : MonoBehaviour
 
         if (parryBox != null)
         {
+            if (parriedTargets.Contains(parryBox))
+                return;
+
+            parriedTargets.Add(parryBox);
+
             DamageInfo damageInfo = CreateDamageInfo(other);
             parryBox.ReceiveHit(damageInfo);
+
             return;
         }
 

@@ -562,8 +562,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossAction
   rb: {fileID: 402595759}
-  chargeSpeed: 50
-  chargeDuration: 0.1
+  dashSpeed: 17
+  dashBehindDistance: 2.2
+  maxDashDuration: 0.6
   player: {fileID: 685367515}
   visual: {fileID: 1266593679}
   bodyCollider: {fileID: 402595763}
@@ -579,6 +580,10 @@ MonoBehaviour:
   backDodgeDistance: 3
   backDodgeDuration: 0.18
   bossAnimator: {fileID: 402595765}
+  playerLayer:
+    serializedVersion: 2
+    m_Bits: 128
+  movement: {fileID: 402595762}
 --- !u!50 &402595759
 Rigidbody2D:
   serializedVersion: 5
@@ -1750,7 +1755,7 @@ Transform:
   m_GameObject: {fileID: 1266593678}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -1.7, z: 0}
+  m_LocalPosition: {x: 0, y: -1.6, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
