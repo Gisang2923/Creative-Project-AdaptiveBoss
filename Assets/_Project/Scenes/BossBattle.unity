@@ -568,17 +568,18 @@ MonoBehaviour:
   player: {fileID: 685367515}
   visual: {fileID: 1266593679}
   bodyCollider: {fileID: 402595763}
-  jumpSlamVanishTime: 0.4
+  jumpSlamVanishTime: 0.3
   jumpSlamSpawnHeight: 7
   jumpSlamFallSpeed: 30
   jumpSlamGroundY: 0
+  jumpLandingOffset: 0.6
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
   groundCheckDistance: 10
   groundOffset: 0.7
-  backDodgeDistance: 3
-  backDodgeDuration: 0.18
+  backDodgeDistance: 4
+  backDodgeDuration: 0.3
   bossAnimator: {fileID: 402595765}
   playerLayer:
     serializedVersion: 2
@@ -651,69 +652,69 @@ MonoBehaviour:
     hitbox: {fileID: 234565048}
     minRange: 0
     maxRange: 1.6
-    baseWeight: 1
+    baseWeight: 1.2
     repeatWeightMultiplier: 0.35
     decisionCooldown: 0
-    holdWeight: 1
-    approachWeight: 0
-    retreatWeight: 0
+    holdWeight: 0.4
+    approachWeight: 1
+    retreatWeight: 0.1
   - intent: 0
     attackType: 0
     attackData: {fileID: 11400000, guid: ef22968520759c64ea9e0eb53148af3a, type: 2}
     hitbox: {fileID: 234565048}
     minRange: 0
     maxRange: 1.6
-    baseWeight: 1
+    baseWeight: 1.2
     repeatWeightMultiplier: 0.35
     decisionCooldown: 0
-    holdWeight: 1
-    approachWeight: 0
-    retreatWeight: 0
+    holdWeight: 0.4
+    approachWeight: 1
+    retreatWeight: 0.1
   - intent: 0
     attackType: 0
     attackData: {fileID: 11400000, guid: e6157d64dc0c0fd469f313643b7c028e, type: 2}
     hitbox: {fileID: 234565048}
     minRange: 0
     maxRange: 1.6
-    baseWeight: 1
+    baseWeight: 1.2
     repeatWeightMultiplier: 0.35
     decisionCooldown: 0
-    holdWeight: 1
-    approachWeight: 0
-    retreatWeight: 0
+    holdWeight: 0.4
+    approachWeight: 1
+    retreatWeight: 0.1
   - intent: 2
     attackType: 1
     attackData: {fileID: 11400000, guid: 019a04b47a48c0b4cb2d65824871f45d, type: 2}
     hitbox: {fileID: 1563451150}
-    minRange: 0.5
-    maxRange: 2.3
-    baseWeight: 1
-    repeatWeightMultiplier: 0.35
-    decisionCooldown: 0
+    minRange: 0.6
+    maxRange: 2.5
+    baseWeight: 0.7
+    repeatWeightMultiplier: 0.3
+    decisionCooldown: 1
     holdWeight: 1
-    approachWeight: 0
-    retreatWeight: 0
+    approachWeight: 0.05
+    retreatWeight: 0.1
   - intent: 1
     attackType: 2
     attackData: {fileID: 11400000, guid: 63406c358d8650b40b54ce814997bd56, type: 2}
     hitbox: {fileID: 222304603}
-    minRange: 2
-    maxRange: 4.5
-    baseWeight: 1
-    repeatWeightMultiplier: 0.35
-    decisionCooldown: 3
+    minRange: 1.8
+    maxRange: 5.5
+    baseWeight: 0.8
+    repeatWeightMultiplier: 0.25
+    decisionCooldown: 5
     holdWeight: 1
-    approachWeight: 0
+    approachWeight: 0.1
     retreatWeight: 0
   - intent: 3
     attackType: 3
     attackData: {fileID: 11400000, guid: abc2b63f31dde2340aa5201cd19204eb, type: 2}
     hitbox: {fileID: 630531844}
-    minRange: 2.5
-    maxRange: 5.5
+    minRange: 1.5
+    maxRange: 4.5
     baseWeight: 0.12
-    repeatWeightMultiplier: 0.35
-    decisionCooldown: 7
+    repeatWeightMultiplier: 0
+    decisionCooldown: 20
     holdWeight: 1
     approachWeight: 0
     retreatWeight: 0
@@ -769,7 +770,7 @@ CapsuleCollider2D:
   m_CompositeOperation: 0
   m_CompositeOrder: 0
   m_Offset: {x: 0, y: 0}
-  m_Size: {x: 0.5, y: 1}
+  m_Size: {x: 1, y: 1}
   m_Direction: 0
 --- !u!114 &402595764
 MonoBehaviour:
@@ -1089,7 +1090,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: -0.4}
+  m_Offset: {x: 1, y: -0.4}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -1099,7 +1100,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 3, y: 0.8}
+  m_Size: {x: 3, y: 2}
   m_EdgeRadius: 0
 --- !u!114 &630531844
 MonoBehaviour:
@@ -1789,7 +1790,7 @@ Transform:
   m_GameObject: {fileID: 1266593678}
   serializedVersion: 2
   m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
-  m_LocalPosition: {x: 0, y: -1.6, z: 0}
+  m_LocalPosition: {x: 0, y: -1.5, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -1964,7 +1965,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 2, y: 1.2}
+  m_Size: {x: 2.3, y: 1.2}
   m_EdgeRadius: 0
 --- !u!4 &1563451152
 Transform:

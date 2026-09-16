@@ -8,7 +8,7 @@ public class BossMovement : MonoBehaviour
 
     [Header("Movement")]
     [SerializeField] private float moveSpeed = 3f;
-    
+    [SerializeField] private float facingDeadZone = 0.2f;
     [SerializeField] private BossAnimator bossAnimator;
     private Rigidbody2D rb;
 
@@ -35,9 +35,16 @@ public class BossMovement : MonoBehaviour
             Stop();
             return;
         }
+        float deltaX =
+        target.position.x - transform.position.x;
 
-        float direction =
-            Mathf.Sign(target.position.x - transform.position.x);
+        if (Mathf.Abs(deltaX) < facingDeadZone)
+        {
+            Stop();
+            return;
+        }
+
+        float direction = Mathf.Sign(deltaX);
 
         rb.linearVelocity =
             new Vector2(direction * moveSpeed, rb.linearVelocity.y);
@@ -77,10 +84,13 @@ public class BossMovement : MonoBehaviour
         if (target == null)
             return;
 
-        float direction =
-            Mathf.Sign(target.position.x - transform.position.x);
+        float deltaX =
+            target.position.x - transform.position.x;
 
-        UpdateFacing(direction);
+        if (Mathf.Abs(deltaX) < facingDeadZone)
+            return;
+
+        UpdateFacing(Mathf.Sign(deltaX));
     }
 
     private void UpdateFacing(float direction)

@@ -221,6 +221,9 @@ public class BossController : MonoBehaviour
         if (Random.value > backDodgeChance)
             return false;
 
+        movement.Stop();
+        movement.FaceTarget();
+
         bossAction.ExecuteBackDodge();
 
         backDodgeCooldownTimer = backDodgeCooldown;

@@ -22,7 +22,7 @@ public class BossAction : MonoBehaviour
     [SerializeField] private float jumpSlamSpawnHeight = 5f;
     [SerializeField] private float jumpSlamFallSpeed = 12f;
     [SerializeField] private float jumpSlamGroundY = 0f;
-
+    [SerializeField] private float jumpLandingOffset = 0.6f;
     [Header("Jump Slam Ground Check")]
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float groundCheckDistance = 10f;
@@ -237,8 +237,8 @@ public class BossAction : MonoBehaviour
 
         bossAnimator?.PlayJump();
 
-        float jumpUpSpeed = 30f;
-        float jumpUpTime = 0.04f;
+        float jumpUpSpeed = 35f;
+        float jumpUpTime = 0.03f;
 
         float elapsed = 0f;
 
@@ -272,7 +272,12 @@ public class BossAction : MonoBehaviour
         yield return new WaitForSeconds(jumpSlamVanishTime);
 
         // 3. 플레이어 위쪽으로 위치 이동
-        float targetX = player.position.x;
+        // 3. 플레이어 옆 위치를 착지 지점으로 설정
+        float direction =
+            Mathf.Sign(player.position.x - transform.position.x);
+
+        float targetX =
+            player.position.x - direction * jumpLandingOffset;
 
         transform.position = new Vector3(
             targetX,
@@ -284,6 +289,7 @@ public class BossAction : MonoBehaviour
         if (visual != null)
             visual.gameObject.SetActive(true);
 
+        movement.FaceTarget();
         // 재등장하는 순간 JumpAttack 재생
         bossAnimator?.PlayJumpAttack();
 
@@ -329,8 +335,9 @@ public class BossAction : MonoBehaviour
             bodyCollider.enabled = true;
 
         // 7. 착지 공격 판정
+        yield return new WaitForSeconds(0.3f);
         hitbox.Activate(data);
-
+        
         yield return new WaitForSeconds(
             data.activeTime
         );
