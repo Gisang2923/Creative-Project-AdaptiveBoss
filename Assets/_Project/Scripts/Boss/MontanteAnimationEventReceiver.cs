@@ -8,4 +8,8 @@ public class MontanteAnimationEventReceiver : MonoBehaviour
     public void OnCheckCombo() { }
     public void OnBreakVelocity(){}
     public void OnFlipToTarget(){}
+    public void OnJumpOnTarget(){}
+    public void OnUnstopable(){}
+    public void OnDive(){}
+    public void OnShakeCam(){}
 }

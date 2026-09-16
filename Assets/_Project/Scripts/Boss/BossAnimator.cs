@@ -13,8 +13,20 @@ public class BossAnimator : MonoBehaviour
     private static readonly int Dash =
         Animator.StringToHash("Dash");
 
+    private static readonly int LightAttack =
+    Animator.StringToHash("LightAtk1");    
+
     private static readonly int DashAttack =
         Animator.StringToHash("DashAtk");
+
+    private static readonly int HeavyAttack =
+    Animator.StringToHash("FrontHeavyAtk");
+
+    private static readonly int Jump =
+    Animator.StringToHash("Jump");
+
+    private static readonly int JumpAttack =
+    Animator.StringToHash("JumpAtk");
 
     public void SetMoving(bool isMoving)
     {
@@ -41,16 +53,29 @@ public class BossAnimator : MonoBehaviour
 
     public void PlayLightAttack()
     {
-        animator.SetTrigger("LightAttack");
+        animator.SetBool(IsMoving, false);
+        animator.CrossFade(LightAttack, 0.02f, 0, 0f);
     }
 
     public void PlayHeavyAttack()
     {
-        animator.SetTrigger("HeavyAttack");
+        animator.SetBool(IsMoving, false);
+        animator.CrossFade(HeavyAttack, 0.02f, 0, 0f);
     }
 
     public void PlayRushAttack()
     {
         animator.SetTrigger("RushAttack");
+    }
+    
+    public void PlayJump()
+    {
+        animator.SetBool(IsMoving, false);
+        animator.CrossFade(Jump, 0.02f, 0, 0f);
+    }
+    public void PlayJumpAttack()
+    {
+        animator.SetBool(IsMoving, false);
+        animator.CrossFade(JumpAttack, 0.02f, 0, 0f);
     }
 }

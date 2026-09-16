@@ -141,4 +141,16 @@ public class Hitbox : MonoBehaviour
             attackData.parryable
         );
     }
+    private void OnDrawGizmosSelected()
+    {
+        if (hitCollider == null)
+            return;
+
+        Gizmos.matrix = hitCollider.transform.localToWorldMatrix;
+
+        Gizmos.DrawWireCube(
+            hitCollider.offset,
+            hitCollider.size
+        );
+    }
 }

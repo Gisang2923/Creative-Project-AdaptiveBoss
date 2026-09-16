@@ -231,12 +231,36 @@ public class BossAction : MonoBehaviour
 
         currentHitbox = hitbox;
 
-        // 1. 준비 동작
+        // 1. 점프 준비 + 점프 애니메이션
+        // 1. 점프 애니메이션 + 실제 상승
         rb.linearVelocity = Vector2.zero;
+
+        bossAnimator?.PlayJump();
+
+        float jumpUpSpeed = 30f;
+        float jumpUpTime = 0.04f;
+
+        float elapsed = 0f;
+
+        while (elapsed < jumpUpTime)
+        {
+            rb.linearVelocity = new Vector2(
+                0f,
+                jumpUpSpeed
+            );
+
+            elapsed += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+        }
+
+        rb.linearVelocity = new Vector2(
+            0f,
+            jumpUpSpeed
+        );
 
         yield return new WaitForSeconds(data.startupTime);
 
-        // 2. 사라짐
+        // 2. 화면 밖으로 사라짐
         if (visual != null)
             visual.gameObject.SetActive(false);
 
@@ -260,6 +284,9 @@ public class BossAction : MonoBehaviour
         if (visual != null)
             visual.gameObject.SetActive(true);
 
+        // 재등장하는 순간 JumpAttack 재생
+        bossAnimator?.PlayJumpAttack();
+
         // 5. 아래로 낙하
         while (true)
         {
@@ -280,7 +307,6 @@ public class BossAction : MonoBehaviour
                 float distanceToGround =
                     transform.position.y - hit.point.y;
 
-                // 거의 착지한 상태
                 if (distanceToGround <= groundOffset)
                 {
                     rb.linearVelocity = Vector2.zero;
@@ -298,6 +324,7 @@ public class BossAction : MonoBehaviour
             yield return new WaitForFixedUpdate();
         }
 
+        // 6. 착지 후 몸 충돌 복구
         if (bodyCollider != null)
             bodyCollider.enabled = true;
 
