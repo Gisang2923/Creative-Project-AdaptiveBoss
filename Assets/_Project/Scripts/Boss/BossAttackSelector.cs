@@ -5,14 +5,39 @@ public class BossAttackSelector : MonoBehaviour
 {
     [SerializeField] private BossAttack[] attacks;
 
+    [Header("Adaptive")]
+    [SerializeField]
+    private BossAdaptiveDecisionSource adaptiveSource;
+
     private BossAttack lastAttack;
-    private BossActionIntent? lastIntent;
+
+    private readonly Dictionary<BossAttack, float> cooldowns =
+        new Dictionary<BossAttack, float>();
+
+    private void Update()
+    {
+        if (cooldowns.Count == 0)
+            return;
+
+        List<BossAttack> keys =
+            new List<BossAttack>(cooldowns.Keys);
+
+        foreach (BossAttack attack in keys)
+        {
+            cooldowns[attack] -= Time.deltaTime;
+
+            if (cooldowns[attack] <= 0f)
+            {
+                cooldowns.Remove(attack);
+            }
+        }
+    }
 
     public bool HasValidAttack(float distance)
     {
         foreach (BossAttack attack in attacks)
         {
-            if (IsInRange(attack, distance))
+            if (CanUseAttack(attack, distance))
                 return true;
         }
 
@@ -21,77 +46,181 @@ public class BossAttackSelector : MonoBehaviour
 
     public BossAttack SelectAttack(float distance)
     {
-        List<BossAttack> validAttacks = new List<BossAttack>();
-
-        // 현재 거리에서 사용 가능한 공격 수집
-        foreach (BossAttack attack in attacks)
-        {
-            if (IsInRange(attack, distance))
-                validAttacks.Add(attack);
-        }
-
-        if (validAttacks.Count == 0)
-            return null;
-
-        // 사용 가능한 Intent 수집
-        List<BossActionIntent> validIntents =
-            new List<BossActionIntent>();
-
-        foreach (BossAttack attack in validAttacks)
-        {
-            if (!validIntents.Contains(attack.intent))
-                validIntents.Add(attack.intent);
-        }
-
-        // 가능하면 직전 Intent 반복 방지
-        if (lastIntent.HasValue && validIntents.Count > 1)
-        {
-            validIntents.Remove(lastIntent.Value);
-        }
-
-        // Intent 먼저 선택
-        BossActionIntent selectedIntent =
-            validIntents[Random.Range(0, validIntents.Count)];
-
-        // 선택된 Intent 내부의 공격 수집
-        List<BossAttack> intentAttacks =
+        List<BossAttack> candidates =
             new List<BossAttack>();
 
-        foreach (BossAttack attack in validAttacks)
+        List<float> weights =
+            new List<float>();
+
+        float totalWeight = 0f;
+
+        foreach (BossAttack attack in attacks)
         {
-            if (attack.intent != selectedIntent)
+            if (!CanUseAttack(attack, distance))
                 continue;
 
-            if (attack == lastAttack)
+            float weight =
+                CalculateAttackWeight(
+                    attack,
+                    distance
+                );
+
+            if (weight <= 0f)
                 continue;
 
-            intentAttacks.Add(attack);
+            candidates.Add(attack);
+            weights.Add(weight);
+
+            totalWeight += weight;
         }
 
-        // 해당 Intent에 공격이 하나뿐이면 반복 허용
-        if (intentAttacks.Count == 0)
+        if (candidates.Count == 0)
+            return null;
+
+        float random =
+            Random.Range(0f, totalWeight);
+
+        float accumulated = 0f;
+
+        for (int i = 0; i < candidates.Count; i++)
         {
-            foreach (BossAttack attack in validAttacks)
+            accumulated += weights[i];
+
+            if (random <= accumulated)
             {
-                if (attack.intent == selectedIntent)
-                    intentAttacks.Add(attack);
+                BossAttack selected =
+                    candidates[i];
+
+                RegisterAttack(selected);
+
+                return selected;
             }
         }
 
-        BossAttack selected =
-            intentAttacks[Random.Range(0, intentAttacks.Count)];
+        BossAttack fallback =
+            candidates[candidates.Count - 1];
 
-        lastIntent = selectedIntent;
-        lastAttack = selected;
+        RegisterAttack(fallback);
 
-        Debug.Log(
-            $"Boss Intent: {selectedIntent} | Attack: {selected.attackType}"
-        );
-
-        return selected;
+        return fallback;
     }
 
-    private bool IsInRange(BossAttack attack, float distance)
+    public BossPostAction SelectPostAction(
+        BossAttack attack,
+        float distance)
+    {
+        float hold =
+            attack.holdWeight;
+
+        float approach =
+            attack.approachWeight;
+
+        float retreat =
+            attack.retreatWeight;
+
+        if (adaptiveSource != null)
+        {
+            hold *=
+                adaptiveSource.GetPostActionWeightMultiplier(
+                    attack,
+                    BossPostAction.Hold,
+                    distance
+                );
+
+            approach *=
+                adaptiveSource.GetPostActionWeightMultiplier(
+                    attack,
+                    BossPostAction.Approach,
+                    distance
+                );
+
+            retreat *=
+                adaptiveSource.GetPostActionWeightMultiplier(
+                    attack,
+                    BossPostAction.Retreat,
+                    distance
+                );
+        }
+
+        float total =
+            hold + approach + retreat;
+
+        if (total <= 0f)
+            return BossPostAction.Hold;
+
+        float random =
+            Random.Range(0f, total);
+
+        if (random < hold)
+            return BossPostAction.Hold;
+
+        random -= hold;
+
+        if (random < approach)
+            return BossPostAction.Approach;
+
+        return BossPostAction.Retreat;
+    }
+
+    private float CalculateAttackWeight(
+        BossAttack attack,
+        float distance)
+    {
+        float weight =
+            attack.baseWeight;
+
+        // 같은 공격 연속 사용 억제
+        if (attack == lastAttack)
+        {
+            weight *=
+                attack.repeatWeightMultiplier;
+        }
+
+        // Adaptive는 지금 1.0
+        if (adaptiveSource != null)
+        {
+            weight *=
+                adaptiveSource.GetAttackWeightMultiplier(
+                    attack,
+                    distance
+                );
+        }
+
+        return Mathf.Max(0f, weight);
+    }
+
+    private bool CanUseAttack(
+        BossAttack attack,
+        float distance)
+    {
+        if (!IsInRange(attack, distance))
+            return false;
+
+        if (cooldowns.ContainsKey(attack))
+            return false;
+
+        return true;
+    }
+
+    private void RegisterAttack(
+        BossAttack attack)
+    {
+        lastAttack = attack;
+
+        if (attack.decisionCooldown > 0f)
+        {
+            cooldowns[attack] =
+                attack.decisionCooldown;
+        }
+
+        Debug.Log(
+            $"Boss Attack → {attack.attackType}"
+        );
+    }
+
+    private bool IsInRange(
+        BossAttack attack,
+        float distance)
     {
         return distance >= attack.minRange &&
                distance <= attack.maxRange;

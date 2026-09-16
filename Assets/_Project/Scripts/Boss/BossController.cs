@@ -18,29 +18,17 @@ public class BossController : MonoBehaviour
     [SerializeField] private BossAttackSelector attackSelector;
 
     [Header("Combat")]
-    [SerializeField] private float attackCooldown = 0.6f;
     
     [SerializeField] private BossDamageReceiver damageReceiver;
-    private enum RepositionType
-    {
-        Hold,
-        Approach,
-        Retreat
-    }
 
     [Header("Reposition")]
     [SerializeField] private float repositionDuration = 0.4f;
 
-    [SerializeField, Range(0f, 1f)]
-    private float retreatChance = 0.4f;
-
-    [SerializeField, Range(0f, 1f)]
-    private float approachChance = 0.25f;
-
-    private RepositionType currentReposition;
+    private BossPostAction currentPostAction;
+    private BossAttack lastExecutedAttack;
     private float repositionTimer;
     private BossState currentState = BossState.Idle;
-    private float attackCooldownTimer;
+
     private bool wasAttacking;
 
     [Header("Back Dodge")]
@@ -66,7 +54,7 @@ public class BossController : MonoBehaviour
 
         if (wasAttacking && !bossAction.IsAttacking)
         {
-            StartReposition();
+            StartPostAction();
         }
 
         if (wasDodging && !bossAction.IsDodging)
@@ -101,7 +89,7 @@ public class BossController : MonoBehaviour
 
         if (repositionTimer > 0f)
         {
-            if (currentReposition == RepositionType.Hold)
+            if (currentPostAction == BossPostAction.Hold)
                 ChangeState(BossState.Idle);
             else
                 ChangeState(BossState.Reposition);
@@ -132,14 +120,18 @@ public class BossController : MonoBehaviour
 
             case BossState.Reposition:
 
-                switch (currentReposition)
+                switch (currentPostAction)
                 {
-                    case RepositionType.Approach:
+                    case BossPostAction.Approach:
                         movement.MoveTowardTarget();
                         break;
 
-                    case RepositionType.Retreat:
+                    case BossPostAction.Retreat:
                         movement.MoveAwayFromTarget();
+                        break;
+
+                    case BossPostAction.Hold:
+                        movement.Stop();
                         break;
                 }
 
@@ -172,6 +164,8 @@ public class BossController : MonoBehaviour
 
         if (selectedAttack == null)
             return;
+        
+        lastExecutedAttack = selectedAttack;
 
         bossAction.ExecuteAttack(selectedAttack);
 
@@ -187,26 +181,34 @@ public class BossController : MonoBehaviour
 
         Debug.Log($"Boss State → {currentState}");
     }
-    private void StartReposition()
+    private void StartPostAction()
     {
-        repositionTimer = repositionDuration;
+        if (lastExecutedAttack == null)
+        {
+            currentPostAction =
+                BossPostAction.Hold;
 
-        float random = Random.value;
+            repositionTimer =
+                repositionDuration;
 
-        if (random < retreatChance)
-        {
-            currentReposition = RepositionType.Retreat;
-        }
-        else if (random < retreatChance + approachChance)
-        {
-            currentReposition = RepositionType.Approach;
-        }
-        else
-        {
-            currentReposition = RepositionType.Hold;
+            return;
         }
 
-        Debug.Log($"Reposition → {currentReposition}");
+        float distance =
+            movement.DistanceToTarget;
+
+        currentPostAction =
+            attackSelector.SelectPostAction(
+                lastExecutedAttack,
+                distance
+            );
+
+        repositionTimer =
+            repositionDuration;
+
+        Debug.Log(
+            $"Post Action → {currentPostAction}"
+        );
     }
     private bool TryBackDodge(float distance)
     {
@@ -229,10 +231,15 @@ public class BossController : MonoBehaviour
     }
     private void StartBackDodgeRecovery()
     {
-        repositionTimer = backDodgeRecoveryTime;
-        currentReposition = RepositionType.Hold;
+        repositionTimer =
+            backDodgeRecoveryTime;
 
-        Debug.Log("BackDodge Recovery → Hold");
+        currentPostAction =
+            BossPostAction.Hold;
+
+        Debug.Log(
+            "BackDodge Recovery → Hold"
+        );
     }
     public void SetDead()
     {

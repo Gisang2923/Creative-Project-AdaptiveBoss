@@ -626,11 +626,8 @@ MonoBehaviour:
   movement: {fileID: 402595762}
   bossAction: {fileID: 402595758}
   attackSelector: {fileID: 402595761}
-  attackCooldown: 0.6
   damageReceiver: {fileID: 402595764}
   repositionDuration: 0.8
-  retreatChance: 0.4
-  approachChance: 0.25
   backDodgeTriggerDistance: 2.5
   backDodgeCooldown: 3
   wasDodging: 0
@@ -654,36 +651,73 @@ MonoBehaviour:
     hitbox: {fileID: 234565048}
     minRange: 0
     maxRange: 1.6
+    baseWeight: 1
+    repeatWeightMultiplier: 0.35
+    decisionCooldown: 0
+    holdWeight: 1
+    approachWeight: 0
+    retreatWeight: 0
   - intent: 0
     attackType: 0
     attackData: {fileID: 11400000, guid: ef22968520759c64ea9e0eb53148af3a, type: 2}
     hitbox: {fileID: 234565048}
     minRange: 0
     maxRange: 1.6
+    baseWeight: 1
+    repeatWeightMultiplier: 0.35
+    decisionCooldown: 0
+    holdWeight: 1
+    approachWeight: 0
+    retreatWeight: 0
   - intent: 0
     attackType: 0
     attackData: {fileID: 11400000, guid: e6157d64dc0c0fd469f313643b7c028e, type: 2}
     hitbox: {fileID: 234565048}
     minRange: 0
     maxRange: 1.6
+    baseWeight: 1
+    repeatWeightMultiplier: 0.35
+    decisionCooldown: 0
+    holdWeight: 1
+    approachWeight: 0
+    retreatWeight: 0
   - intent: 2
     attackType: 1
     attackData: {fileID: 11400000, guid: 019a04b47a48c0b4cb2d65824871f45d, type: 2}
     hitbox: {fileID: 1563451150}
     minRange: 0.5
     maxRange: 2.3
+    baseWeight: 1
+    repeatWeightMultiplier: 0.35
+    decisionCooldown: 0
+    holdWeight: 1
+    approachWeight: 0
+    retreatWeight: 0
   - intent: 1
     attackType: 2
     attackData: {fileID: 11400000, guid: 63406c358d8650b40b54ce814997bd56, type: 2}
     hitbox: {fileID: 222304603}
     minRange: 2
     maxRange: 4.5
+    baseWeight: 1
+    repeatWeightMultiplier: 0.35
+    decisionCooldown: 3
+    holdWeight: 1
+    approachWeight: 0
+    retreatWeight: 0
   - intent: 3
     attackType: 3
     attackData: {fileID: 11400000, guid: abc2b63f31dde2340aa5201cd19204eb, type: 2}
     hitbox: {fileID: 630531844}
     minRange: 2.5
     maxRange: 5.5
+    baseWeight: 0.12
+    repeatWeightMultiplier: 0.35
+    decisionCooldown: 7
+    holdWeight: 1
+    approachWeight: 0
+    retreatWeight: 0
+  adaptiveSource: {fileID: 0}
 --- !u!114 &402595762
 MonoBehaviour:
   m_ObjectHideFlags: 0
