@@ -16,7 +16,14 @@ public class PlayerCombat : MonoBehaviour
     [Header("Normal Attack")]
     [SerializeField] private AttackData normalAttackData;
     [SerializeField] private Hitbox normalAttackHitbox;
-
+    public enum AttackType
+    {
+        None,
+        Normal,
+        Charge
+    }
+    private AttackType currentAttackType = AttackType.None;
+    public AttackType CurrentAttackType => currentAttackType;
     public enum ChargeState
     {
         None,
@@ -89,6 +96,7 @@ public class PlayerCombat : MonoBehaviour
 
         StopAllCoroutines();
 
+        currentAttackType = AttackType.None;
         normalAttackHitbox.Deactivate();
         chargeAttackHitbox.Deactivate();
 
@@ -102,6 +110,7 @@ public class PlayerCombat : MonoBehaviour
         normalAttackHitbox.Deactivate();
         chargeAttackHitbox.Deactivate();
 
+        currentAttackType = AttackType.None;
         chargeState = ChargeState.None;
         chargeTimer = 0f;
 
@@ -109,6 +118,7 @@ public class PlayerCombat : MonoBehaviour
     }
     private IEnumerator NormalAttack()
     {
+        currentAttackType = AttackType.Normal;
         currentPhase = AttackPhase.Startup;
 
         yield return new WaitForSeconds(
@@ -131,6 +141,7 @@ public class PlayerCombat : MonoBehaviour
             normalAttackData.recoveryTime
         );
 
+        currentAttackType = AttackType.None;
         currentPhase = AttackPhase.None;
     }
     public void OnChargeAttack(InputAction.CallbackContext context)
@@ -185,6 +196,7 @@ public class PlayerCombat : MonoBehaviour
 
     private IEnumerator ChargeAttack()
     {
+        currentAttackType = AttackType.Charge;
         currentPhase = AttackPhase.Startup;
 
         yield return new WaitForSeconds(
@@ -207,6 +219,7 @@ public class PlayerCombat : MonoBehaviour
             chargeAttackData.recoveryTime
         );
 
+        currentAttackType = AttackType.None;
         currentPhase = AttackPhase.None;
     }
 }

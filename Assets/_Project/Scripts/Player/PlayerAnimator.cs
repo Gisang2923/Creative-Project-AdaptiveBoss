@@ -7,7 +7,7 @@ public class PlayerAnimator : MonoBehaviour
     private PlayerMovement movement;
     private PlayerDash dash;
     private PlayerDamageReceiver damageReceiver;
-
+    private PlayerCombat combat;
     private static readonly int Idle =
         Animator.StringToHash("Idle");
 
@@ -22,6 +22,8 @@ public class PlayerAnimator : MonoBehaviour
 
     private static readonly int Dash =
         Animator.StringToHash("Dash");
+    private static readonly int LightAttack =
+    Animator.StringToHash("LightAtk");
 
     private int currentState = -1;
 
@@ -30,6 +32,7 @@ public class PlayerAnimator : MonoBehaviour
         movement = GetComponent<PlayerMovement>();
         dash = GetComponent<PlayerDash>();
         damageReceiver = GetComponent<PlayerDamageReceiver>();
+        combat = GetComponent<PlayerCombat>();
     }
 
     private void Update()
@@ -42,7 +45,11 @@ public class PlayerAnimator : MonoBehaviour
         if (damageReceiver != null &&
             (damageReceiver.IsStunned || damageReceiver.IsDead))
             return;
-
+        if (combat != null && combat.IsAttacking)
+        {
+            PlayState(LightAttack);
+            return;
+        }
         if (dash != null && dash.IsDashing)
         {
             PlayState(Dash);

@@ -14,8 +14,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AttackData
   attackId: 
   damage: 20
-  startupTime: 0.05
+  startupTime: 0.22
   activeTime: 0.12
-  recoveryTime: 0.15
+  recoveryTime: 0.33
   knockbackForce: 2
   parryable: 1
