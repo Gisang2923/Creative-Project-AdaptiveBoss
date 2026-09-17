@@ -36,7 +36,29 @@ public class BossAnimator : MonoBehaviour
     private static readonly int JumpAttack =
         Animator.StringToHash("JumpAtk");
 
+    private static readonly int Hited =
+    Animator.StringToHash("Hited");
+    private static readonly int CounterHit =
+    Animator.StringToHash("BossCounterHit");
+    private static readonly int Death =
+    Animator.StringToHash("Death");
 
+    public void PlayDeath()
+    {
+        PlayAction(Death);
+    }
+    public void PlayHit()
+    {
+        PlayAction(Hited);
+    }
+    public void PlayCounterHit()
+    {
+        Debug.Log(
+            $"CounterHit State Exists: {animator.HasState(0, CounterHit)}"
+        );
+
+        PlayAction(CounterHit);
+    }
     public void SetMoving(bool isMoving)
     {
         animator.SetBool(IsMoving, isMoving);

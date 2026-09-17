@@ -12,4 +12,5 @@ public class MontanteAnimationEventReceiver : MonoBehaviour
     public void OnUnstopable(){}
     public void OnDive(){}
     public void OnShakeCam(){}
+    
 }

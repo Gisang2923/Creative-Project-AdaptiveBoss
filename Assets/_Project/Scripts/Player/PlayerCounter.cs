@@ -14,13 +14,16 @@ public class PlayerCounter : MonoBehaviour
     [SerializeField] private float startupTime = 0.03f;
     [SerializeField] private float parryWindow = 0.15f;
     [SerializeField] private float failRecovery = 0.4f;
-
+    [SerializeField] private float successAnimationDuration = 0.35f;
     private PlayerDamageReceiver damageReceiver;
     private PlayerCombat playerCombat;
 
     private bool isCountering;
     private PlayerHeal playerHeal;
     public bool IsCountering => isCountering;
+    private bool counterSucceeded;
+
+    public bool CounterSucceeded => counterSucceeded;
     private Coroutine counterRoutine;
     private void Awake()
     {
@@ -56,7 +59,7 @@ public class PlayerCounter : MonoBehaviour
     private IEnumerator CounterRoutine()
     {
         isCountering = true;
-
+        counterSucceeded = false;
         // Startup
         yield return new WaitForSeconds(startupTime);
 
@@ -89,14 +92,24 @@ public class PlayerCounter : MonoBehaviour
         }
 
         // 성공한 순간 Counter 종료
+        counterSucceeded = true;
         EndCounter();
+        StartCoroutine(CounterSuccessRoutine());
 
         GameObject attacker = incomingDamage.Attacker;
 
         // 보스 공격 중단
         BossAction bossAction = attacker.GetComponent<BossAction>();
         bossAction?.ForceCancelAttack();
+        BossAnimator bossAnimator =
+            attacker.GetComponent<BossAnimator>();
 
+        BossController bossController =
+            attacker.GetComponent<BossController>();
+
+        bossController?.EnterCounterStun(0.5f);
+        bossAnimator?.PlayCounterHit();
+        
         // 반격 데미지
         IDamageable target = attacker.GetComponent<IDamageable>();
 
@@ -116,6 +129,14 @@ public class PlayerCounter : MonoBehaviour
 
             target.TakeDamage(counterDamage);
         }
+    }
+    private IEnumerator CounterSuccessRoutine()
+    {
+        counterSucceeded = true;
+
+        yield return new WaitForSeconds(successAnimationDuration);
+
+        counterSucceeded = false;
     }
     private void EndCounter()
     {

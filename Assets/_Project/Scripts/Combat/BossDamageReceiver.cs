@@ -7,6 +7,7 @@ public class BossDamageReceiver : DamageReceiver
     [SerializeField] private BossMovement bossMovement;
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private BossController bossController;
+    [SerializeField] private BossAnimator bossAnimator;
     private bool isDead;
 
     public bool IsDead => isDead;
@@ -21,6 +22,8 @@ public class BossDamageReceiver : DamageReceiver
 
         if (bossController == null)
             bossController = GetComponent<BossController>();
+        if (bossAnimator == null)
+            bossAnimator = GetComponent<BossAnimator>();
 
         if (rb == null)
             rb = GetComponent<Rigidbody2D>();
@@ -65,6 +68,10 @@ public class BossDamageReceiver : DamageReceiver
 
         if (rb != null)
             rb.linearVelocity = Vector2.zero;
+
+        // Stop()이 BattleIdle을 재생할 수 있으므로 Death는 마지막에
+        if (bossAnimator != null)
+            bossAnimator.PlayDeath();
 
         Debug.Log("Boss Dead");
     }

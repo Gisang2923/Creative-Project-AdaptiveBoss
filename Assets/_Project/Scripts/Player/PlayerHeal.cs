@@ -8,18 +8,21 @@ public class PlayerHeal : MonoBehaviour
     [SerializeField] private int healAmount = 30;
     [SerializeField] private float healDuration = 1f;
     [SerializeField] private int maxHealCount = 3;
-
+    [SerializeField] private float healEndDuration = 0.3f;
     private Health health;
     private PlayerDamageReceiver damageReceiver;
     private PlayerCombat playerCombat;
     private PlayerCounter playerCounter;
 
     private Coroutine healRoutine;
-
+    private Coroutine healEndRoutine;
     private bool isHealing;
     private bool healButtonHeld;
 
     private int remainingHealCount;
+    private bool healSucceeded;
+
+    public bool HealSucceeded => healSucceeded;
 
     public bool IsHealing => isHealing;
     public int RemainingHealCount => remainingHealCount;
@@ -92,12 +95,22 @@ public class PlayerHeal : MonoBehaviour
         health.Heal(healAmount);
         remainingHealCount--;
 
-        Debug.Log($"Heal Success! Remaining: {remainingHealCount}");
-
         isHealing = false;
         healRoutine = null;
-    }
 
+        healEndRoutine = StartCoroutine(HealEndRoutine());
+
+        Debug.Log($"Heal Success! Remaining: {remainingHealCount}");
+    }
+    private IEnumerator HealEndRoutine()
+    {
+        healSucceeded = true;
+
+        yield return new WaitForSeconds(healEndDuration);
+
+        healSucceeded = false;
+        healEndRoutine = null;
+    }
     private void CancelHeal()
     {
         EndHeal();
@@ -118,6 +131,13 @@ public class PlayerHeal : MonoBehaviour
             healRoutine = null;
         }
 
+        if (healEndRoutine != null)
+        {
+            StopCoroutine(healEndRoutine);
+            healEndRoutine = null;
+        }
+
         isHealing = false;
+        healSucceeded = false;
     }
 }

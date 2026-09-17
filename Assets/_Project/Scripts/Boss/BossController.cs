@@ -9,6 +9,7 @@ public class BossController : MonoBehaviour
         Reposition,
         Attack,
         BackDodge,
+        Stunned,
         Dead
     }
 
@@ -42,17 +43,24 @@ public class BossController : MonoBehaviour
 
     private float backDodgeCooldownTimer;
 
+    private float stunTimer;
     public BossState CurrentState => currentState;
 
     private void Update()
     {
+        if (stunTimer > 0f)
+        {
+            stunTimer -= Time.deltaTime;
+        }
         if (backDodgeCooldownTimer > 0f)
             backDodgeCooldownTimer -= Time.deltaTime;
 
         if (repositionTimer > 0f)
             repositionTimer -= Time.deltaTime;
 
-        if (wasAttacking && !bossAction.IsAttacking)
+        if (wasAttacking &&
+            !bossAction.IsAttacking &&
+            stunTimer <= 0f)
         {
             StartPostAction();
         }
@@ -76,7 +84,11 @@ public class BossController : MonoBehaviour
     private void UpdateState()
     {
         float distance = movement.DistanceToTarget;
-
+        if (stunTimer > 0f)
+        {
+            ChangeState(BossState.Stunned);
+            return;
+        }
         if (bossAction.IsBusy)
         {
             if (bossAction.IsDodging)
@@ -147,7 +159,8 @@ public class BossController : MonoBehaviour
             case BossState.BackDodge:
                 // 이동은 BossAction이 직접 제어
                 break;
-
+            case BossState.Stunned:
+                break;
             case BossState.Dead:
                 movement.Stop();
                 break;    
@@ -243,6 +256,12 @@ public class BossController : MonoBehaviour
         Debug.Log(
             "BackDodge Recovery → Hold"
         );
+    }
+    public void EnterCounterStun(float duration)
+    {
+        stunTimer = duration;
+
+        ChangeState(BossState.Stunned);
     }
     public void SetDead()
     {

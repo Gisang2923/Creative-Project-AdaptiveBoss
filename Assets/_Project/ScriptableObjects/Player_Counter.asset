@@ -15,7 +15,7 @@ MonoBehaviour:
   attackId: 
   damage: 50
   startupTime: 0.03
-  activeTime: 0.15
-  recoveryTime: 0.4
+  activeTime: 0.35
+  recoveryTime: 0.28
   knockbackForce: 4
   parryable: 1
