@@ -6,7 +6,7 @@ public class PlayerDamageReceiver : DamageReceiver
     [Header("Hit Settings")]
     [SerializeField] private float hitStunDuration = 0.25f;
     [SerializeField] private float invincibilityDuration = 0.7f;
-
+    [SerializeField] private HitFlash hitFlash;
     private bool isInvincible;
     private bool isStunned;
 
@@ -24,6 +24,8 @@ public class PlayerDamageReceiver : DamageReceiver
         playerCombat = GetComponent<PlayerCombat>();
         playerDash = GetComponent<PlayerDash>();
         playerHeal = GetComponent<PlayerHeal>();
+        if (hitFlash == null)
+            hitFlash = GetComponentInChildren<HitFlash>();
     }
     private void ApplyKnockback(DamageInfo damageInfo)
     {
@@ -45,6 +47,9 @@ public class PlayerDamageReceiver : DamageReceiver
         playerDash?.ForceCancelDash();
 
         health.TakeDamage(damageInfo);
+        base.TakeDamage(damageInfo);
+
+        hitFlash?.Flash();
 
         if (health.IsDead)
         {

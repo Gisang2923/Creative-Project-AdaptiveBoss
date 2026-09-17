@@ -20,6 +20,11 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float groundCheckRadius = 0.15f;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Transform facingRoot;
+    [Header("Hit Recovery")]
+    [SerializeField] private float hitMoveRecoveryTime = 0.15f;
+
+    private float hitMoveRecoveryTimer;
+    private bool wasStunned;
     private Rigidbody2D rb;
 
     private Vector2 moveInput;
@@ -58,8 +63,22 @@ public class PlayerMovement : MonoBehaviour
     {
         UpdateGroundState();
         UpdateJumpBuffer();
-    }
 
+        bool isStunned =
+            damageReceiver != null && damageReceiver.IsStunned;
+
+        if (wasStunned && !isStunned)
+        {
+            hitMoveRecoveryTimer = hitMoveRecoveryTime;
+        }
+
+        if (hitMoveRecoveryTimer > 0f)
+        {
+            hitMoveRecoveryTimer -= Time.deltaTime;
+        }
+
+        wasStunned = isStunned;
+    }
     private void FixedUpdate()
     {
         if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
@@ -159,8 +178,16 @@ public class PlayerMovement : MonoBehaviour
 
     private void Move()
     {
+        float moveMultiplier = 1f;
+
+        if (hitMoveRecoveryTimer > 0f)
+        {
+            moveMultiplier =
+                1f - (hitMoveRecoveryTimer / hitMoveRecoveryTime);
+        }
+
         rb.linearVelocity = new Vector2(
-            moveInput.x * moveSpeed,
+            moveInput.x * moveSpeed * moveMultiplier,
             rb.linearVelocity.y
         );
     }

@@ -8,6 +8,7 @@ public class BossDamageReceiver : DamageReceiver
     [SerializeField] private Rigidbody2D rb;
     [SerializeField] private BossController bossController;
     [SerializeField] private BossAnimator bossAnimator;
+    [SerializeField] private HitFlash hitFlash;
     private bool isDead;
 
     public bool IsDead => isDead;
@@ -24,7 +25,8 @@ public class BossDamageReceiver : DamageReceiver
             bossController = GetComponent<BossController>();
         if (bossAnimator == null)
             bossAnimator = GetComponent<BossAnimator>();
-
+        if (hitFlash == null)
+            hitFlash = GetComponentInChildren<HitFlash>();
         if (rb == null)
             rb = GetComponent<Rigidbody2D>();
 
@@ -44,7 +46,7 @@ public class BossDamageReceiver : DamageReceiver
             return;
 
         base.TakeDamage(damageInfo);
-
+        hitFlash?.Flash();
         // 일반 공격으로는 현재 Boss 공격을 끊지 않음.
         // Counter 성공은 PlayerCounter에서
         // bossAction.ForceCancelAttack() 처리.

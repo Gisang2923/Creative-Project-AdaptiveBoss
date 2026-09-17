@@ -791,6 +791,7 @@ MonoBehaviour:
   rb: {fileID: 402595759}
   bossController: {fileID: 402595760}
   bossAnimator: {fileID: 0}
+  hitFlash: {fileID: 0}
 --- !u!114 &402595765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1252,6 +1253,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   facingRoot: {fileID: 687523294}
+  hitMoveRecoveryTime: 0.15
 --- !u!114 &685367519
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1483,6 +1485,7 @@ MonoBehaviour:
   health: {fileID: 685367522}
   hitStunDuration: 0.25
   invincibilityDuration: 0.7
+  hitFlash: {fileID: 0}
 --- !u!114 &685367524
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1792,6 +1795,7 @@ GameObject:
   - component: {fileID: 1266593680}
   - component: {fileID: 1266593681}
   - component: {fileID: 1266593682}
+  - component: {fileID: 1266593683}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -1840,7 +1844,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: bdb9236ebc9bb63439b5c4e50c814316, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -1907,6 +1911,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: a15ec5bf8046c944ca011af3f2d4a5ed, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::MontanteAnimationEventReceiver
+--- !u!114 &1266593683
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1266593678}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19783c98709df9647832e605502fbc24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  spriteRenderer: {fileID: 1266593680}
+  flashDuration: 0.08
 --- !u!1 &1563451149
 GameObject:
   m_ObjectHideFlags: 0
@@ -2334,6 +2352,7 @@ GameObject:
   - component: {fileID: 1726732468}
   - component: {fileID: 1726732469}
   - component: {fileID: 1726732470}
+  - component: {fileID: 1726732471}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -2382,7 +2401,7 @@ SpriteRenderer:
   m_RenderingLayerMask: 1
   m_RendererPriority: 0
   m_Materials:
-  - {fileID: 2100000, guid: a97c105638bdf8b4a8650670310a4cd3, type: 2}
+  - {fileID: 2100000, guid: bdb9236ebc9bb63439b5c4e50c814316, type: 2}
   m_StaticBatchInfo:
     firstSubMesh: 0
     subMeshCount: 0
@@ -2449,6 +2468,20 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd6ec2db417a1614a9a7f50435213a06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationEventReceiver
+--- !u!114 &1726732471
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1726732466}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 19783c98709df9647832e605502fbc24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitFlash
+  spriteRenderer: {fileID: 1726732468}
+  flashDuration: 0.08
 --- !u!1 &1753081630
 GameObject:
   m_ObjectHideFlags: 0
