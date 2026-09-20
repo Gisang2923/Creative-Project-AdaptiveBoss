@@ -72,6 +72,9 @@ public class PlayerMovement : MonoBehaviour
             hitMoveRecoveryTimer = hitMoveRecoveryTime;
         }
 
+        // 현재 입력과 Facing을 지속적으로 동기화
+        UpdateFacing();
+
         if (hitMoveRecoveryTimer > 0f)
         {
             hitMoveRecoveryTimer -= Time.deltaTime;
@@ -116,14 +119,42 @@ public class PlayerMovement : MonoBehaviour
     public void OnMove(InputAction.CallbackContext context)
     {
         moveInput = context.ReadValue<Vector2>();
+    }
+    private bool CanChangeFacing()
+    {
+        if (damageReceiver != null &&
+            (damageReceiver.IsStunned || damageReceiver.IsDead))
+            return false;
 
-        if (moveInput.x == 0f)
+        if (playerDash != null && playerDash.IsDashing)
+            return false;
+
+        if (playerCounter != null && playerCounter.IsCountering)
+            return false;
+
+        if (playerHeal != null && playerHeal.IsHealing)
+            return false;
+
+        if (playerCombat != null &&
+            (playerCombat.IsAttacking || playerCombat.IsCharging))
+            return false;
+
+        return true;
+    }
+    private void UpdateFacing()
+    {
+        if (Mathf.Abs(moveInput.x) <= 0.01f)
             return;
 
         if (!CanChangeFacing())
             return;
 
-        facingDirection = Mathf.Sign(moveInput.x);
+        float newDirection = Mathf.Sign(moveInput.x);
+
+        if (newDirection == facingDirection)
+            return;
+
+        facingDirection = newDirection;
 
         facingRoot.localScale = new Vector3(
             facingDirection,
@@ -132,26 +163,6 @@ public class PlayerMovement : MonoBehaviour
         );
 
         playerDash?.SetDirection(facingDirection);
-    }
-    private bool CanChangeFacing()
-    {
-        if (damageReceiver != null &&
-            (damageReceiver.IsStunned || damageReceiver.IsDead))
-            return false;
-
-        if (playerCounter != null && playerCounter.IsCountering)
-            return false;
-
-        if (playerDash != null && playerDash.IsDashing)
-            return false;
-
-        if (playerCombat != null && playerCombat.IsCharging)
-            return false;
-
-        if (playerHeal != null && playerHeal.IsHealing)
-            return false;
-
-        return true;
     }
     public void OnJump(InputAction.CallbackContext context)
     {
@@ -178,6 +189,17 @@ public class PlayerMovement : MonoBehaviour
 
     private void Move()
     {
+        if (playerCombat != null &&
+            (playerCombat.IsAttacking || playerCombat.IsCharging))
+        {
+            rb.linearVelocity = new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
+
+            return;
+        }
+
         float moveMultiplier = 1f;
 
         if (hitMoveRecoveryTimer > 0f)

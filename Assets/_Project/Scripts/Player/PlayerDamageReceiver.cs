@@ -46,7 +46,7 @@ public class PlayerDamageReceiver : DamageReceiver
         playerCombat?.ForceCancelAttack();
         playerDash?.ForceCancelDash();
 
-        health.TakeDamage(damageInfo);
+
         base.TakeDamage(damageInfo);
 
         hitFlash?.Flash();

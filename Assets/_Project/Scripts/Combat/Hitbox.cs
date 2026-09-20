@@ -8,15 +8,12 @@ public class Hitbox : MonoBehaviour
 
     private AttackData attackData;
 
-    private readonly HashSet<Hurtbox> hitTargets = new();
-    private readonly HashSet<ParryBox> parriedTargets = new();
-
+    private readonly HashSet<GameObject> processedTargets = new();
     public void Activate(AttackData data)
     {
         attackData = data;
 
-        hitTargets.Clear();
-        parriedTargets.Clear();
+        processedTargets.Clear();
 
         gameObject.SetActive(true);
 
@@ -92,15 +89,20 @@ public class Hitbox : MonoBehaviour
 
     private void ProcessCollision(Collider2D other)
     {
-        // Counter 먼저 확인
         ParryBox parryBox = other.GetComponent<ParryBox>();
 
         if (parryBox != null)
         {
-            if (parriedTargets.Contains(parryBox))
+            GameObject targetRoot =
+                parryBox.transform.root.gameObject;
+
+            if (targetRoot == owner)
                 return;
 
-            parriedTargets.Add(parryBox);
+            if (processedTargets.Contains(targetRoot))
+                return;
+
+            processedTargets.Add(targetRoot);
 
             DamageInfo damageInfo = CreateDamageInfo(other);
             parryBox.ReceiveHit(damageInfo);
@@ -113,14 +115,16 @@ public class Hitbox : MonoBehaviour
         if (hurtbox == null)
             return;
 
-        if (hurtbox.transform.root.gameObject == owner)
+        GameObject hurtTargetRoot =
+            hurtbox.transform.root.gameObject;
+
+        if (hurtTargetRoot == owner)
             return;
 
-        // 한 번의 공격에서 같은 Hurtbox 중복 타격 방지
-        if (hitTargets.Contains(hurtbox))
+        if (processedTargets.Contains(hurtTargetRoot))
             return;
 
-        hitTargets.Add(hurtbox);
+        processedTargets.Add(hurtTargetRoot);
 
         DamageInfo info = CreateDamageInfo(other);
 
