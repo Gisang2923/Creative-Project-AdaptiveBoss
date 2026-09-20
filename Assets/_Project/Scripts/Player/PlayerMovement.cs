@@ -245,6 +245,10 @@ public class PlayerMovement : MonoBehaviour
                 jumpForce
             );
 
+            CombatLogger.Instance?.RecordPlayerResponse(
+                PlayerResponseType.Jump
+            );
+
             jumpBufferCounter = 0f;
             coyoteTimeCounter = 0f;
         }

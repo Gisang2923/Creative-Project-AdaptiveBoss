@@ -6,6 +6,8 @@ public class BossAnimator : MonoBehaviour
 
     private int currentState = -1;
 
+    private static readonly int Ready =
+    Animator.StringToHash("Ready");
     private static readonly int BattleIdle =
         Animator.StringToHash("BattleIdle");
 
@@ -42,7 +44,10 @@ public class BossAnimator : MonoBehaviour
     Animator.StringToHash("BossCounterHit");
     private static readonly int Death =
     Animator.StringToHash("Death");
-
+    public void PlayReady()
+    {
+        animator.Play(Ready, 0, 0f);
+    }
     public void PlayDeath()
     {
         PlayAction(Death);

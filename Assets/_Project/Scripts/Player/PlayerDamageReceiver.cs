@@ -48,7 +48,8 @@ public class PlayerDamageReceiver : DamageReceiver
 
 
         base.TakeDamage(damageInfo);
-
+        CombatLogger.Instance?.RecordPlayerHit();
+        
         hitFlash?.Flash();
 
         if (health.IsDead)

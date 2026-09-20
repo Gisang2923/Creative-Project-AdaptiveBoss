@@ -83,6 +83,9 @@ public class PlayerDash : MonoBehaviour
 
         if (playerHeal != null && playerHeal.IsHealing)
             return;
+        CombatLogger.Instance?.RecordPlayerResponse(
+            PlayerResponseType.Dash
+        );    
         dashCoroutine = StartCoroutine(Dash());
     }
 

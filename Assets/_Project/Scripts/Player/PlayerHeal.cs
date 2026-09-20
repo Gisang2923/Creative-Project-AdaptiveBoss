@@ -75,7 +75,9 @@ public class PlayerHeal : MonoBehaviour
             return;
 
         healButtonHeld = true;
-
+        CombatLogger.Instance?.RecordPlayerResponse(
+            PlayerResponseType.Heal
+        );
         healRoutine = StartCoroutine(HealRoutine());
     }
 

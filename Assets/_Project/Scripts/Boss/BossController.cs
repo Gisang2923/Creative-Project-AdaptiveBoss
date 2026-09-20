@@ -46,8 +46,13 @@ public class BossController : MonoBehaviour
     private float stunTimer;
     public BossState CurrentState => currentState;
 
+    private bool battleStarted = false;
+
+    public bool BattleStarted => battleStarted;
     private void Update()
     {
+        if (!battleStarted)
+            return;
         if (stunTimer > 0f)
         {
             stunTimer -= Time.deltaTime;
@@ -62,6 +67,8 @@ public class BossController : MonoBehaviour
             !bossAction.IsAttacking &&
             stunTimer <= 0f)
         {
+            CombatLogger.Instance?.EndBossAttack();
+
             StartPostAction();
         }
 
@@ -78,6 +85,9 @@ public class BossController : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (!battleStarted)
+            return;
+
         ExecuteMovement();
     }
 
@@ -177,8 +187,13 @@ public class BossController : MonoBehaviour
 
         if (selectedAttack == null)
             return;
-        
+
         lastExecutedAttack = selectedAttack;
+
+        CombatLogger.Instance?.BeginBossAttack(
+            selectedAttack.attackType,
+            distance
+        );
 
         bossAction.ExecuteAttack(selectedAttack);
 
@@ -257,6 +272,25 @@ public class BossController : MonoBehaviour
             "BackDodge Recovery → Hold"
         );
     }
+    public void TriggerHitBackDodge()
+    {
+        if (!battleStarted)
+            return;
+
+        if (currentState == BossState.Dead)
+            return;
+
+        bossAction.ForceCancelAttack();
+
+        movement.Stop();
+        movement.FaceTarget();
+
+        bossAction.ExecuteBackDodge();
+
+        backDodgeCooldownTimer = backDodgeCooldown;
+
+        ChangeState(BossState.BackDodge);
+    }
     public void EnterCounterStun(float duration)
     {
         stunTimer = duration;
@@ -270,5 +304,14 @@ public class BossController : MonoBehaviour
         movement.Stop();
 
         enabled = false;
+    }
+    public void StartBattle()
+    {
+        if (battleStarted)
+            return;
+
+        battleStarted = true;
+
+        ChangeState(BossState.Idle);
     }
 }

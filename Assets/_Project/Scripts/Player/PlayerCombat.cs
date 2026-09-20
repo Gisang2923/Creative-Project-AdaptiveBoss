@@ -121,6 +121,9 @@ public class PlayerCombat : MonoBehaviour
         currentAttackType = AttackType.Normal;
         currentPhase = AttackPhase.Startup;
 
+        CombatLogger.Instance?.RecordPlayerResponse(
+            PlayerResponseType.NormalAttack
+        );
         yield return new WaitForSeconds(
             normalAttackData.startupTime
         );
@@ -198,7 +201,9 @@ public class PlayerCombat : MonoBehaviour
     {
         currentAttackType = AttackType.Charge;
         currentPhase = AttackPhase.Startup;
-
+        CombatLogger.Instance?.RecordPlayerResponse(
+            PlayerResponseType.ChargeAttack
+        );
         yield return new WaitForSeconds(
             chargeAttackData.startupTime
         );

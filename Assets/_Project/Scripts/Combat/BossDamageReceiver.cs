@@ -46,10 +46,11 @@ public class BossDamageReceiver : DamageReceiver
             return;
 
         base.TakeDamage(damageInfo);
+
         hitFlash?.Flash();
-        // 일반 공격으로는 현재 Boss 공격을 끊지 않음.
-        // Counter 성공은 PlayerCounter에서
-        // bossAction.ForceCancelAttack() 처리.
+
+        if (!isDead)
+            bossController?.TriggerHitBackDodge();
     }
 
     private void HandleDeath()

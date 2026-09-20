@@ -39,7 +39,6 @@ public class PlayerCounter : MonoBehaviour
     {
         if (!context.performed)
             return;
-        Debug.Log("Counter Input!");
         if (isCountering)
             return;
 
@@ -52,7 +51,10 @@ public class PlayerCounter : MonoBehaviour
         if (playerCombat != null && playerCombat.IsCharging)
             return;
         if (playerHeal != null && playerHeal.IsHealing)
-            return;    
+            return;  
+        CombatLogger.Instance?.RecordPlayerResponse(
+            PlayerResponseType.Counter
+        );      
         counterRoutine = StartCoroutine(CounterRoutine());
     }
 
@@ -95,6 +97,8 @@ public class PlayerCounter : MonoBehaviour
         counterSucceeded = true;
         EndCounter();
         StartCoroutine(CounterSuccessRoutine());
+
+        CombatLogger.Instance?.RecordParrySuccess();
 
         GameObject attacker = incomingDamage.Attacker;
 
