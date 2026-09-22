@@ -44,6 +44,11 @@ public class BossAnimator : MonoBehaviour
     Animator.StringToHash("BossCounterHit");
     private static readonly int Death =
     Animator.StringToHash("Death");
+
+    private static readonly int Parry =
+        Animator.StringToHash("Parry");
+    private static readonly int ParrySuccess =
+        Animator.StringToHash("ParrySuccess");
     public void PlayReady()
     {
         animator.Play(Ready, 0, 0f);
@@ -134,5 +139,14 @@ public class BossAnimator : MonoBehaviour
     public void PlayJumpAttack()
     {
         PlayAction(JumpAttack);
+    }
+    public void PlayParry()
+    {
+        animator.Play(Parry, 0, 0f);
+    }
+
+    public void PlayParrySuccess()
+    {
+        animator.Play(ParrySuccess, 0, 0f);
     }
 }

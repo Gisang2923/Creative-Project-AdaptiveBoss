@@ -89,8 +89,32 @@ public class Hitbox : MonoBehaviour
 
     private void ProcessCollision(Collider2D other)
     {
-        ParryBox parryBox = other.GetComponent<ParryBox>();
+        BossParryBox bossParryBox =
+        other.GetComponent<BossParryBox>();
 
+        if (bossParryBox != null)
+        {
+            GameObject targetRoot =
+                bossParryBox.transform.root.gameObject;
+
+            if (targetRoot == owner)
+                return;
+
+            if (processedTargets.Contains(targetRoot))
+                return;
+
+            processedTargets.Add(targetRoot);
+
+            DamageInfo damageInfo =
+                CreateDamageInfo(other);
+
+            bossParryBox.ReceiveHit(damageInfo);
+
+            return;
+        }
+
+        ParryBox parryBox = other.GetComponent<ParryBox>();
+        
         if (parryBox != null)
         {
             GameObject targetRoot =

@@ -8,6 +8,7 @@ public class BossController : MonoBehaviour
         Approach,
         Reposition,
         Attack,
+        Parry,
         BackDodge,
         Stunned,
         Dead
@@ -35,15 +36,27 @@ public class BossController : MonoBehaviour
     [Header("Back Dodge")]
     [SerializeField] private float backDodgeTriggerDistance = 1.5f;
     [SerializeField] private float backDodgeCooldown = 3f;
-    [SerializeField, Range(0f, 1f)]
     private bool wasDodging;
 
     [SerializeField] private float backDodgeRecoveryTime = 0.5f;
+
+    [SerializeField, Range(0f, 1f)]
     private float backDodgeChance = 0.35f;
 
     private float backDodgeCooldownTimer;
 
     private float stunTimer;
+
+    [Header("Parry")]
+    [SerializeField] private BossParry bossParry;
+    [SerializeField, Range(0f, 1f)]
+    private float parryChance = 0.15f;
+
+    [SerializeField] private float parryCooldown = 4f;
+
+    private float parryCooldownTimer;
+    private bool wasParrying;
+
     public BossState CurrentState => currentState;
 
     private bool battleStarted = false;
@@ -62,7 +75,10 @@ public class BossController : MonoBehaviour
 
         if (repositionTimer > 0f)
             repositionTimer -= Time.deltaTime;
-
+        if (parryCooldownTimer > 0f)
+        {
+            parryCooldownTimer -= Time.deltaTime;
+        }
         if (wasAttacking &&
             !bossAction.IsAttacking &&
             stunTimer <= 0f)
@@ -71,7 +87,12 @@ public class BossController : MonoBehaviour
 
             StartPostAction();
         }
-
+        if (wasParrying &&
+            (bossParry == null || !bossParry.IsParrying) &&
+            stunTimer <= 0f)
+        {
+            ChangeState(BossState.Idle);
+        }
         if (wasDodging && !bossAction.IsDodging)
         {
             StartBackDodgeRecovery();
@@ -79,7 +100,7 @@ public class BossController : MonoBehaviour
 
         wasAttacking = bossAction.IsAttacking;
         wasDodging = bossAction.IsDodging;
-
+        wasParrying = bossParry != null && bossParry.IsParrying;
         UpdateState();
     }
 
@@ -97,6 +118,11 @@ public class BossController : MonoBehaviour
         if (stunTimer > 0f)
         {
             ChangeState(BossState.Stunned);
+            return;
+        }
+        if (bossParry != null && bossParry.IsParrying)
+        {
+            ChangeState(BossState.Parry);
             return;
         }
         if (bossAction.IsBusy)
@@ -121,7 +147,10 @@ public class BossController : MonoBehaviour
 
         if (TryBackDodge(distance))
             return;
-            
+        if (TryParry())
+        {
+            return;
+        }   
         if (attackSelector.HasValidAttack(distance))
         {
             StartAttack(distance);
@@ -162,7 +191,9 @@ public class BossController : MonoBehaviour
             case BossState.Idle:
                 movement.Stop();
                 break;
-
+            case BossState.Parry:
+                movement.Stop();
+                break;
             case BossState.Attack:
                 // 공격 중 이동은 BossAction 담당
                 break;
@@ -293,12 +324,46 @@ public class BossController : MonoBehaviour
     }
     public void EnterCounterStun(float duration)
     {
+        bossParry?.ForceCancelParry();
+
         stunTimer = duration;
 
         ChangeState(BossState.Stunned);
     }
+
+    private bool TryParry()
+    {
+        if (bossParry == null)
+            return false;
+
+        if (bossParry.IsParrying)
+            return false;
+
+        if (parryCooldownTimer > 0f)
+            return false;
+
+        if (Random.value > parryChance)
+            return false;
+
+        StartParry();
+
+        return true;
+    }
+    private void StartParry()
+    {
+        movement.Stop();
+        movement.FaceTarget();
+
+        ChangeState(BossState.Parry);
+
+        parryCooldownTimer = parryCooldown;
+
+        bossParry.StartParry();
+    }
     public void SetDead()
     {
+        bossParry?.ForceCancelParry();
+
         ChangeState(BossState.Dead);
 
         movement.Stop();
