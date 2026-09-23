@@ -831,9 +831,10 @@ MonoBehaviour:
   counterAttackData: {fileID: 11400000, guid: e7390b23d3d277543a485c37685f121a, type: 2}
   startupTime: 0.1
   parryWindow: 1
-  counterDelay: 0.05
-  counterHitboxDuration: 0.15
-  counterDuration: 0.42
+  parrySuccessDuration: 0.52
+  thrustHitDelay: 0.22
+  thrustHitboxDuration: 0.1
+  counterThrustDuration: 0.85
 --- !u!1 &440562010
 GameObject:
   m_ObjectHideFlags: 0

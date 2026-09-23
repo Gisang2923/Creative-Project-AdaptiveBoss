@@ -12,13 +12,13 @@ public class BossParry : MonoBehaviour
     [SerializeField] private Hitbox counterHitbox;
     [SerializeField] private AttackData counterAttackData;
     [SerializeField] private float startupTime = 0.10f;
-    [SerializeField] private float parryWindow = 0.40f;
+    [SerializeField] private float parryWindow = 0.80f;
 
     [Header("Counter Timing")]
-    [SerializeField] private float counterDelay = 0.05f;
-    [SerializeField] private float counterHitboxDuration = 0.15f;
-    [SerializeField] private float counterDuration = 0.45f;
-
+    [SerializeField] private float parrySuccessDuration = 0.20f;
+    [SerializeField] private float thrustHitDelay = 0.12f;
+    [SerializeField] private float thrustHitboxDuration = 0.10f;
+    [SerializeField] private float counterThrustDuration = 0.42f;
     private Coroutine parryRoutine;
 
     private bool isParrying;
@@ -29,7 +29,7 @@ public class BossParry : MonoBehaviour
 
     // 나중에 Adaptive AI에서 읽거나 조절할 수 있도록 노출
     public float ParryWindow => parryWindow;
-    public float CounterDuration => counterDuration;
+    public float CounterThrustDuration => counterThrustDuration;
 
     private void Awake()
     {
@@ -101,6 +101,7 @@ public class BossParry : MonoBehaviour
     {
         GameObject attacker = incomingDamage.Attacker;
 
+        // 플레이어의 현재 공격 취소
         if (attacker != null)
         {
             PlayerCombat playerCombat =
@@ -109,35 +110,46 @@ public class BossParry : MonoBehaviour
             playerCombat?.ForceCancelAttack();
         }
 
-        // 반격 직전에 플레이어 방향을 다시 바라봄
-        movement?.FaceTarget();
-
+        // 1. 공격을 튕겨내는 모션
         bossAnimator?.PlayParrySuccess();
 
-        yield return new WaitForSeconds(counterDelay);
+        yield return new WaitForSeconds(parrySuccessDuration);
 
+        // 2. 찌르기 직전에 플레이어 방향 다시 확인
+        movement?.FaceTarget();
+
+        // 3. 찌르기 반격 시작
+        bossAnimator?.PlayCounterThrust();
+
+        // 4. 실제 검이 나가는 시점까지 대기
+        yield return new WaitForSeconds(thrustHitDelay);
+
+        // 5. 실제 공격 판정 활성화
         if (counterHitbox != null && counterAttackData != null)
         {
             counterHitbox.Activate(counterAttackData);
         }
 
-        yield return new WaitForSeconds(counterHitboxDuration);
+        yield return new WaitForSeconds(thrustHitboxDuration);
 
+        // 6. 공격 판정 종료
         if (counterHitbox != null)
         {
             counterHitbox.Deactivate();
         }
 
+        // 7. 찌르기 애니메이션 남은 시간
         float remainingDuration =
             Mathf.Max(
                 0f,
-                counterDuration
-                - counterDelay
-                - counterHitboxDuration
+                counterThrustDuration
+                - thrustHitDelay
+                - thrustHitboxDuration
             );
 
         yield return new WaitForSeconds(remainingDuration);
 
+        // 8. 패링 전체 행동 종료
         EndParry();
     }
 
