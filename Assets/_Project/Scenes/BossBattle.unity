@@ -1643,8 +1643,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3b0f5d872f295c64cbc6aa6b7f085584, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDash
-  dashSpeed: 14
-  dashDuration: 0.15
+  dashSpeed: 20
+  dashDuration: 0.2
   dashCooldown: 0.4
   groundCheck: {fileID: 119292375}
   groundCheckRadius: 0.15
@@ -1668,6 +1668,10 @@ MonoBehaviour:
   chargeAttackData: {fileID: 11400000, guid: b14f6dfa434f60a429b2577539a1b7f0, type: 2}
   chargeAttackHitbox: {fileID: 1059957506}
   chargeTime: 0.7
+  dashAttackData: {fileID: 11400000, guid: 20a81b7eb9cf19245ba48552492f41d8, type: 2}
+  dashAttackHitbox: {fileID: 1383829620}
+  dashAttackMoveDistance: 0.63
+  dashAttackMoveDuration: 0.2
 --- !u!114 &685367522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1777,6 +1781,7 @@ Transform:
   - {fileID: 1726732467}
   - {fileID: 1672193364}
   - {fileID: 1059957505}
+  - {fileID: 1383829619}
   m_Father: {fileID: 685367515}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &722405369
@@ -2244,6 +2249,99 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossAnimationEventReceiver
   bossParry: {fileID: 402595766}
+--- !u!1 &1383829618
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1383829619}
+  - component: {fileID: 1383829621}
+  - component: {fileID: 1383829620}
+  m_Layer: 0
+  m_Name: DashAttackHitbox
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!4 &1383829619
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1383829618}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 687523294}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1383829620
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1383829618}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69389c6525e1e4e4799ab8b13d58f97c, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::Hitbox
+  owner: {fileID: 685367513}
+  hitCollider: {fileID: 1383829621}
+--- !u!61 &1383829621
+BoxCollider2D:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1383829618}
+  m_Enabled: 1
+  serializedVersion: 3
+  m_Density: 1
+  m_Material: {fileID: 0}
+  m_IncludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_ExcludeLayers:
+    serializedVersion: 2
+    m_Bits: 0
+  m_LayerOverridePriority: 0
+  m_ForceSendLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ForceReceiveLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_ContactCaptureLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_CallbackLayers:
+    serializedVersion: 2
+    m_Bits: 4294967295
+  m_IsTrigger: 1
+  m_UsedByEffector: 0
+  m_CompositeOperation: 0
+  m_CompositeOrder: 0
+  m_Offset: {x: 1, y: 0}
+  m_SpriteTilingProperty:
+    border: {x: 0, y: 0, z: 0, w: 0}
+    pivot: {x: 0, y: 0}
+    oldSize: {x: 0, y: 0}
+    newSize: {x: 0, y: 0}
+    adaptiveTilingThreshold: 0
+    drawMode: 0
+    adaptiveTiling: 0
+  m_AutoTiling: 0
+  m_Size: {x: 1, y: 0.5}
+  m_EdgeRadius: 0
 --- !u!1 &1563451149
 GameObject:
   m_ObjectHideFlags: 0
@@ -2787,6 +2885,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd6ec2db417a1614a9a7f50435213a06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationEventReceiver
+  playerCombat: {fileID: 685367521}
 --- !u!114 &1726732471
 MonoBehaviour:
   m_ObjectHideFlags: 0

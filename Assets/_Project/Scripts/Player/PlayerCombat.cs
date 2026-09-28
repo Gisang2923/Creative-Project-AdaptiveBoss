@@ -20,7 +20,8 @@ public class PlayerCombat : MonoBehaviour
     {
         None,
         Normal,
-        Charge
+        Charge,
+        DashAttack
     }
     private AttackType currentAttackType = AttackType.None;
     public AttackType CurrentAttackType => currentAttackType;
@@ -33,6 +34,7 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField] private AttackData chargeAttackData;
     [SerializeField] private Hitbox chargeAttackHitbox;
     [SerializeField] private float chargeTime = 0.7f;
+    
 
     private ChargeState chargeState = ChargeState.None;
     private float chargeTimer;
@@ -53,11 +55,20 @@ public class PlayerCombat : MonoBehaviour
     private PlayerDamageReceiver damageReceiver;
     private PlayerCounter playerCounter;
     private PlayerHeal playerHeal;
+    private PlayerDash playerDash;
+    private PlayerMovement playerMovement;
+    [Header("Dash Attack")]
+    [SerializeField] private AttackData dashAttackData;
+    [SerializeField] private Hitbox dashAttackHitbox;
+    [SerializeField] private float dashAttackMoveDistance = 0.63f;
+    [SerializeField] private float dashAttackMoveDuration = 0.20f;
     private void Awake()
     {
         damageReceiver = GetComponent<PlayerDamageReceiver>();
         playerCounter = GetComponent<PlayerCounter>();
         playerHeal = GetComponent<PlayerHeal>();
+        playerDash = GetComponent<PlayerDash>();
+        playerMovement = GetComponent<PlayerMovement>();
     }
 
     private void Update()
@@ -76,18 +87,29 @@ public class PlayerCombat : MonoBehaviour
     {
         if (playerHeal != null && playerHeal.IsHealing)
             return;
-        if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
+
+        if (damageReceiver != null &&
+            (damageReceiver.IsStunned || damageReceiver.IsDead))
             return;
+
         if (playerCounter != null && playerCounter.IsCountering)
             return;
+
         if (!context.performed)
             return;
 
         if (IsAttacking || IsCharging)
             return;
 
+        // Dash 중 공격 입력 → DashAttack
+        if (playerDash != null && playerDash.IsDashing)
+        {
+            StartDashAttack();
+            return;
+        }
+
         StartCoroutine(NormalAttack());
-    }
+}
 
     public void CancelAttack()
     {
@@ -99,6 +121,7 @@ public class PlayerCombat : MonoBehaviour
         currentAttackType = AttackType.None;
         normalAttackHitbox.Deactivate();
         chargeAttackHitbox.Deactivate();
+        dashAttackHitbox.Deactivate();
 
         currentPhase = AttackPhase.None;
     }
@@ -107,9 +130,11 @@ public class PlayerCombat : MonoBehaviour
     {
         StopAllCoroutines();
 
-        normalAttackHitbox.Deactivate();
-        chargeAttackHitbox.Deactivate();
-
+        normalAttackHitbox?.Deactivate();
+        chargeAttackHitbox?.Deactivate();
+        dashAttackHitbox?.Deactivate();
+        playerMovement?.StopDashAttackMove();
+        
         currentAttackType = AttackType.None;
         chargeState = ChargeState.None;
         chargeTimer = 0f;
@@ -223,6 +248,84 @@ public class PlayerCombat : MonoBehaviour
         yield return new WaitForSeconds(
             chargeAttackData.recoveryTime
         );
+
+        currentAttackType = AttackType.None;
+        currentPhase = AttackPhase.None;
+    }
+    private void StartDashAttack()
+    {
+        if (playerDash == null || !playerDash.IsDashing)
+            return;
+
+        float direction =
+            playerMovement != null
+            ? playerMovement.FacingDirection
+            : 1f;
+
+        playerDash.CancelDashForAttack();
+
+        currentAttackType = AttackType.DashAttack;
+        currentPhase = AttackPhase.Startup;
+
+        if (playerMovement != null)
+        {
+            playerMovement.StartDashAttackMove(
+                direction,
+                dashAttackMoveDistance,
+                dashAttackMoveDuration
+            );
+        }
+
+        CombatLogger.Instance?.RecordPlayerResponse(
+            PlayerResponseType.DashAttack
+        );
+
+        StartCoroutine(
+            StopDashAttackMoveAfterDelay()
+        );
+    }
+    private IEnumerator StopDashAttackMoveAfterDelay()
+    {
+        yield return new WaitForSeconds(
+            dashAttackMoveDuration
+        );
+
+        playerMovement?.StopDashAttackMove();
+    }
+    public void OnDashAttackHitboxOn()
+    {
+        if (currentAttackType != AttackType.DashAttack)
+            return;
+
+        currentPhase = AttackPhase.Active;
+
+        if (dashAttackHitbox != null && dashAttackData != null)
+        {
+            dashAttackHitbox.Activate(dashAttackData);
+        }
+    }
+    public void OnDashAttackHitboxOff()
+    {
+        if (dashAttackHitbox != null)
+        {
+            dashAttackHitbox.Deactivate();
+        }
+
+        if (currentAttackType == AttackType.DashAttack)
+        {
+            currentPhase = AttackPhase.Recovery;
+        }
+    }
+    public void OnDashAttackEnd()
+    {
+        if (dashAttackHitbox != null)
+        {
+            dashAttackHitbox.Deactivate();
+        }
+        playerMovement?.StopDashAttackMove();
+
+        if (currentAttackType != AttackType.DashAttack)
+            return;
 
         currentAttackType = AttackType.None;
         currentPhase = AttackPhase.None;

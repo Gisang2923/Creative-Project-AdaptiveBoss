@@ -144,7 +144,25 @@ public class PlayerDash : MonoBehaviour
 
         StartCoroutine(ResetDashCooldown());
     }
+    public void CancelDashForAttack()
+    {
+        if (!isDashing)
+            return;
 
+        if (dashCoroutine != null)
+        {
+            StopCoroutine(dashCoroutine);
+            dashCoroutine = null;
+        }
+
+        rb.gravityScale = originalGravity;
+        isDashing = false;
+
+        // DashAttack으로 전환해도 기존 Dash 쿨타임은 소모
+        canDash = false;
+
+        StartCoroutine(ResetDashCooldown());
+    }
     private IEnumerator ResetDashCooldown()
     {
         yield return new WaitForSeconds(dashCooldown);

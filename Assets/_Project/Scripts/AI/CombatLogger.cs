@@ -6,6 +6,7 @@ public enum PlayerResponseType
     None,
     Counter,
     Dash,
+    DashAttack,
     Jump,
     NormalAttack,
     ChargeAttack,

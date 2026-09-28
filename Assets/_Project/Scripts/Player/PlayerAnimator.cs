@@ -42,6 +42,8 @@ public class PlayerAnimator : MonoBehaviour
     Animator.StringToHash("Hurt");
     private static readonly int Death =
     Animator.StringToHash("Death");
+    private static readonly int DashAttack =
+    Animator.StringToHash("DashAttack");
     private int currentState = -1;
 
     private void Awake()
@@ -109,6 +111,13 @@ public class PlayerAnimator : MonoBehaviour
         if (combat != null && combat.IsCharging)
         {
             PlayState(ChargeHold);
+            return;
+        }
+        if (combat != null &&
+            combat.IsAttacking &&
+            combat.CurrentAttackType == PlayerCombat.AttackType.DashAttack)
+        {
+            PlayState(DashAttack);
             return;
         }
         if (dash != null && dash.IsDashing)

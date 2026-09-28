@@ -13,4 +13,19 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
     public void DoCast(){}
 
     public void OnCounter(){}
+    [SerializeField] private PlayerCombat playerCombat;
+    public void DashAttackHitboxOn()
+    {
+        playerCombat?.OnDashAttackHitboxOn();
+    }
+
+    public void DashAttackHitboxOff()
+    {
+        playerCombat?.OnDashAttackHitboxOff();
+    }
+
+    public void DashAttackEnd()
+    {
+        playerCombat?.OnDashAttackEnd();
+    }
 }

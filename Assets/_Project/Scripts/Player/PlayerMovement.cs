@@ -45,7 +45,9 @@ public class PlayerMovement : MonoBehaviour
     private PlayerCombat playerCombat;
     private PlayerHeal playerHeal;
     private bool isGrounded;
-
+    private bool isDashAttacking;
+    private float dashAttackDirection;
+    private float dashAttackMoveSpeed;
     public bool IsGroundedState => isGrounded;
     public float VerticalVelocity => rb.linearVelocity.y;
     public float HorizontalVelocity => rb.linearVelocity.x;
@@ -97,6 +99,15 @@ public class PlayerMovement : MonoBehaviour
         }
         if (playerDash != null && playerDash.IsDashing)
             return;
+        if (isDashAttacking)
+        {
+            rb.linearVelocity = new Vector2(
+                dashAttackDirection * dashAttackMoveSpeed,
+                rb.linearVelocity.y
+            );
+
+            return;
+        }    
         if (playerCombat != null && playerCombat.IsCharging)
         {
             rb.linearVelocity =
@@ -293,6 +304,34 @@ public class PlayerMovement : MonoBehaviour
         Gizmos.DrawWireSphere(
             groundCheck.position,
             groundCheckRadius
+        );
+    }
+    public void StartDashAttackMove(
+        float direction,
+        float moveDistance,
+        float moveDuration)
+    {
+        isDashAttacking = true;
+        dashAttackDirection = Mathf.Sign(direction);
+
+        if (moveDuration <= 0f)
+        {
+            dashAttackMoveSpeed = 0f;
+            return;
+        }
+
+        dashAttackMoveSpeed =
+            moveDistance / moveDuration;
+    }
+
+    public void StopDashAttackMove()
+    {
+        isDashAttacking = false;
+        dashAttackMoveSpeed = 0f;
+
+        rb.linearVelocity = new Vector2(
+            0f,
+            rb.linearVelocity.y
         );
     }
 }
