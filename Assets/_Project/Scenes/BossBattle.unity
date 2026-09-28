@@ -832,9 +832,6 @@ MonoBehaviour:
   startupTime: 0.1
   parryWindow: 1
   parrySuccessDuration: 0.52
-  thrustHitDelay: 0.22
-  thrustHitboxDuration: 0.1
-  counterThrustDuration: 0.85
 --- !u!1 &440562010
 GameObject:
   m_ObjectHideFlags: 0
@@ -2104,6 +2101,7 @@ GameObject:
   - component: {fileID: 1266593681}
   - component: {fileID: 1266593682}
   - component: {fileID: 1266593683}
+  - component: {fileID: 1266593684}
   m_Layer: 0
   m_Name: Visual
   m_TagString: Untagged
@@ -2233,6 +2231,19 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::HitFlash
   spriteRenderer: {fileID: 1266593680}
   flashDuration: 0.08
+--- !u!114 &1266593684
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1266593678}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a2087754a13645847a3d0f949f581d6e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossAnimationEventReceiver
+  bossParry: {fileID: 402595766}
 --- !u!1 &1563451149
 GameObject:
   m_ObjectHideFlags: 0
