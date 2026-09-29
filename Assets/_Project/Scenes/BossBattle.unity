@@ -515,6 +515,8 @@ GameObject:
   - component: {fileID: 402595763}
   - component: {fileID: 402595765}
   - component: {fileID: 402595766}
+  - component: {fileID: 402595767}
+  - component: {fileID: 402595768}
   m_Layer: 8
   m_Name: Boss
   m_TagString: Untagged
@@ -534,7 +536,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe54fb2faef0c2e4a9a2124833e8eb0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
-  maxHealth: 200
+  maxHealth: 1000
 --- !u!4 &402595756
 Transform:
   m_ObjectHideFlags: 0
@@ -832,6 +834,40 @@ MonoBehaviour:
   startupTime: 0.1
   parryWindow: 1
   parrySuccessDuration: 0.52
+--- !u!114 &402595767
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 402595753}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2256d9191894ca24bb1ff0bba381fb8e, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerBehaviorModel
+  minAttackSamples: 3
+  minResponseSamples: 2
+  usageWeight: 0.45
+  successWeight: 0.35
+  recencyWeight: 0.2
+  recencyWindow: 5
+--- !u!114 &402595768
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 402595753}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c0684ffe1308b94088f5b9b4f598fc1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossAdaptiveDecisionSource
+  behaviorModel: {fileID: 402595767}
+  attackRules: []
+  minMultiplier: 0.6
+  maxMultiplier: 1.5
 --- !u!1 &440562010
 GameObject:
   m_ObjectHideFlags: 0
@@ -1956,6 +1992,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::CombatLogger
   player: {fileID: 685367515}
   boss: {fileID: 402595756}
+  behaviorModel: {fileID: 402595767}
 --- !u!4 &792907620
 Transform:
   m_ObjectHideFlags: 0
