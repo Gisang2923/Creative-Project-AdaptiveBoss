@@ -70,6 +70,8 @@ public class CombatLogger : MonoBehaviour
     [Header("References")]
     [SerializeField] private Transform player;
     [SerializeField] private Transform boss;
+    [SerializeField]
+    private PlayerBehaviorModel behaviorModel;
     public static CombatLogger Instance { get; private set; }
 
     private readonly List<AttackResponseLog> logs = new();
@@ -217,7 +219,9 @@ public class CombatLogger : MonoBehaviour
         }
 
         logs.Add(currentLog);
-
+        behaviorModel?.PrintSummary(
+            currentLog.bossAttack
+        );
         Debug.Log(
             $"[CombatLog #{currentLog.sequenceId}] " +
             $"{currentLog.bossAttack} → " +
