@@ -1954,6 +1954,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 43b699b30a19c454f9777c70cfad82c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::CombatLogger
+  player: {fileID: 685367515}
+  boss: {fileID: 402595756}
 --- !u!4 &792907620
 Transform:
   m_ObjectHideFlags: 0

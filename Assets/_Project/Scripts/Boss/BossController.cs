@@ -83,7 +83,9 @@ public class BossController : MonoBehaviour
             !bossAction.IsAttacking &&
             stunTimer <= 0f)
         {
-            CombatLogger.Instance?.EndBossAttack();
+            CombatLogger.Instance?.EndBossAttack(
+                movement.DistanceToTarget
+            );
 
             StartPostAction();
         }

@@ -12,7 +12,13 @@ public enum PlayerResponseType
     ChargeAttack,
     Heal
 }
-
+public enum ResponseDirection
+{
+    None,
+    TowardBoss,
+    AwayFromBoss,
+    Neutral
+}
 public enum CombatResultType
 {
     Pending,
@@ -24,37 +30,53 @@ public enum CombatResultType
 [System.Serializable]
 public class AttackResponseLog
 {
+    public int sequenceId;
+
     public BossAttackType bossAttack;
     public PlayerResponseType playerResponse;
+    public ResponseDirection responseDirection;
     public CombatResultType result;
 
     public float attackStartTime;
     public float responseDelay;
-    public float distance;
+
+    public float distanceBefore;
+    public float distanceAtResponse;
+    public float distanceAfter;
 
     public AttackResponseLog(
+        int sequenceId,
         BossAttackType bossAttack,
         float attackStartTime,
-        float distance)
+        float distanceBefore)
     {
+        this.sequenceId = sequenceId;
         this.bossAttack = bossAttack;
         this.attackStartTime = attackStartTime;
-        this.distance = distance;
+        this.distanceBefore = distanceBefore;
 
         playerResponse = PlayerResponseType.None;
+        responseDirection = ResponseDirection.None;
         result = CombatResultType.Pending;
+
         responseDelay = -1f;
+        distanceAtResponse = -1f;
+        distanceAfter = distanceBefore;
     }
 }
 
 public class CombatLogger : MonoBehaviour
 {
+    [Header("References")]
+    [SerializeField] private Transform player;
+    [SerializeField] private Transform boss;
     public static CombatLogger Instance { get; private set; }
 
     private readonly List<AttackResponseLog> logs = new();
 
     private AttackResponseLog currentLog;
     private bool responseRecorded;
+    private int nextSequenceId = 0;
 
     public IReadOnlyList<AttackResponseLog> Logs => logs;
 
@@ -76,10 +98,13 @@ public class CombatLogger : MonoBehaviour
         // 혹시 이전 공격 로그가 정상 종료되지 않았으면 먼저 마감
         if (currentLog != null)
         {
-            EndBossAttack();
+            EndBossAttack(
+                GetCurrentDistance()
+            );
         }
 
         currentLog = new AttackResponseLog(
+            nextSequenceId++,
             attackType,
             Time.time,
             distance
@@ -107,8 +132,15 @@ public class CombatLogger : MonoBehaviour
         responseRecorded = true;
 
         currentLog.playerResponse = response;
+
         currentLog.responseDelay =
             Time.time - currentLog.attackStartTime;
+
+        currentLog.distanceAtResponse =
+            GetCurrentDistance();
+
+        currentLog.responseDirection =
+            GetResponseDirection();
 
         Debug.Log(
             $"[CombatLog] RESPONSE | " +
@@ -116,7 +148,46 @@ public class CombatLogger : MonoBehaviour
             $"Delay={currentLog.responseDelay:F2}"
         );
     }
+    private float GetCurrentDistance()
+    {
+        if (player == null || boss == null)
+            return -1f;
 
+        return Mathf.Abs(
+            player.position.x - boss.position.x
+        );
+    }
+    private ResponseDirection GetResponseDirection()
+    {
+        if (player == null || boss == null)
+            return ResponseDirection.None;
+
+        Rigidbody2D playerRb =
+            player.GetComponent<Rigidbody2D>();
+
+        if (playerRb == null)
+            return ResponseDirection.None;
+
+        float velocityX =
+            playerRb.linearVelocity.x;
+
+        if (Mathf.Abs(velocityX) < 0.1f)
+            return ResponseDirection.Neutral;
+
+        float bossDirection =
+            Mathf.Sign(
+                boss.position.x -
+                player.position.x
+            );
+
+        float moveDirection =
+            Mathf.Sign(velocityX);
+
+        if (moveDirection == bossDirection)
+            return ResponseDirection.TowardBoss;
+
+        return ResponseDirection.AwayFromBoss;
+    }
     public void RecordPlayerHit()
     {
         if (currentLog == null)
@@ -133,8 +204,9 @@ public class CombatLogger : MonoBehaviour
         currentLog.result = CombatResultType.ParrySuccess;
     }
 
-    public void EndBossAttack()
+    public void EndBossAttack(float distanceAfter)
     {
+        currentLog.distanceAfter = distanceAfter;
         if (currentLog == null)
             return;
 
@@ -147,10 +219,16 @@ public class CombatLogger : MonoBehaviour
         logs.Add(currentLog);
 
         Debug.Log(
-            $"[CombatLog] END | " +
+            $"[CombatLog #{currentLog.sequenceId}] " +
             $"{currentLog.bossAttack} → " +
-            $"{currentLog.playerResponse} → " +
-            $"{currentLog.result}"
+            $"{currentLog.playerResponse} " +
+            $"({currentLog.responseDirection}) | " +
+            $"{currentLog.result} | " +
+            $"Distance " +
+            $"{currentLog.distanceBefore:F2} → " +
+            $"{currentLog.distanceAtResponse:F2} → " +
+            $"{currentLog.distanceAfter:F2} | " +
+            $"Delay={currentLog.responseDelay:F2}"
         );
 
         currentLog = null;
