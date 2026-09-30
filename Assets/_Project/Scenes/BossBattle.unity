@@ -586,6 +586,9 @@ MonoBehaviour:
   backDodgeDistance: 4
   backDodgeDuration: 0.3
   bossAnimator: {fileID: 402595765}
+  frontStepDistance: 4
+  frontStepDuration: 0.2
+  frontStepStopDistance: 0.8
   playerLayer:
     serializedVersion: 2
     m_Bits: 128
@@ -638,6 +641,9 @@ MonoBehaviour:
   backDodgeCooldown: 3
   backDodgeRecoveryTime: 0.5
   backDodgeChance: 0.35
+  frontStepTriggerDistance: 4
+  frontStepChance: 0.25
+  frontStepCooldown: 3
   bossParry: {fileID: 402595766}
   parryChance: 0.35
   parryCooldown: 4
@@ -726,7 +732,7 @@ MonoBehaviour:
     holdWeight: 1
     approachWeight: 0
     retreatWeight: 0
-  adaptiveSource: {fileID: 0}
+  adaptiveSource: {fileID: 402595768}
 --- !u!114 &402595762
 MonoBehaviour:
   m_ObjectHideFlags: 0

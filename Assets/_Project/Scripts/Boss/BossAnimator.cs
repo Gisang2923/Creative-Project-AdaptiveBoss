@@ -22,6 +22,8 @@ public class BossAnimator : MonoBehaviour
 
     private static readonly int Dash =
         Animator.StringToHash("Dash");
+    private static readonly int FrontStep =
+        Animator.StringToHash("FrontStep");    
 
     private static readonly int LightAttack =
         Animator.StringToHash("LightAtk1");
@@ -113,7 +115,10 @@ public class BossAnimator : MonoBehaviour
     {
         PlayAction(BackDash);
     }
-
+    public void PlayFrontStep()
+    {
+        PlayAction(FrontStep);
+    }
     public void PlayDash()
     {
         PlayAction(Dash);

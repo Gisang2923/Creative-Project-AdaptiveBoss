@@ -35,7 +35,20 @@ public class BossAction : MonoBehaviour
     private bool isDodging;
 
     public bool IsDodging => isDodging;
-    public bool IsBusy => isAttacking || isDodging;
+
+    [Header("Front Step")]
+    [SerializeField] private float frontStepDistance = 2f;
+    [SerializeField] private float frontStepDuration = 0.2f;
+    [SerializeField] private float frontStepStopDistance = 0.8f;
+
+    private bool isFrontStepping;
+
+    public bool IsFrontStepping => isFrontStepping;
+    
+    public bool IsBusy =>
+        isAttacking ||
+        isDodging ||
+        isFrontStepping;
     private bool isAttacking;
     private Hitbox currentHitbox;
 
@@ -120,6 +133,7 @@ public class BossAction : MonoBehaviour
 
         isAttacking = false;
         isDodging = false;
+        isFrontStepping = false;
     }
     private IEnumerator ChargeSlashRoutine(BossAttack attack)
     {
@@ -360,7 +374,7 @@ public class BossAction : MonoBehaviour
 
         StartCoroutine(BackDodgeRoutine());
     }
-
+    
     private IEnumerator BackDodgeRoutine()
     {
         isDodging = true;
@@ -400,6 +414,84 @@ public class BossAction : MonoBehaviour
             new Vector2(0f, rb.linearVelocity.y);
 
         isDodging = false;
+    }
+    public void ExecuteFrontStep()
+    {
+        if (IsBusy)
+            return;
+
+        StartCoroutine(FrontStepRoutine());
+    }
+    private IEnumerator FrontStepRoutine()
+    {
+        if (player == null)
+            yield break;
+
+        isFrontStepping = true;
+
+        movement?.FaceTarget();
+        bossAnimator?.PlayFrontStep();
+
+        float deltaX =
+            player.position.x -
+            transform.position.x;
+
+        float currentDistance =
+            Mathf.Abs(deltaX);
+
+        // 이미 충분히 가까우면 FrontStep하지 않음
+        if (currentDistance <= frontStepStopDistance)
+        {
+            isFrontStepping = false;
+            yield break;
+        }
+
+        float direction =
+            Mathf.Sign(deltaX);
+
+        // 플레이어를 뚫고 지나가지 않도록
+        float moveDistance =
+            Mathf.Min(
+                frontStepDistance,
+                currentDistance -
+                frontStepStopDistance
+            );
+
+        float speed =
+            moveDistance /
+            frontStepDuration;
+
+        float movedDistance = 0f;
+
+        while (movedDistance < moveDistance)
+        {
+            float moveThisFrame =
+                speed * Time.fixedDeltaTime;
+
+            moveThisFrame =
+                Mathf.Min(
+                    moveThisFrame,
+                    moveDistance - movedDistance
+                );
+
+            rb.linearVelocity =
+                new Vector2(
+                    direction * speed,
+                    rb.linearVelocity.y
+                );
+
+            movedDistance += moveThisFrame;
+
+            yield return new WaitForFixedUpdate();
+        }
+
+        rb.linearVelocity =
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
+
+        isFrontStepping = false;
     }
     private void RestoreBossState()
     {

@@ -10,6 +10,7 @@ public class BossController : MonoBehaviour
         Attack,
         Parry,
         BackDodge,
+        FrontStep,
         Stunned,
         Dead
     }
@@ -47,6 +48,15 @@ public class BossController : MonoBehaviour
 
     private float stunTimer;
 
+    [Header("Front Step")]
+    [SerializeField] private float frontStepTriggerDistance = 4f;
+
+    [SerializeField, Range(0f, 1f)]
+    private float frontStepChance = 0.25f;
+
+    [SerializeField] private float frontStepCooldown = 3f;
+
+    private float frontStepCooldownTimer;
     [Header("Parry")]
     [SerializeField] private BossParry bossParry;
     [SerializeField, Range(0f, 1f)]
@@ -72,7 +82,10 @@ public class BossController : MonoBehaviour
         }
         if (backDodgeCooldownTimer > 0f)
             backDodgeCooldownTimer -= Time.deltaTime;
-
+        if (frontStepCooldownTimer > 0f)
+        {
+            frontStepCooldownTimer -= Time.deltaTime;
+        }
         if (repositionTimer > 0f)
             repositionTimer -= Time.deltaTime;
         if (parryCooldownTimer > 0f)
@@ -130,9 +143,17 @@ public class BossController : MonoBehaviour
         if (bossAction.IsBusy)
         {
             if (bossAction.IsDodging)
+            {
                 ChangeState(BossState.BackDodge);
+            }
+            else if (bossAction.IsFrontStepping)
+            {
+                ChangeState(BossState.FrontStep);
+            }
             else
+            {
                 ChangeState(BossState.Attack);
+            }
 
             return;
         }
@@ -149,10 +170,10 @@ public class BossController : MonoBehaviour
 
         if (TryBackDodge(distance))
             return;
-        if (TryParry())
-        {
+        if (TryParry())  
             return;
-        }   
+        if (TryFrontStep(distance))
+            return;
         if (attackSelector.HasValidAttack(distance))
         {
             StartAttack(distance);
@@ -202,6 +223,9 @@ public class BossController : MonoBehaviour
             case BossState.BackDodge:
                 // 이동은 BossAction이 직접 제어
                 break;
+            case BossState.FrontStep:
+                // 이동은 BossAction의 FrontStepRoutine이 담당
+                break;    
             case BossState.Stunned:
                 break;
             case BossState.Dead:
@@ -323,6 +347,36 @@ public class BossController : MonoBehaviour
         backDodgeCooldownTimer = backDodgeCooldown;
 
         ChangeState(BossState.BackDodge);
+    }
+    private bool TryFrontStep(float distance)
+    {
+        if (frontStepCooldownTimer > 0f)
+            return false;
+
+        // 가까운데 굳이 접근하지 않음
+        if (distance <= 1.5f)
+            return false;
+
+        // 너무 멀면 기존 Approach 사용
+        if (distance > frontStepTriggerDistance)
+            return false;
+
+        if (Random.value > frontStepChance)
+            return false;
+
+        movement.Stop();
+        movement.FaceTarget();
+
+        bossAction.ExecuteFrontStep();
+
+        frontStepCooldownTimer =
+            frontStepCooldown;
+
+        ChangeState(
+            BossState.FrontStep
+        );
+
+        return true;
     }
     public void EnterCounterStun(float duration)
     {
