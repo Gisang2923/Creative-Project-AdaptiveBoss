@@ -30,7 +30,8 @@ public class BossAnimator : MonoBehaviour
 
     private static readonly int DashAttack =
         Animator.StringToHash("DashAtk");
-
+    private static readonly int HeavyPrepare =
+        Animator.StringToHash("HeavyPrepare");
     private static readonly int HeavyAttack =
         Animator.StringToHash("FrontHeavyAtk");
 
@@ -133,7 +134,10 @@ public class BossAnimator : MonoBehaviour
     {
         PlayAction(LightAttack);
     }
-
+    public void PlayHeavyPrepare()
+    {
+        PlayAction(HeavyPrepare);
+    }
     public void PlayHeavyAttack()
     {
         PlayAction(HeavyAttack);

@@ -4,7 +4,8 @@ using UnityEngine;
 public class BossAction : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D rb;
-
+    [Header("Heavy Slash")]
+    [SerializeField] private float heavyPrepareTime = 0.5f;
     [Header("Charge Slash")]
     [SerializeField] private float dashSpeed = 12f;
 
@@ -73,8 +74,7 @@ public class BossAction : MonoBehaviour
                 break;
 
             case BossAttackType.HeavySlash:
-                bossAnimator?.PlayHeavyAttack();
-                StartCoroutine(SlashRoutine(attack));
+                StartCoroutine(HeavySlashRoutine(attack));
                 break;
 
             case BossAttackType.ChargeSlash:
@@ -112,7 +112,40 @@ public class BossAction : MonoBehaviour
         currentHitbox = null;
         isAttacking = false;
     }
+    private IEnumerator HeavySlashRoutine(BossAttack attack)
+    {
+        isAttacking = true;
 
+        AttackData data = attack.attackData;
+        Hitbox hitbox = attack.hitbox;
+
+        currentHitbox = hitbox;
+
+        // 1. Prepare
+        bossAnimator?.PlayHeavyPrepare();
+
+        yield return new WaitForSeconds(heavyPrepareTime);
+
+        // 2. 실제 Heavy Attack
+        bossAnimator?.PlayHeavyAttack();
+
+        // 기존 Heavy 애니메이션 안에서
+        // 실제 공격 프레임까지의 시간
+        yield return new WaitForSeconds(data.startupTime);
+
+        // 3. Active
+        hitbox.Activate(data);
+
+        yield return new WaitForSeconds(data.activeTime);
+
+        hitbox.Deactivate();
+
+        // 4. Recovery
+        yield return new WaitForSeconds(data.recoveryTime);
+
+        currentHitbox = null;
+        isAttacking = false;
+    }
     public void ForceCancelAttack()
     {
         StopAllCoroutines();
