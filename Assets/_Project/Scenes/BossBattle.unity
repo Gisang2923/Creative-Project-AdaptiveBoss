@@ -567,6 +567,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossAction
   rb: {fileID: 402595759}
+  heavyPrepareTime: 1
   dashSpeed: 30
   dashBehindDistance: 2
   maxDashDuration: 0.6
@@ -635,6 +636,7 @@ MonoBehaviour:
   movement: {fileID: 402595762}
   bossAction: {fileID: 402595758}
   attackSelector: {fileID: 402595761}
+  adaptiveSource: {fileID: 0}
   damageReceiver: {fileID: 402595764}
   repositionDuration: 0.8
   backDodgeTriggerDistance: 2.5
@@ -859,6 +861,8 @@ MonoBehaviour:
   successWeight: 0.35
   recencyWeight: 0.2
   recencyWindow: 5
+  spatialWindow: 6
+  minSpatialSamples: 3
 --- !u!114 &402595768
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -875,6 +879,8 @@ MonoBehaviour:
   attackRules: []
   minMultiplier: 0.6
   maxMultiplier: 1.5
+  retreatHabitThreshold: 0.4
+  maxFrontStepChance: 0.65
 --- !u!1 &440562010
 GameObject:
   m_ObjectHideFlags: 0
