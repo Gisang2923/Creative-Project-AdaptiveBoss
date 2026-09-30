@@ -19,7 +19,7 @@ public class BossController : MonoBehaviour
     [SerializeField] private BossMovement movement;
     [SerializeField] private BossAction bossAction;
     [SerializeField] private BossAttackSelector attackSelector;
-
+    [SerializeField] private BossAdaptiveDecisionSource adaptiveSource;
     [Header("Combat")]
     
     [SerializeField] private BossDamageReceiver damageReceiver;
@@ -57,6 +57,9 @@ public class BossController : MonoBehaviour
     [SerializeField] private float frontStepCooldown = 3f;
 
     private float frontStepCooldownTimer;
+    [SerializeField] private float frontStepRecoveryTime = 0.3f;
+
+    private bool wasFrontStepping;
     [Header("Parry")]
     [SerializeField] private BossParry bossParry;
     [SerializeField, Range(0f, 1f)]
@@ -112,9 +115,14 @@ public class BossController : MonoBehaviour
         {
             StartBackDodgeRecovery();
         }
-
+        if (wasFrontStepping &&
+            !bossAction.IsFrontStepping)
+        {
+            StartFrontStepRecovery();
+        }
         wasAttacking = bossAction.IsAttacking;
         wasDodging = bossAction.IsDodging;
+        wasFrontStepping = bossAction.IsFrontStepping;
         wasParrying = bossParry != null && bossParry.IsParrying;
         UpdateState();
     }
@@ -329,6 +337,18 @@ public class BossController : MonoBehaviour
             "BackDodge Recovery → Hold"
         );
     }
+    private void StartFrontStepRecovery()
+    {
+        repositionTimer =
+            frontStepRecoveryTime;
+
+        currentPostAction =
+            BossPostAction.Hold;
+
+        Debug.Log(
+            "FrontStep Recovery → Hold"
+        );
+    }
     public void TriggerHitBackDodge()
     {
         if (!battleStarted)
@@ -361,7 +381,18 @@ public class BossController : MonoBehaviour
         if (distance > frontStepTriggerDistance)
             return false;
 
-        if (Random.value > frontStepChance)
+        float currentChance =
+            frontStepChance;
+
+        if (adaptiveSource != null)
+        {
+            currentChance =
+                adaptiveSource.GetFrontStepChance(
+                    frontStepChance
+                );
+        }
+
+        if (Random.value > currentChance)
             return false;
 
         movement.Stop();

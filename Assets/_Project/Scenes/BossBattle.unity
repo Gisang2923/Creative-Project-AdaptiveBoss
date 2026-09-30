@@ -644,6 +644,7 @@ MonoBehaviour:
   frontStepTriggerDistance: 4
   frontStepChance: 0.25
   frontStepCooldown: 3
+  frontStepRecoveryTime: 0.5
   bossParry: {fileID: 402595766}
   parryChance: 0.35
   parryCooldown: 4

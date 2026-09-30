@@ -19,6 +19,10 @@ public class PlayerBehaviorModel : MonoBehaviour
     [Header("Recency")]
     [SerializeField] private int recencyWindow = 5;
 
+    [Header("Spatial Habit")]
+    [SerializeField] private int spatialWindow = 6;
+    [SerializeField] private int minSpatialSamples = 3;
+
     public float GetHabitScore(
         BossAttackType bossAttack,
         PlayerResponseType response)
@@ -227,7 +231,56 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         return best;
     }
+    public float GetRetreatHabitScore()
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
 
+        if (logs == null || logs.Count == 0)
+            return 0f;
+
+        int checkedCount = 0;
+        int retreatCount = 0;
+
+        // 최근 로그부터 확인
+        for (int i = logs.Count - 1;
+            i >= 0 && checkedCount < spatialWindow;
+            i--)
+        {
+            AttackResponseLog log = logs[i];
+
+            // 아무 대응도 없었던 경우는 공간 습관 분석에서 제외
+            if (log.playerResponse == PlayerResponseType.None)
+                continue;
+
+            checkedCount++;
+
+            bool movedAway =
+                log.responseDirection ==
+                ResponseDirection.AwayFromBoss;
+
+            bool increasedDistance =
+                log.distanceAfter >
+                log.distanceBefore;
+
+            bool successful =
+                log.result ==
+                CombatResultType.Avoided;
+
+            if (movedAway &&
+                increasedDistance &&
+                successful)
+            {
+                retreatCount++;
+            }
+        }
+
+        if (checkedCount < minSpatialSamples)
+            return 0f;
+
+        return (float)retreatCount /
+            checkedCount;
+    }
     public void PrintSummary(
         BossAttackType bossAttack)
     {

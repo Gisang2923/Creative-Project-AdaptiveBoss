@@ -33,7 +33,13 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     [SerializeField]
     private float maxMultiplier = 1.5f;
+    [Header("Spatial Adaptation")]
+    [SerializeField, Range(0f, 1f)]
+    private float retreatHabitThreshold = 0.4f;
 
+    [SerializeField, Range(0f, 1f)]
+    private float maxFrontStepChance = 0.65f;
+    
     public float GetAttackWeightMultiplier(
         BossAttack attack,
         float distance)
@@ -99,5 +105,42 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         float distance)
     {
         return 1f;
+    }
+    public float GetFrontStepChance(float baseChance)
+    {
+        if (behaviorModel == null)
+            return baseChance;
+
+        float retreatHabit =
+            behaviorModel.GetRetreatHabitScore();
+
+        if (retreatHabit <
+            retreatHabitThreshold)
+        {
+            return baseChance;
+        }
+
+        float influence =
+            Mathf.InverseLerp(
+                retreatHabitThreshold,
+                1f,
+                retreatHabit
+            );
+
+        float adaptedChance =
+            Mathf.Lerp(
+                baseChance,
+                maxFrontStepChance,
+                influence
+            );
+
+        Debug.Log(
+            $"[Spatial Adaptive] " +
+            $"RetreatHabit={retreatHabit:F2} | " +
+            $"FrontStepChance " +
+            $"{baseChance:F2} → {adaptedChance:F2}"
+        );
+
+        return adaptedChance;
     }
 }
