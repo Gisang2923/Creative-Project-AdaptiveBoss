@@ -23,6 +23,7 @@ public class BossAction : MonoBehaviour
     [SerializeField] private float jumpSlamVanishTime = 0.35f;
     [SerializeField] private float jumpSlamSpawnHeight = 5f;
     [SerializeField] private float jumpSlamFallSpeed = 12f;
+    [SerializeField] private float jumpSlamHorizontalSpeed = 2f;
     [SerializeField] private float jumpSlamGroundY = 0f;
     [SerializeField] private float jumpLandingOffset = 0.6f;
     [Header("Jump Slam Ground Check")]
@@ -285,7 +286,7 @@ public class BossAction : MonoBehaviour
 
         bossAnimator?.PlayJump();
 
-        float jumpUpSpeed = 35f;
+        float jumpUpSpeed = 40f;
         float jumpUpTime = 0.03f;
 
         float elapsed = 0f;
@@ -320,15 +321,38 @@ public class BossAction : MonoBehaviour
         yield return new WaitForSeconds(jumpSlamVanishTime);
 
         // 3. 플레이어 위쪽으로 위치 이동
-        // 3. 플레이어 옆 위치를 착지 지점으로 설정
-        float direction =
-            Mathf.Sign(player.position.x - transform.position.x);
+        // ==========================================
+        // 3. 왼쪽 / 오른쪽 상공 랜덤 등장
+        // ==========================================
 
-        float targetX =
-            player.position.x - direction * jumpLandingOffset;
+        // -1 = 플레이어 왼쪽에서 등장
+        //  1 = 플레이어 오른쪽에서 등장
+        float spawnSide =
+            Random.value < 0.5f ? -1f : 1f;
+
+        // 등장한 쪽의 반대 방향으로 내려찍음
+        float slamDirection = -spawnSide;
+
+        // 예상 낙하 시간
+        float estimatedFallTime =
+            jumpSlamSpawnHeight / jumpSlamFallSpeed;
+
+        // 낙하 중 예상 수평 이동 거리
+        float horizontalTravel =
+            jumpSlamHorizontalSpeed * estimatedFallTime;
+
+        // 플레이어를 살짝 지나가는 지점을 착지 목표로 설정
+        float landingX =
+            player.position.x +
+            slamDirection * jumpLandingOffset;
+
+        // 착지 목표에서 역산하여 Spawn 위치 결정
+        float spawnX =
+            landingX -
+            slamDirection * horizontalTravel;
 
         transform.position = new Vector3(
-            targetX,
+            spawnX,
             jumpSlamGroundY + jumpSlamSpawnHeight,
             transform.position.z
         );
@@ -345,7 +369,7 @@ public class BossAction : MonoBehaviour
         while (true)
         {
             rb.linearVelocity = new Vector2(
-                0f,
+                slamDirection * jumpSlamHorizontalSpeed,
                 -jumpSlamFallSpeed
             );
 

@@ -576,10 +576,11 @@ MonoBehaviour:
   visual: {fileID: 1266593679}
   bodyCollider: {fileID: 402595763}
   jumpSlamVanishTime: 0.3
-  jumpSlamSpawnHeight: 7
-  jumpSlamFallSpeed: 30
+  jumpSlamSpawnHeight: 6
+  jumpSlamFallSpeed: 18
+  jumpSlamHorizontalSpeed: 8
   jumpSlamGroundY: 0
-  jumpLandingOffset: 0.6
+  jumpLandingOffset: 0.2
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
@@ -963,7 +964,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 1, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -2461,7 +2462,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0.7, y: 0}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -2471,7 +2472,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 2.3, y: 1.2}
+  m_Size: {x: 4, y: 2}
   m_EdgeRadius: 0
 --- !u!4 &1563451152
 Transform:
