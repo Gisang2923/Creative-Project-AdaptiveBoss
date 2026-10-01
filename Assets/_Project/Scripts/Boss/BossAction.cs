@@ -7,6 +7,7 @@ public class BossAction : MonoBehaviour
     [Header("Heavy Slash")]
     [SerializeField] private float heavyPrepareTime = 0.5f;
     [Header("Charge Slash")]
+    [SerializeField] private float chargePostPassDelay = 0.15f;
     [SerializeField] private float dashSpeed = 12f;
 
     // 공격을 결정한 순간 플레이어 위치 기준,
@@ -231,7 +232,7 @@ public class BossAction : MonoBehaviour
         // ==========================================
         // 3. 제자리에서 DashAttack 모션
         // ==========================================
-
+        yield return new WaitForSeconds(chargePostPassDelay);
         bossAnimator?.PlayDashAttack();
 
         // 실제 검을 휘두르는 프레임까지 기다림

@@ -567,7 +567,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossAction
   rb: {fileID: 402595759}
-  heavyPrepareTime: 1
+  heavyPrepareTime: 0.5
+  chargePostPassDelay: 0.3
   dashSpeed: 30
   dashBehindDistance: 2
   maxDashDuration: 0.6
@@ -636,7 +637,7 @@ MonoBehaviour:
   movement: {fileID: 402595762}
   bossAction: {fileID: 402595758}
   attackSelector: {fileID: 402595761}
-  adaptiveSource: {fileID: 0}
+  adaptiveSource: {fileID: 402595768}
   damageReceiver: {fileID: 402595764}
   repositionDuration: 0.8
   backDodgeTriggerDistance: 2.5
