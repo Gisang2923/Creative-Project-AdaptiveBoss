@@ -128,6 +128,11 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         foreach (AttackResponseLog log in logs)
         {
+            if (log.bossBehavior !=
+                BossBehaviorType.Attack)
+            {
+                continue;
+            }
             if (log.bossAttack != bossAttack)
                 continue;
 
@@ -165,7 +170,10 @@ public class PlayerBehaviorModel : MonoBehaviour
              recent.Count < recencyWindow;
              i--)
         {
-            if (logs[i].bossAttack == bossAttack)
+            if (logs[i].bossBehavior ==
+                    BossBehaviorType.Attack &&
+                logs[i].bossAttack ==
+                    bossAttack)
             {
                 recent.Add(logs[i]);
             }
@@ -248,7 +256,11 @@ public class PlayerBehaviorModel : MonoBehaviour
             i--)
         {
             AttackResponseLog log = logs[i];
-
+            if (log.bossBehavior !=
+                    BossBehaviorType.Attack)
+                {
+                    continue;
+                }
             // 아무 대응도 없었던 경우는 공간 습관 분석에서 제외
             if (log.playerResponse == PlayerResponseType.None)
                 continue;
@@ -259,16 +271,11 @@ public class PlayerBehaviorModel : MonoBehaviour
                 log.responseDirection ==
                 ResponseDirection.AwayFromBoss;
 
-            bool increasedDistance =
-                log.distanceAfter >
-                log.distanceBefore;
-
             bool successful =
                 log.result ==
                 CombatResultType.Avoided;
 
             if (movedAway &&
-                increasedDistance &&
                 successful)
             {
                 retreatCount++;
@@ -328,8 +335,10 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         foreach (AttackResponseLog log in logs)
         {
-            if (log.bossAttack ==
-                bossAttack)
+            if (log.bossBehavior ==
+                    BossBehaviorType.Attack &&
+                log.bossAttack ==
+                    bossAttack)
             {
                 count++;
             }
@@ -347,7 +356,9 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         foreach (AttackResponseLog log in logs)
         {
-            if (log.bossAttack ==
+            if (log.bossBehavior ==
+                    BossBehaviorType.Attack &&
+                log.bossAttack ==
                     bossAttack &&
                 log.playerResponse ==
                     response)

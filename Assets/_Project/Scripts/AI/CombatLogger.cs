@@ -24,14 +24,22 @@ public enum CombatResultType
     Pending,
     Avoided,
     PlayerHit,
-    ParrySuccess
+    ParrySuccess,
+    Completed
 }
-
+public enum BossBehaviorType
+{
+    Attack,
+    BackDodge,
+    FrontStep,
+    Parry
+}
 [System.Serializable]
 public class AttackResponseLog
 {
     public int sequenceId;
 
+    public BossBehaviorType bossBehavior;
     public BossAttackType bossAttack;
     public PlayerResponseType playerResponse;
     public ResponseDirection responseDirection;
@@ -51,8 +59,29 @@ public class AttackResponseLog
         float distanceBefore)
     {
         this.sequenceId = sequenceId;
+        this.bossBehavior = BossBehaviorType.Attack;
         this.bossAttack = bossAttack;
         this.attackStartTime = attackStartTime;
+        this.distanceBefore = distanceBefore;
+
+        playerResponse = PlayerResponseType.None;
+        responseDirection = ResponseDirection.None;
+        result = CombatResultType.Pending;
+
+        responseDelay = -1f;
+        distanceAtResponse = -1f;
+        distanceAfter = distanceBefore;
+    }
+    public AttackResponseLog(
+        int sequenceId,
+        BossBehaviorType bossBehavior,
+        float behaviorStartTime,
+        float distanceBefore)
+    {
+        this.sequenceId = sequenceId;
+        this.bossBehavior = bossBehavior;
+
+        this.attackStartTime = behaviorStartTime;
         this.distanceBefore = distanceBefore;
 
         playerResponse = PlayerResponseType.None;
@@ -97,10 +126,9 @@ public class CombatLogger : MonoBehaviour
         BossAttackType attackType,
         float distance)
     {
-        // 혹시 이전 공격 로그가 정상 종료되지 않았으면 먼저 마감
         if (currentLog != null)
         {
-            EndBossAttack(
+            EndCurrentBehavior(
                 GetCurrentDistance()
             );
         }
@@ -119,7 +147,35 @@ public class CombatLogger : MonoBehaviour
             $"{attackType} | Distance={distance:F2}"
         );
     }
+    public void BeginBossBehavior(
+        BossBehaviorType behaviorType,
+        float distance)
+    {
+        if (behaviorType == BossBehaviorType.Attack)
+            return;
 
+        // 이전 행동 로그가 남아 있으면 먼저 종료
+        if (currentLog != null)
+        {
+            EndCurrentBehavior(
+                GetCurrentDistance()
+            );
+        }
+
+        currentLog = new AttackResponseLog(
+            nextSequenceId++,
+            behaviorType,
+            Time.time,
+            distance
+        );
+
+        responseRecorded = false;
+
+        Debug.Log(
+            $"[CombatLog] START | " +
+            $"{behaviorType} | Distance={distance:F2}"
+        );
+    }
     public void RecordPlayerResponse(
         PlayerResponseType response)
     {
@@ -144,9 +200,15 @@ public class CombatLogger : MonoBehaviour
         currentLog.responseDirection =
             GetResponseDirection();
 
+        string behaviorName =
+            currentLog.bossBehavior ==
+            BossBehaviorType.Attack
+                ? currentLog.bossAttack.ToString()
+                : currentLog.bossBehavior.ToString();
+
         Debug.Log(
             $"[CombatLog] RESPONSE | " +
-            $"{currentLog.bossAttack} → {response} | " +
+            $"{behaviorName} → {response} | " +
             $"Delay={currentLog.responseDelay:F2}"
         );
     }
@@ -205,26 +267,75 @@ public class CombatLogger : MonoBehaviour
 
         currentLog.result = CombatResultType.ParrySuccess;
     }
-
     public void EndBossAttack(float distanceAfter)
     {
-        currentLog.distanceAfter = distanceAfter;
         if (currentLog == null)
             return;
 
-        // 맞지도 않았고 패링도 안 당했다면 회피 성공으로 처리
+        if (currentLog.bossBehavior !=
+            BossBehaviorType.Attack)
+        {
+            return;
+        }
+
+        EndCurrentBehavior(distanceAfter);
+    }
+    public void EndBossBehavior(float distanceAfter)
+    {
+        if (currentLog == null)
+            return;
+
+        if (currentLog.bossBehavior ==
+            BossBehaviorType.Attack)
+        {
+            return;
+        }
+
+        EndCurrentBehavior(distanceAfter);
+    }
+    private void EndCurrentBehavior(float distanceAfter)
+    {
+        if (currentLog == null)
+            return;
+
+        currentLog.distanceAfter = distanceAfter;
+
         if (currentLog.result == CombatResultType.Pending)
         {
-            currentLog.result = CombatResultType.Avoided;
+            if (currentLog.bossBehavior ==
+                BossBehaviorType.Attack)
+            {
+                // 공격인데 맞지도, 패링되지도 않았다면 회피
+                currentLog.result =
+                    CombatResultType.Avoided;
+            }
+            else
+            {
+                // 이동/방어 행동은 단순 정상 종료
+                currentLog.result =
+                    CombatResultType.Completed;
+            }
         }
 
         logs.Add(currentLog);
-        behaviorModel?.PrintSummary(
-            currentLog.bossAttack
-        );
+
+        if (currentLog.bossBehavior ==
+            BossBehaviorType.Attack)
+        {
+            behaviorModel?.PrintSummary(
+                currentLog.bossAttack
+            );
+        }
+
+        string behaviorName =
+            currentLog.bossBehavior ==
+            BossBehaviorType.Attack
+                ? currentLog.bossAttack.ToString()
+                : currentLog.bossBehavior.ToString();
+
         Debug.Log(
             $"[CombatLog #{currentLog.sequenceId}] " +
-            $"{currentLog.bossAttack} → " +
+            $"{behaviorName} → " +
             $"{currentLog.playerResponse} " +
             $"({currentLog.responseDirection}) | " +
             $"{currentLog.result} | " +

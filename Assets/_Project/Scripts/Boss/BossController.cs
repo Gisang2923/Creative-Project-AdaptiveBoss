@@ -38,6 +38,7 @@ public class BossController : MonoBehaviour
     [SerializeField] private float backDodgeTriggerDistance = 1.5f;
     [SerializeField] private float backDodgeCooldown = 3f;
     private bool wasDodging;
+    private bool backDodgeLogPending;
 
     [SerializeField] private float backDodgeRecoveryTime = 0.5f;
 
@@ -60,6 +61,7 @@ public class BossController : MonoBehaviour
     [SerializeField] private float frontStepRecoveryTime = 0.3f;
 
     private bool wasFrontStepping;
+    private bool frontStepLogPending;
     [Header("Parry")]
     [SerializeField] private BossParry bossParry;
     [SerializeField, Range(0f, 1f)]
@@ -91,6 +93,26 @@ public class BossController : MonoBehaviour
         }
         if (repositionTimer > 0f)
             repositionTimer -= Time.deltaTime;
+        if (frontStepLogPending &&
+            !bossAction.IsFrontStepping &&
+            repositionTimer <= 0f)
+        {
+            CombatLogger.Instance?.EndBossBehavior(
+                movement.DistanceToTarget
+            );
+
+            frontStepLogPending = false;
+        } 
+        if (backDodgeLogPending &&
+            !bossAction.IsDodging &&
+            repositionTimer <= 0f)
+        {
+            CombatLogger.Instance?.EndBossBehavior(
+                movement.DistanceToTarget
+            );
+
+            backDodgeLogPending = false;
+        }   
         if (parryCooldownTimer > 0f)
         {
             parryCooldownTimer -= Time.deltaTime;
@@ -109,6 +131,10 @@ public class BossController : MonoBehaviour
             (bossParry == null || !bossParry.IsParrying) &&
             stunTimer <= 0f)
         {
+            CombatLogger.Instance?.EndBossBehavior(
+                movement.DistanceToTarget
+            );
+
             ChangeState(BossState.Idle);
         }
         if (wasDodging && !bossAction.IsDodging)
@@ -316,8 +342,14 @@ public class BossController : MonoBehaviour
 
         movement.Stop();
         movement.FaceTarget();
+        
+        CombatLogger.Instance?.BeginBossBehavior(
+            BossBehaviorType.BackDodge,
+            distance
+        );
 
         bossAction.ExecuteBackDodge();
+        backDodgeLogPending = true;
 
         backDodgeCooldownTimer = backDodgeCooldown;
 
@@ -398,6 +430,11 @@ public class BossController : MonoBehaviour
         movement.Stop();
         movement.FaceTarget();
 
+        CombatLogger.Instance?.BeginBossBehavior(
+            BossBehaviorType.FrontStep,
+            distance
+        );
+        frontStepLogPending = true;
         bossAction.ExecuteFrontStep();
 
         frontStepCooldownTimer =
@@ -441,6 +478,10 @@ public class BossController : MonoBehaviour
         movement.Stop();
         movement.FaceTarget();
 
+        CombatLogger.Instance?.BeginBossBehavior(
+            BossBehaviorType.Parry,
+            movement.DistanceToTarget
+        );
         ChangeState(BossState.Parry);
 
         parryCooldownTimer = parryCooldown;
