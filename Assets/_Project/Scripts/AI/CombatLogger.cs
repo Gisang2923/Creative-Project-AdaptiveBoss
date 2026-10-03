@@ -326,6 +326,12 @@ public class CombatLogger : MonoBehaviour
                 currentLog.bossAttack
             );
         }
+        else
+        {
+            behaviorModel?.PrintBehaviorSummary(
+                currentLog.bossBehavior
+            );
+        }
 
         string behaviorName =
             currentLog.bossBehavior ==

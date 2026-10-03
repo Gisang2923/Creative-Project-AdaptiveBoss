@@ -86,6 +86,136 @@ public class PlayerBehaviorModel : MonoBehaviour
         return Mathf.Clamp01(score);
     }
 
+    public float GetBehaviorHabitScore(
+        BossBehaviorType bossBehavior,
+        PlayerResponseType response)
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null || logs.Count == 0)
+            return 0f;
+
+        int behaviorCount =
+            GetBehaviorCount(
+                logs,
+                bossBehavior
+            );
+
+        int responseCount =
+            GetBehaviorResponseCount(
+                logs,
+                bossBehavior,
+                response
+            );
+
+        if (behaviorCount < minAttackSamples)
+            return 0f;
+
+        if (responseCount < minResponseSamples)
+            return 0f;
+
+        float usage =
+            GetBehaviorUsageRate(
+                bossBehavior,
+                response
+            );
+
+        float success =
+            GetBehaviorSuccessRate(
+                bossBehavior,
+                response
+            );
+
+        float recency =
+            GetBehaviorRecencyScore(
+                bossBehavior,
+                response
+            );
+
+        float totalWeight =
+            usageWeight +
+            successWeight +
+            recencyWeight;
+
+        if (totalWeight <= 0f)
+            return 0f;
+
+        float score =
+            (
+                usage * usageWeight +
+                success * successWeight +
+                recency * recencyWeight
+            )
+            / totalWeight;
+
+        return Mathf.Clamp01(score);
+    }
+    public float GetBehaviorUsageRate(
+        BossBehaviorType bossBehavior,
+        PlayerResponseType response)
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null)
+            return 0f;
+
+        int behaviorCount =
+            GetBehaviorCount(
+                logs,
+                bossBehavior
+            );
+
+        if (behaviorCount == 0)
+            return 0f;
+
+        int responseCount =
+            GetBehaviorResponseCount(
+                logs,
+                bossBehavior,
+                response
+            );
+
+        return (float)responseCount /
+            behaviorCount;
+    }
+    public float GetBehaviorSuccessRate(
+        BossBehaviorType bossBehavior,
+        PlayerResponseType response)
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null)
+            return 0f;
+
+        int responseCount = 0;
+        int successCount = 0;
+
+        foreach (AttackResponseLog log in logs)
+        {
+            if (log.bossBehavior != bossBehavior)
+                continue;
+
+            if (log.playerResponse != response)
+                continue;
+
+            responseCount++;
+
+            if (log.result ==
+                CombatResultType.Completed)
+            {
+                successCount++;
+            }
+        }
+
+        if (responseCount == 0)
+            return 0f;
+
+        return (float)successCount /
+            responseCount;
+    }
     public float GetUsageRate(
         BossAttackType bossAttack,
         PlayerResponseType response)
@@ -208,6 +338,59 @@ public class PlayerBehaviorModel : MonoBehaviour
                totalWeight;
     }
 
+    public float GetBehaviorRecencyScore(
+        BossBehaviorType bossBehavior,
+        PlayerResponseType response)
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null || logs.Count == 0)
+            return 0f;
+
+        List<AttackResponseLog> recent =
+            new List<AttackResponseLog>();
+
+        for (int i = logs.Count - 1;
+            i >= 0 &&
+            recent.Count < recencyWindow;
+            i--)
+        {
+            if (logs[i].bossBehavior ==
+                bossBehavior)
+            {
+                recent.Add(logs[i]);
+            }
+        }
+
+        if (recent.Count == 0)
+            return 0f;
+
+        float matchedWeight = 0f;
+        float totalWeight = 0f;
+
+        for (int i = 0;
+            i < recent.Count;
+            i++)
+        {
+            float weight =
+                recent.Count - i;
+
+            totalWeight += weight;
+
+            if (recent[i].playerResponse ==
+                response)
+            {
+                matchedWeight += weight;
+            }
+        }
+
+        if (totalWeight <= 0f)
+            return 0f;
+
+        return matchedWeight /
+            totalWeight;
+    }
     public PlayerResponseType GetDominantResponse(
         BossAttackType bossAttack)
     {
@@ -227,6 +410,39 @@ public class PlayerBehaviorModel : MonoBehaviour
             float score =
                 GetHabitScore(
                     bossAttack,
+                    response
+                );
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                best = response;
+            }
+        }
+
+        return best;
+    }
+    public PlayerResponseType GetDominantBehaviorResponse(
+        BossBehaviorType bossBehavior)
+    {
+        PlayerResponseType best =
+            PlayerResponseType.None;
+
+        float bestScore = 0f;
+
+        foreach (PlayerResponseType response
+                in System.Enum.GetValues(
+                    typeof(PlayerResponseType)))
+        {
+            if (response ==
+                PlayerResponseType.None)
+            {
+                continue;
+            }
+
+            float score =
+                GetBehaviorHabitScore(
+                    bossBehavior,
                     response
                 );
 
@@ -326,7 +542,46 @@ public class PlayerBehaviorModel : MonoBehaviour
             $"{GetDominantResponse(bossAttack)}"
         );
     }
+    public void PrintBehaviorSummary(
+        BossBehaviorType bossBehavior)
+    {
+        Debug.Log(
+            $"===== Boss Behavior : {bossBehavior} ====="
+        );
 
+        foreach (PlayerResponseType response
+                in System.Enum.GetValues(
+                    typeof(PlayerResponseType)))
+        {
+            if (response ==
+                PlayerResponseType.None)
+            {
+                continue;
+            }
+
+            float habit =
+                GetBehaviorHabitScore(
+                    bossBehavior,
+                    response
+                );
+
+            if (habit <= 0f)
+                continue;
+
+            Debug.Log(
+                $"{response} | " +
+                $"Usage={GetBehaviorUsageRate(bossBehavior, response):F2} | " +
+                $"Success={GetBehaviorSuccessRate(bossBehavior, response):F2} | " +
+                $"Recency={GetBehaviorRecencyScore(bossBehavior, response):F2} | " +
+                $"Habit={habit:F2}"
+            );
+        }
+
+        Debug.Log(
+            $"Dominant → " +
+            $"{GetDominantBehaviorResponse(bossBehavior)}"
+        );
+    }
     private int GetAttackCount(
         IReadOnlyList<AttackResponseLog> logs,
         BossAttackType bossAttack)
@@ -369,8 +624,44 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         return count;
     }
+    private int GetBehaviorCount(
+        IReadOnlyList<AttackResponseLog> logs,
+        BossBehaviorType bossBehavior)
+    {
+        int count = 0;
 
-    private bool WasSuccessful(
+        foreach (AttackResponseLog log in logs)
+        {
+            if (log.bossBehavior ==
+                bossBehavior)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+    private int GetBehaviorResponseCount(
+        IReadOnlyList<AttackResponseLog> logs,
+        BossBehaviorType bossBehavior,
+        PlayerResponseType response)
+    {
+        int count = 0;
+
+        foreach (AttackResponseLog log in logs)
+        {
+            if (log.bossBehavior ==
+                    bossBehavior &&
+                log.playerResponse ==
+                    response)
+            {
+                count++;
+            }
+        }
+
+        return count;
+    }
+        private bool WasSuccessful(
         AttackResponseLog log)
     {
         if (log.playerResponse ==
