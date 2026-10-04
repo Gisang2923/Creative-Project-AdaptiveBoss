@@ -64,11 +64,9 @@ public class BossController : MonoBehaviour
 
     private bool wasFrontStepping;
     private bool frontStepLogPending;
-    [SerializeField] private float frontStepResponseDelay = 0.10f;
+    [SerializeField] private float frontStepResponseWindow = 0.3f;
 
-    private bool frontStepResponseWaiting;
     private float frontStepResponseTimer;
-    private float frontStepStartDistance;
 
     [Header("Parry")]
     [SerializeField] private BossParry bossParry;
@@ -101,26 +99,12 @@ public class BossController : MonoBehaviour
         }
         if (repositionTimer > 0f)
             repositionTimer -= Time.deltaTime;
-        // FrontStep 반응 관찰 시작
-        if (frontStepResponseWaiting)
+
+        // FrontStep 반응 관찰 시간
+        if (frontStepLogPending &&
+            frontStepResponseTimer > 0f)
         {
             frontStepResponseTimer -= Time.deltaTime;
-
-            if (frontStepResponseTimer <= 0f)
-            {
-                if (bossAction.IsFrontStepping ||
-                    repositionTimer > 0f)
-                {
-                    CombatLogger.Instance?.BeginBossBehavior(
-                        BossBehaviorType.FrontStep,
-                        frontStepStartDistance
-                    );
-
-                    frontStepLogPending = true;
-                }
-
-                frontStepResponseWaiting = false;
-            }
         }
 
         // BackDodge 반응 관찰 시간
@@ -131,7 +115,8 @@ public class BossController : MonoBehaviour
         }
         if (frontStepLogPending &&
             !bossAction.IsFrontStepping &&
-            repositionTimer <= 0f)
+            repositionTimer <= 0f &&
+            frontStepResponseTimer <= 0f)
         {
             CombatLogger.Instance?.EndBossBehavior(
                 movement.DistanceToTarget
@@ -461,15 +446,18 @@ public class BossController : MonoBehaviour
         movement.Stop();
         movement.FaceTarget();
 
-        frontStepStartDistance = distance;
-
         frontStepResponseTimer =
-            frontStepResponseDelay;
+            frontStepResponseWindow;
 
-        frontStepResponseWaiting = true;
-        frontStepLogPending = false;
+        // FrontStep 시작과 동시에 로그 시작
+        CombatLogger.Instance?.BeginBossBehavior(
+            BossBehaviorType.FrontStep,
+            distance
+        );
 
-        bossAction.ExecuteFrontStep();
+        frontStepLogPending = true;
+
+    bossAction.ExecuteFrontStep();
 
         frontStepCooldownTimer =
             frontStepCooldown;
