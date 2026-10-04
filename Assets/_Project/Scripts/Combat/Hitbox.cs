@@ -69,7 +69,6 @@ public class Hitbox : MonoBehaviour
                 distance
             );
 
-        Debug.Log($"Sweep Hit Count: {hits.Length}");
 
         foreach (RaycastHit2D hit in hits)
         {

@@ -39,7 +39,9 @@ public class BossController : MonoBehaviour
     [SerializeField] private float backDodgeCooldown = 3f;
     private bool wasDodging;
     private bool backDodgeLogPending;
+    [SerializeField] private float backDodgeResponseWindow = 0.6f;
 
+    private float backDodgeResponseTimer;
     [SerializeField] private float backDodgeRecoveryTime = 0.5f;
 
     [SerializeField, Range(0f, 1f)]
@@ -62,6 +64,12 @@ public class BossController : MonoBehaviour
 
     private bool wasFrontStepping;
     private bool frontStepLogPending;
+    [SerializeField] private float frontStepResponseDelay = 0.10f;
+
+    private bool frontStepResponseWaiting;
+    private float frontStepResponseTimer;
+    private float frontStepStartDistance;
+
     [Header("Parry")]
     [SerializeField] private BossParry bossParry;
     [SerializeField, Range(0f, 1f)]
@@ -93,6 +101,34 @@ public class BossController : MonoBehaviour
         }
         if (repositionTimer > 0f)
             repositionTimer -= Time.deltaTime;
+        // FrontStep 반응 관찰 시작
+        if (frontStepResponseWaiting)
+        {
+            frontStepResponseTimer -= Time.deltaTime;
+
+            if (frontStepResponseTimer <= 0f)
+            {
+                if (bossAction.IsFrontStepping ||
+                    repositionTimer > 0f)
+                {
+                    CombatLogger.Instance?.BeginBossBehavior(
+                        BossBehaviorType.FrontStep,
+                        frontStepStartDistance
+                    );
+
+                    frontStepLogPending = true;
+                }
+
+                frontStepResponseWaiting = false;
+            }
+        }
+
+        // BackDodge 반응 관찰 시간
+        if (backDodgeLogPending &&
+            backDodgeResponseTimer > 0f)
+        {
+            backDodgeResponseTimer -= Time.deltaTime;
+        }
         if (frontStepLogPending &&
             !bossAction.IsFrontStepping &&
             repositionTimer <= 0f)
@@ -105,14 +141,15 @@ public class BossController : MonoBehaviour
         } 
         if (backDodgeLogPending &&
             !bossAction.IsDodging &&
-            repositionTimer <= 0f)
+            repositionTimer <= 0f &&
+            backDodgeResponseTimer <= 0f)
         {
             CombatLogger.Instance?.EndBossBehavior(
                 movement.DistanceToTarget
             );
 
             backDodgeLogPending = false;
-        }   
+        }  
         if (parryCooldownTimer > 0f)
         {
             parryCooldownTimer -= Time.deltaTime;
@@ -298,7 +335,6 @@ public class BossController : MonoBehaviour
 
         currentState = newState;
 
-        Debug.Log($"Boss State → {currentState}");
     }
     private void StartPostAction()
     {
@@ -325,9 +361,6 @@ public class BossController : MonoBehaviour
         repositionTimer =
             repositionDuration;
 
-        Debug.Log(
-            $"Post Action → {currentPostAction}"
-        );
     }
     private bool TryBackDodge(float distance)
     {
@@ -343,14 +376,18 @@ public class BossController : MonoBehaviour
         movement.Stop();
         movement.FaceTarget();
         
+        backDodgeResponseTimer =
+            backDodgeResponseWindow;
+
+        // BackDodge 시작과 동시에 로그 시작
         CombatLogger.Instance?.BeginBossBehavior(
             BossBehaviorType.BackDodge,
             distance
         );
 
-        bossAction.ExecuteBackDodge();
         backDodgeLogPending = true;
 
+        bossAction.ExecuteBackDodge();
         backDodgeCooldownTimer = backDodgeCooldown;
 
         ChangeState(BossState.BackDodge);
@@ -365,9 +402,6 @@ public class BossController : MonoBehaviour
         currentPostAction =
             BossPostAction.Hold;
 
-        Debug.Log(
-            "BackDodge Recovery → Hold"
-        );
     }
     private void StartFrontStepRecovery()
     {
@@ -377,9 +411,6 @@ public class BossController : MonoBehaviour
         currentPostAction =
             BossPostAction.Hold;
 
-        Debug.Log(
-            "FrontStep Recovery → Hold"
-        );
     }
     public void TriggerHitBackDodge()
     {
@@ -430,11 +461,14 @@ public class BossController : MonoBehaviour
         movement.Stop();
         movement.FaceTarget();
 
-        CombatLogger.Instance?.BeginBossBehavior(
-            BossBehaviorType.FrontStep,
-            distance
-        );
-        frontStepLogPending = true;
+        frontStepStartDistance = distance;
+
+        frontStepResponseTimer =
+            frontStepResponseDelay;
+
+        frontStepResponseWaiting = true;
+        frontStepLogPending = false;
+
         bossAction.ExecuteFrontStep();
 
         frontStepCooldownTimer =

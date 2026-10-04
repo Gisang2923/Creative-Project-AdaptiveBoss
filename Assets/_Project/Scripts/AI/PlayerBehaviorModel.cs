@@ -504,6 +504,91 @@ public class PlayerBehaviorModel : MonoBehaviour
         return (float)retreatCount /
             checkedCount;
     }
+    public float GetFrontStepRetreatHabitScore()
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null || logs.Count == 0)
+            return 0f;
+
+        int checkedCount = 0;
+        int retreatCount = 0;
+
+        // 최근 FrontStep 로그부터 확인
+        for (int i = logs.Count - 1;
+            i >= 0 && checkedCount < spatialWindow;
+            i--)
+        {
+            AttackResponseLog log = logs[i];
+
+            if (log.bossBehavior !=
+                BossBehaviorType.FrontStep)
+            {
+                continue;
+            }
+
+            // FrontStep이 발생했다면 하나의 관찰 샘플로 계산
+            checkedCount++;
+
+            bool movedAway =
+                log.responseDirection ==
+                ResponseDirection.AwayFromBoss;
+
+            if (movedAway)
+            {
+                retreatCount++;
+            }
+           
+        }
+
+        if (checkedCount < minSpatialSamples)
+            return 0f;
+
+        return (float)retreatCount /
+            checkedCount;
+    }
+    public float GetBackDodgeChaseHabitScore()
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null || logs.Count == 0)
+            return 0f;
+
+        int checkedCount = 0;
+        int chaseCount = 0;
+
+        for (int i = logs.Count - 1;
+            i >= 0 && checkedCount < spatialWindow;
+            i--)
+        {
+            AttackResponseLog log = logs[i];
+
+            if (log.bossBehavior !=
+                BossBehaviorType.BackDodge)
+            {
+                continue;
+            }
+
+            checkedCount++;
+
+            bool movedToward =
+                log.responseDirection ==
+                ResponseDirection.TowardBoss;
+
+            if (movedToward)
+            {
+                chaseCount++;
+            }
+        }
+
+        if (checkedCount < minSpatialSamples)
+            return 0f;
+
+        return (float)chaseCount /
+            checkedCount;
+    }
     public void PrintSummary(
         BossAttackType bossAttack)
     {
@@ -581,6 +666,20 @@ public class PlayerBehaviorModel : MonoBehaviour
             $"Dominant → " +
             $"{GetDominantBehaviorResponse(bossBehavior)}"
         );
+        if (bossBehavior == BossBehaviorType.FrontStep)
+        {
+            Debug.Log(
+                $"FrontStep Retreat Habit = " +
+                $"{GetFrontStepRetreatHabitScore():F2}"
+            );
+        }
+        if (bossBehavior == BossBehaviorType.BackDodge)
+        {
+            Debug.Log(
+                $"BackDodge Chase Habit = " +
+                $"{GetBackDodgeChaseHabitScore():F2}"
+            );
+        }
     }
     private int GetAttackCount(
         IReadOnlyList<AttackResponseLog> logs,

@@ -51,7 +51,8 @@ public class AttackResponseLog
     public float distanceBefore;
     public float distanceAtResponse;
     public float distanceAfter;
-
+    public float playerXAtStart;
+    public float bossDirectionAtStart;
     public AttackResponseLog(
         int sequenceId,
         BossAttackType bossAttack,
@@ -169,6 +170,20 @@ public class CombatLogger : MonoBehaviour
             distance
         );
 
+        // 공간 행동 시작 시점의 플레이어 위치와
+        // 플레이어 기준 보스 방향 저장
+        if (player != null && boss != null)
+        {
+            currentLog.playerXAtStart =
+                player.position.x;
+
+            currentLog.bossDirectionAtStart =
+                Mathf.Sign(
+                    boss.position.x -
+                    player.position.x
+                );
+        }
+
         responseRecorded = false;
 
         Debug.Log(
@@ -252,6 +267,50 @@ public class CombatLogger : MonoBehaviour
 
         return ResponseDirection.AwayFromBoss;
     }
+    private void UpdateSpatialResponseFromMovement()
+    {
+        if (currentLog == null)
+            return;
+
+        if (player == null || boss == null)
+            return;
+
+        float playerDeltaX =
+            player.position.x -
+            currentLog.playerXAtStart;
+
+        // 거의 움직이지 않았다면 Neutral
+        if (Mathf.Abs(playerDeltaX) < 0.1f)
+        {
+            currentLog.responseDirection =
+                ResponseDirection.Neutral;
+
+            currentLog.distanceAtResponse =
+                currentLog.distanceBefore;
+
+            return;
+        }
+
+        float moveDirection =
+            Mathf.Sign(playerDeltaX);
+
+        if (moveDirection ==
+            currentLog.bossDirectionAtStart)
+        {
+            currentLog.responseDirection =
+                ResponseDirection.TowardBoss;
+        }
+        else
+        {
+            currentLog.responseDirection =
+                ResponseDirection.AwayFromBoss;
+        }
+
+        // 별도의 액션 Response가 없었기 때문에
+        // 공간 분석 기준값으로 시작 거리를 사용
+        currentLog.distanceAtResponse =
+            currentLog.distanceBefore;
+    }
     public void RecordPlayerHit()
     {
         if (currentLog == null)
@@ -299,7 +358,13 @@ public class CombatLogger : MonoBehaviour
             return;
 
         currentLog.distanceAfter = distanceAfter;
-
+        // FrontStep / BackDodge 같은 공간 행동에서
+// 별도 액션 입력이 없었던 경우에도 실제 위치 변화로 방향을 보정
+        if (currentLog.bossBehavior != BossBehaviorType.Attack &&
+            currentLog.playerResponse == PlayerResponseType.None)
+        {
+            UpdateSpatialResponseFromMovement();
+        }
         if (currentLog.result == CombatResultType.Pending)
         {
             if (currentLog.bossBehavior ==

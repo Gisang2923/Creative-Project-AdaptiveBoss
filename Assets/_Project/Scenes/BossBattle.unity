@@ -641,14 +641,16 @@ MonoBehaviour:
   adaptiveSource: {fileID: 402595768}
   damageReceiver: {fileID: 402595764}
   repositionDuration: 0.8
-  backDodgeTriggerDistance: 2.5
+  backDodgeTriggerDistance: 3
   backDodgeCooldown: 3
-  backDodgeRecoveryTime: 0.5
+  backDodgeResponseDelay: 0.3
+  backDodgeRecoveryTime: 0.7
   backDodgeChance: 0.35
   frontStepTriggerDistance: 4
   frontStepChance: 0.25
   frontStepCooldown: 3
   frontStepRecoveryTime: 0.5
+  frontStepResponseDelay: 0.3
   bossParry: {fileID: 402595766}
   parryChance: 0.35
   parryCooldown: 4
