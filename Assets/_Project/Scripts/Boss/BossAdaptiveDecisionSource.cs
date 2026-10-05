@@ -52,6 +52,23 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     private AdaptiveHabitType followUpHabit =
         AdaptiveHabitType.None;
+
+    [Header("Counter Bait")]
+
+    [SerializeField, Range(0f, 1f)]
+    private float frontStepCounterThreshold = 0.6f;
+
+    [SerializeField, Range(0f, 1f)]
+    private float maxCounterHoldChance = 0.4f;
+
+    [SerializeField, Range(0f, 1f)]
+    private float maxCounterBackDodgeChance = 0.55f;
+
+    [SerializeField]
+    private float counterBaitHoldDuration = 0.35f;
+
+    private bool counterBaitHoldEvaluated;   
+
     [Header("Persistent Adaptive Policy")]
 
     [SerializeField, Range(0f, 1f)]
@@ -224,6 +241,45 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
         return baseChance;
     }
+    public float GetBackDodgeChance(
+        float baseChance)
+    {
+        if (!IsActiveFollowUp(
+                BossBehaviorType.FrontStep,
+                AdaptiveHabitType.Counter))
+        {
+            return baseChance;
+        }
+
+        float influence =
+            Mathf.InverseLerp(
+                frontStepHabitReleaseThreshold,
+                1f,
+                followUpHabitScore
+            );
+
+        float targetChance =
+            Mathf.Max(
+                baseChance,
+                maxCounterBackDodgeChance
+            );
+
+        float adaptedChance =
+            Mathf.Lerp(
+                baseChance,
+                targetChance,
+                influence
+            );
+
+        Debug.Log(
+            $"[Counter Bait] " +
+            $"BackDodge Chance " +
+            $"{baseChance:F2} → " +
+            $"{adaptedChance:F2}"
+        );
+
+        return adaptedChance;
+    }
     public void OpenFollowUpOpportunity(
         BossBehaviorType context)
     {
@@ -233,7 +289,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         // 먼저 현재 Habit을 보고
         // Persistent Policy를 갱신
         UpdatePersistentPolicy(context);
-
+        counterBaitHoldEvaluated = false;
 
         // BackDodge
         if (context == BossBehaviorType.BackDodge)
@@ -365,6 +421,56 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
         return selected;
     }
+    public bool ShouldUseCounterBaitHold()
+    {
+        if (!IsActiveFollowUp(
+                BossBehaviorType.FrontStep,
+                AdaptiveHabitType.Counter))
+        {
+            return false;
+        }
+
+        // 하나의 Opportunity에서
+        // Hold 추첨은 딱 한 번만
+        if (counterBaitHoldEvaluated)
+            return false;
+
+        counterBaitHoldEvaluated = true;
+
+        float influence =
+            Mathf.InverseLerp(
+                frontStepHabitReleaseThreshold,
+                1f,
+                followUpHabitScore
+            );
+
+        float chance =
+            Mathf.Lerp(
+                0.15f,
+                maxCounterHoldChance,
+                influence
+            );
+
+        bool selected =
+            Random.value <= chance;
+
+        if (selected)
+        {
+            Debug.Log(
+                $"[Counter Bait] " +
+                $"Hold Selected | " +
+                $"Chance={chance:F2} | " +
+                $"Habit={followUpHabitScore:F2}"
+            );
+        }
+
+        return selected;
+    }
+
+    public float GetCounterBaitHoldDuration()
+    {
+        return counterBaitHoldDuration;
+    }
     public void ConsumeFollowUpOpportunity(
         string selectedAction)
     {
@@ -390,6 +496,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
         followUpHabitScore = 0f;
         followUpTimer = 0f;
+        counterBaitHoldEvaluated = false;
     }
     private void UpdateBackDodgePolicy()
     {
@@ -456,7 +563,9 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         float attackHabit =
             behaviorModel
                 .GetFrontStepAttackHabitScore();
-
+        float counterHabit =
+            behaviorModel
+                .GetFrontStepCounterHabitScore();
 
         // 아직 학습된 Policy 없음
         if (frontStepPolicy ==
@@ -469,18 +578,33 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             bool attackValid =
                 attackHabit >=
                 frontStepAttackThreshold;
-
+            bool counterValid =
+                counterHabit >=
+                frontStepCounterThreshold;
 
             if (!retreatValid &&
-                !attackValid)
+                !attackValid &&
+                !counterValid)
             {
                 return;
             }
 
 
-            if (attackValid &&
+            if (counterValid &&
+                (!attackValid ||
+                    counterHabit >= attackHabit) &&
                 (!retreatValid ||
-                attackHabit > retreatHabit))
+                    counterHabit >= retreatHabit))
+            {
+                frontStepPolicy =
+                    AdaptiveHabitType.Counter;
+
+                frontStepPolicyScore =
+                    counterHabit;
+            }
+            else if (attackValid &&
+                    (!retreatValid ||
+                    attackHabit > retreatHabit))
             {
                 frontStepPolicy =
                     AdaptiveHabitType.Attack;
@@ -551,6 +675,31 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                     $"Context=FrontStep | " +
                     $"Policy=Attack | " +
                     $"Score={attackHabit:F2}"
+                );
+
+                frontStepPolicy =
+                    AdaptiveHabitType.None;
+
+                frontStepPolicyScore = 0f;
+            }
+
+            return;
+        }
+
+        if (frontStepPolicy ==
+            AdaptiveHabitType.Counter)
+        {
+            frontStepPolicyScore =
+                counterHabit;
+
+            if (counterHabit <
+                frontStepHabitReleaseThreshold)
+            {
+                Debug.Log(
+                    $"[Adaptive Policy Released] " +
+                    $"Context=FrontStep | " +
+                    $"Policy=Counter | " +
+                    $"Score={counterHabit:F2}"
                 );
 
                 frontStepPolicy =

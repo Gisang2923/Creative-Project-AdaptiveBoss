@@ -240,6 +240,9 @@ public class BossController : MonoBehaviour
             return;
         }
 
+        if (TryCounterBaitHold())
+            return;
+
         if (TryAdaptiveFrontStep(distance))
             return;
 
@@ -380,7 +383,18 @@ public class BossController : MonoBehaviour
         if (backDodgeCooldownTimer > 0f)
             return false;
 
-        if (Random.value > backDodgeChance)
+        float currentChance =
+            backDodgeChance;
+
+        if (adaptiveSource != null)
+        {
+            currentChance =
+                adaptiveSource.GetBackDodgeChance(
+                    backDodgeChance
+                );
+        }
+
+        if (Random.value > currentChance)
             return false;
 
         movement.Stop();
@@ -542,6 +556,36 @@ public class BossController : MonoBehaviour
         Debug.Log(
             "[Retreat Pressure] " +
             "Execute Adaptive FrontStep"
+        );
+
+        return true;
+    }
+    private bool TryCounterBaitHold()
+    {
+        if (adaptiveSource == null)
+            return false;
+
+        if (!adaptiveSource
+                .ShouldUseCounterBaitHold())
+        {
+            return false;
+        }
+
+        movement.Stop();
+        movement.FaceTarget();
+
+        currentPostAction =
+            BossPostAction.Hold;
+
+        repositionTimer =
+            adaptiveSource
+                .GetCounterBaitHoldDuration();
+
+        ChangeState(BossState.Idle);
+
+        Debug.Log(
+            "[Counter Bait] " +
+            "Intentional Hold"
         );
 
         return true;
