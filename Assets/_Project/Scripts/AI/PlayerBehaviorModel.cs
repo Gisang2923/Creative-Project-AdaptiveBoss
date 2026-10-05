@@ -589,6 +589,49 @@ public class PlayerBehaviorModel : MonoBehaviour
         return (float)chaseCount /
             checkedCount;
     }
+    public float GetFrontStepAttackHabitScore()
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null || logs.Count == 0)
+            return 0f;
+
+        int checkedCount = 0;
+        int attackCount = 0;
+
+        for (int i = logs.Count - 1;
+            i >= 0 && checkedCount < spatialWindow;
+            i--)
+        {
+            AttackResponseLog log = logs[i];
+
+            if (log.bossBehavior !=
+                BossBehaviorType.FrontStep)
+            {
+                continue;
+            }
+
+            checkedCount++;
+
+            bool attacked =
+                log.playerResponse ==
+                    PlayerResponseType.NormalAttack ||
+                log.playerResponse ==
+                    PlayerResponseType.ChargeAttack ||
+                log.playerResponse ==
+                    PlayerResponseType.DashAttack;
+
+            if (attacked)
+                attackCount++;
+        }
+
+        if (checkedCount < minSpatialSamples)
+            return 0f;
+
+        return (float)attackCount /
+            checkedCount;
+    }
     public void PrintSummary(
         BossAttackType bossAttack)
     {

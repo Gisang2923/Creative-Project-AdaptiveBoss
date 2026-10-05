@@ -48,9 +48,7 @@ public class BossDamageReceiver : DamageReceiver
         base.TakeDamage(damageInfo);
 
         hitFlash?.Flash();
-
-        if (!isDead)
-            bossController?.TriggerHitBackDodge();
+    
     }
 
     private void HandleDeath()

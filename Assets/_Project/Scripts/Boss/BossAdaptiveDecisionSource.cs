@@ -63,8 +63,13 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     [SerializeField]
     private float maxChaseChargeMultiplier = 1.5f;
+    [SerializeField, Range(0f, 1f)]
+    private float frontStepAttackThreshold = 0.6f;
 
+    [SerializeField, Range(0f, 1f)]
+    private float maxAttackParryChance = 0.4f;
     private BossBehaviorType followUpContext;
+
     private AdaptiveHabitType followUpHabit =
         AdaptiveHabitType.None;
 
@@ -252,35 +257,67 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     public float GetParryChance(
         float baseChance)
     {
-        if (!IsActiveFollowUp(
+        // BackDodge + Chase
+        if (IsActiveFollowUp(
                 BossBehaviorType.BackDodge,
                 AdaptiveHabitType.Chase))
         {
-            return baseChance;
+            float influence =
+                Mathf.InverseLerp(
+                    chaseHabitThreshold,
+                    1f,
+                    followUpHabitScore
+                );
+
+            float adaptedChance =
+                Mathf.Lerp(
+                    baseChance,
+                    maxChaseParryChance,
+                    influence
+                );
+
+            Debug.Log(
+                $"[Chase Punish] " +
+                $"Parry Chance " +
+                $"{baseChance:F2} → " +
+                $"{adaptedChance:F2}"
+            );
+
+            return adaptedChance;
         }
 
-        float influence =
-            Mathf.InverseLerp(
-                chaseHabitThreshold,
-                1f,
-                followUpHabitScore
+        // FrontStep + Attack
+        if (IsActiveFollowUp(
+                BossBehaviorType.FrontStep,
+                AdaptiveHabitType.Attack))
+        {
+            float influence =
+                Mathf.InverseLerp(
+                    frontStepAttackThreshold,
+                    1f,
+                    followUpHabitScore
+                );
+
+            float adaptedChance =
+                Mathf.Lerp(
+                    baseChance,
+                    maxAttackParryChance,
+                    influence
+                );
+
+            Debug.Log(
+                $"[Aggression Punish] " +
+                $"FrontStep Attack Habit=" +
+                $"{followUpHabitScore:F2} | " +
+                $"Parry Chance " +
+                $"{baseChance:F2} → " +
+                $"{adaptedChance:F2}"
             );
 
-        float adaptedChance =
-            Mathf.Lerp(
-                baseChance,
-                maxChaseParryChance,
-                influence
-            );
+            return adaptedChance;
+        }
 
-        Debug.Log(
-            $"[Chase Punish] " +
-            $"Parry Chance " +
-            $"{baseChance:F2} → " +
-            $"{adaptedChance:F2}"
-        );
-
-        return adaptedChance;
+        return baseChance;
     }
     public void OpenFollowUpOpportunity(
         BossBehaviorType context)
@@ -327,7 +364,18 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 behaviorModel
                     .GetFrontStepRetreatHabitScore();
 
-            if (retreatHabit < frontStepRetreatThreshold)
+            float attackHabit =
+                behaviorModel
+                    .GetFrontStepAttackHabitScore();
+
+            bool retreatValid =
+                retreatHabit >= frontStepRetreatThreshold;
+
+            bool attackValid =
+                attackHabit >= frontStepAttackThreshold;
+
+            // 둘 다 습관으로 인정되지 않음
+            if (!retreatValid && !attackValid)
             {
                 ClearFollowUpOpportunity();
                 return;
@@ -336,23 +384,48 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             followUpContext =
                 BossBehaviorType.FrontStep;
 
+            followUpTimer =
+                followUpOpportunityDuration;
+
+            hasFollowUpOpportunity = true;
+
+            // 둘 다 높으면 더 강한 Habit 선택
+            if (attackValid &&
+                (!retreatValid ||
+                attackHabit > retreatHabit))
+            {
+                followUpHabit =
+                    AdaptiveHabitType.Attack;
+
+                followUpHabitScore =
+                    attackHabit;
+
+                Debug.Log(
+                    $"[Adaptive Opportunity] " +
+                    $"Context=FrontStep | " +
+                    $"Habit=Attack | " +
+                    $"Score={attackHabit:F2} | " +
+                    $"Retreat={retreatHabit:F2}"
+                );
+
+                return;
+            }
+
             followUpHabit =
                 AdaptiveHabitType.Retreat;
 
             followUpHabitScore =
                 retreatHabit;
 
-            followUpTimer =
-                followUpOpportunityDuration;
-
-            hasFollowUpOpportunity = true;
-
             Debug.Log(
                 $"[Adaptive Opportunity] " +
                 $"Context=FrontStep | " +
                 $"Habit=Retreat | " +
-                $"Score={retreatHabit:F2}"
+                $"Score={retreatHabit:F2} | " +
+                $"Attack={attackHabit:F2}"
             );
+
+            return;
         }
     }
     private bool IsActiveFollowUp(
@@ -402,15 +475,17 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
         return selected;
     }
-    public void ConsumeFollowUpOpportunity()
+    public void ConsumeFollowUpOpportunity(
+        string selectedAction)
     {
         if (!hasFollowUpOpportunity)
             return;
 
         Debug.Log(
-            $"[Adaptive Opportunity Consumed] " +
-            $"{followUpContext} → " +
-            $"{followUpHabit}"
+            $"[Adaptive Decision] " +
+            $"Context={followUpContext} | " +
+            $"SourceHabit={followUpHabit} | " +
+            $"SelectedAction={selectedAction}"
         );
 
         ClearFollowUpOpportunity();

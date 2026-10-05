@@ -332,7 +332,8 @@ public class BossController : MonoBehaviour
         bossAction.ExecuteAttack(selectedAttack);
 
         adaptiveSource?
-            .ConsumeFollowUpOpportunity();
+            .ConsumeFollowUpOpportunity(
+                selectedAttack.attackType.ToString());
 
         ChangeState(BossState.Attack);
     }
@@ -398,7 +399,7 @@ public class BossController : MonoBehaviour
 
         bossAction.ExecuteBackDodge();
         adaptiveSource?
-            .ConsumeFollowUpOpportunity();
+            .ConsumeFollowUpOpportunity("BackDodge");
         backDodgeCooldownTimer = backDodgeCooldown;
 
         ChangeState(BossState.BackDodge);
@@ -488,7 +489,7 @@ public class BossController : MonoBehaviour
         bossAction.ExecuteFrontStep();
         
         adaptiveSource?
-            .ConsumeFollowUpOpportunity();
+            .ConsumeFollowUpOpportunity("FrontStep");
 
         frontStepCooldownTimer =
             frontStepCooldown;
@@ -541,7 +542,7 @@ public class BossController : MonoBehaviour
             frontStepCooldown;
 
         adaptiveSource
-            .ConsumeFollowUpOpportunity();
+            .ConsumeFollowUpOpportunity("FrontStep");
 
         ChangeState(
             BossState.FrontStep
@@ -591,7 +592,7 @@ public class BossController : MonoBehaviour
         StartParry();
 
         adaptiveSource?
-            .ConsumeFollowUpOpportunity();
+            .ConsumeFollowUpOpportunity("Parry");
 
         return true;
     }
