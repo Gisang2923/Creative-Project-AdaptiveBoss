@@ -456,16 +456,7 @@ public class BossController : MonoBehaviour
         if (distance > frontStepTriggerDistance)
             return false;
 
-        float currentChance =
-            frontStepChance;
-
-        if (adaptiveSource != null)
-        {
-            currentChance =
-                adaptiveSource.GetFrontStepChance(
-                    frontStepChance
-                );
-        }
+        float currentChance = frontStepChance;
 
         if (Random.value > currentChance)
             return false;

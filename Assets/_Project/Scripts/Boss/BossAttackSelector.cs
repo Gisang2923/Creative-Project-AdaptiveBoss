@@ -118,30 +118,6 @@ public class BossAttackSelector : MonoBehaviour
         float retreat =
             attack.retreatWeight;
 
-        if (adaptiveSource != null)
-        {
-            hold *=
-                adaptiveSource.GetPostActionWeightMultiplier(
-                    attack,
-                    BossPostAction.Hold,
-                    distance
-                );
-
-            approach *=
-                adaptiveSource.GetPostActionWeightMultiplier(
-                    attack,
-                    BossPostAction.Approach,
-                    distance
-                );
-
-            retreat *=
-                adaptiveSource.GetPostActionWeightMultiplier(
-                    attack,
-                    BossPostAction.Retreat,
-                    distance
-                );
-        }
-
         float total =
             hold + approach + retreat;
 
