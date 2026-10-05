@@ -67,7 +67,7 @@ public class BossController : MonoBehaviour
     [SerializeField] private float frontStepResponseWindow = 0.3f;
 
     private float frontStepResponseTimer;
-
+    private bool currentFrontStepIsAdaptiveFollowUp;
     [Header("Parry")]
     [SerializeField] private BossParry bossParry;
     [SerializeField, Range(0f, 1f)]
@@ -123,7 +123,19 @@ public class BossController : MonoBehaviour
             );
 
             frontStepLogPending = false;
-        } 
+
+            // 일반 FrontStep에서만
+            // Retreat 적응 기회를 새로 생성
+            if (!currentFrontStepIsAdaptiveFollowUp)
+            {
+                adaptiveSource?
+                    .OpenFollowUpOpportunity(
+                        BossBehaviorType.FrontStep
+                    );
+            }
+
+            currentFrontStepIsAdaptiveFollowUp = false;
+        }
         if (backDodgeLogPending &&
             !bossAction.IsDodging &&
             repositionTimer <= 0f &&
@@ -134,7 +146,11 @@ public class BossController : MonoBehaviour
             );
 
             backDodgeLogPending = false;
-        }  
+
+            adaptiveSource?.OpenFollowUpOpportunity(
+                BossBehaviorType.BackDodge
+            );
+        }
         if (parryCooldownTimer > 0f)
         {
             parryCooldownTimer -= Time.deltaTime;
@@ -224,19 +240,24 @@ public class BossController : MonoBehaviour
             return;
         }
 
+        if (TryAdaptiveFrontStep(distance))
+            return;
+
         if (TryBackDodge(distance))
             return;
-        if (TryParry())  
+
+        if (TryParry())
             return;
+
         if (TryFrontStep(distance))
             return;
+
         if (attackSelector.HasValidAttack(distance))
         {
             StartAttack(distance);
             return;
         }
         
-
         ChangeState(BossState.Approach);
     }
 
@@ -310,6 +331,9 @@ public class BossController : MonoBehaviour
 
         bossAction.ExecuteAttack(selectedAttack);
 
+        adaptiveSource?
+            .ConsumeFollowUpOpportunity();
+
         ChangeState(BossState.Attack);
     }
 
@@ -373,6 +397,8 @@ public class BossController : MonoBehaviour
         backDodgeLogPending = true;
 
         bossAction.ExecuteBackDodge();
+        adaptiveSource?
+            .ConsumeFollowUpOpportunity();
         backDodgeCooldownTimer = backDodgeCooldown;
 
         ChangeState(BossState.BackDodge);
@@ -446,6 +472,8 @@ public class BossController : MonoBehaviour
         movement.Stop();
         movement.FaceTarget();
 
+        currentFrontStepIsAdaptiveFollowUp = false;
+
         frontStepResponseTimer =
             frontStepResponseWindow;
 
@@ -457,13 +485,71 @@ public class BossController : MonoBehaviour
 
         frontStepLogPending = true;
 
-    bossAction.ExecuteFrontStep();
+        bossAction.ExecuteFrontStep();
+        
+        adaptiveSource?
+            .ConsumeFollowUpOpportunity();
 
         frontStepCooldownTimer =
             frontStepCooldown;
 
         ChangeState(
             BossState.FrontStep
+        );
+
+        return true;
+    }
+    private bool TryAdaptiveFrontStep(
+        float distance)
+    {
+        if (adaptiveSource == null)
+            return false;
+
+        // 너무 가까우면 추가 접근하지 않음
+        if (distance <= 1.5f)
+            return false;
+
+        // FrontStep이 의미 있는 거리에서만
+        if (distance > frontStepTriggerDistance)
+            return false;
+
+        if (!adaptiveSource
+                .ShouldUseRetreatPressureFrontStep())
+        {
+            return false;
+        }
+
+        movement.Stop();
+        movement.FaceTarget();
+
+        currentFrontStepIsAdaptiveFollowUp = true;
+
+        frontStepResponseTimer =
+            frontStepResponseWindow;
+
+        CombatLogger.Instance?.BeginBossBehavior(
+            BossBehaviorType.FrontStep,
+            distance
+        );
+
+        frontStepLogPending = true;
+
+        bossAction.ExecuteFrontStep();
+
+        // 일반 FrontStep 쿨다운도 다시 갱신
+        frontStepCooldownTimer =
+            frontStepCooldown;
+
+        adaptiveSource
+            .ConsumeFollowUpOpportunity();
+
+        ChangeState(
+            BossState.FrontStep
+        );
+
+        Debug.Log(
+            "[Retreat Pressure] " +
+            "Execute Adaptive FrontStep"
         );
 
         return true;
@@ -488,10 +574,24 @@ public class BossController : MonoBehaviour
         if (parryCooldownTimer > 0f)
             return false;
 
-        if (Random.value > parryChance)
+        float currentChance =
+            parryChance;
+
+        if (adaptiveSource != null)
+        {
+            currentChance =
+                adaptiveSource.GetParryChance(
+                    parryChance
+                );
+        }
+
+        if (Random.value > currentChance)
             return false;
 
         StartParry();
+
+        adaptiveSource?
+            .ConsumeFollowUpOpportunity();
 
         return true;
     }

@@ -643,16 +643,16 @@ MonoBehaviour:
   repositionDuration: 0.8
   backDodgeTriggerDistance: 3
   backDodgeCooldown: 3
-  backDodgeResponseDelay: 0.3
+  backDodgeResponseWindow: 0.6
   backDodgeRecoveryTime: 0.7
   backDodgeChance: 0.35
   frontStepTriggerDistance: 4
   frontStepChance: 0.25
   frontStepCooldown: 3
   frontStepRecoveryTime: 0.5
-  frontStepResponseDelay: 0.3
+  frontStepResponseWindow: 0.3
   bossParry: {fileID: 402595766}
-  parryChance: 0.35
+  parryChance: 0.15
   parryCooldown: 4
 --- !u!114 &402595761
 MonoBehaviour:
@@ -883,6 +883,13 @@ MonoBehaviour:
   attackRules: []
   minMultiplier: 0.6
   maxMultiplier: 1.5
+  frontStepRetreatThreshold: 0.6
+  maxRetreatFrontStepChance: 0.45
+  maxRetreatChargeMultiplier: 1.5
+  chaseHabitThreshold: 0.6
+  followUpOpportunityDuration: 1.2
+  maxChaseParryChance: 0.35
+  maxChaseChargeMultiplier: 1.5
   retreatHabitThreshold: 0.4
   maxFrontStepChance: 0.65
 --- !u!1 &440562010
