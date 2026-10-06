@@ -22,7 +22,7 @@ public class PlayerBehaviorModel : MonoBehaviour
     [Header("Spatial Habit")]
     [SerializeField] private int spatialWindow = 6;
     [SerializeField] private int minSpatialSamples = 3;
-    
+
     public float GetHabitScore(
         BossAttackType bossAttack,
         PlayerResponseType response)
@@ -873,6 +873,116 @@ public class PlayerBehaviorModel : MonoBehaviour
                 $"{GetBackDodgeChaseHabitScore():F2}"
             );
         }
+    }
+
+    public float GetChargeTimingHabitScore()
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null || logs.Count == 0)
+            return 0f;
+
+        int checkedCount = 0;
+        int successCount = 0;
+
+        for (int i = logs.Count - 1;
+            i >= 0 && checkedCount < 5;
+            i--)
+        {
+            AttackResponseLog log = logs[i];
+
+            if (log.bossBehavior !=
+                    BossBehaviorType.Attack ||
+                log.bossAttack !=
+                    BossAttackType.ChargeSlash)
+            {
+                continue;
+            }
+
+            checkedCount++;
+
+            // 적응 여부는 오직 성공 여부
+            if (log.result ==
+                CombatResultType.ParrySuccess)
+            {
+                successCount++;
+            }
+        }
+
+        if (checkedCount < 3)
+            return 0f;
+
+        return (float)successCount /
+            checkedCount;
+    }
+    public bool TryGetChargeCounterDelayFromPass(
+        out float medianDelay)
+    {
+        medianDelay = 0f;
+
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null || logs.Count == 0)
+            return false;
+
+        List<float> delays =
+            new List<float>();
+
+        int checkedCount = 0;
+
+        for (int i = logs.Count - 1;
+            i >= 0 && checkedCount < 5;
+            i--)
+        {
+            AttackResponseLog log = logs[i];
+
+            if (log.bossBehavior !=
+                    BossBehaviorType.Attack ||
+                log.bossAttack !=
+                    BossAttackType.ChargeSlash)
+            {
+                continue;
+            }
+
+            checkedCount++;
+
+            if (log.result !=
+                    CombatResultType.ParrySuccess ||
+                !log.hasChargeCounterTiming)
+            {
+                continue;
+            }
+
+            delays.Add(
+                log.chargeCounterDelayFromPass
+            );
+        }
+
+        if (delays.Count < 2)
+            return false;
+
+        delays.Sort();
+
+        int middle =
+            delays.Count / 2;
+
+        if (delays.Count % 2 == 1)
+        {
+            medianDelay =
+                delays[middle];
+        }
+        else
+        {
+            medianDelay =
+                (
+                    delays[middle - 1] +
+                    delays[middle]
+                ) * 0.5f;
+        }
+
+        return true;
     }
     private int GetAttackCount(
         IReadOnlyList<AttackResponseLog> logs,

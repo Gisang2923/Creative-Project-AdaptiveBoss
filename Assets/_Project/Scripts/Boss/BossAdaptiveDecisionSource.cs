@@ -111,7 +111,30 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     private AdaptiveHabitType frontStepPolicy =
         AdaptiveHabitType.None;
+    [Header("Charge Timing Adaptation")]
 
+    [SerializeField, Range(0f, 1f)]
+    private float chargeTimingHabitThreshold = 0.6f;
+
+    [SerializeField, Range(0f, 1f)]
+    private float chargeTimingReleaseThreshold = 0.3f;
+
+    [SerializeField, Range(0f, 1f)]
+    private float maxChargeTimingAdaptChance = 0.7f;
+
+    [SerializeField]
+    private float chargeTimingMargin = 0.07f;
+
+    [SerializeField]
+    private float minChargePostPassDelay = 0.12f;
+
+    [SerializeField]
+    private float maxChargePostPassDelay = 0.8f;
+
+    [SerializeField]
+    private float chargeTimingJitter = 0.04f;
+    [SerializeField]
+    private bool chargeTimingPolicyActive;
     private float backDodgePolicyScore;
     private float frontStepPolicyScore;
     private float followUpHabitScore;
@@ -737,193 +760,400 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         }
     }
     public float GetHeavyPrepareTime(
-    float basePrepareTime,
-    float heavyStartupTime)
-{
-    if (behaviorModel == null ||
-        playerCounter == null)
+        float basePrepareTime,
+        float heavyStartupTime)
     {
-        return basePrepareTime;
-    }
-
-    float habitScore =
-        behaviorModel
-            .GetHeavyTimingHabitScore();
-
-
-    // =============================
-    // Policy 학습 / 해제
-    // 오직 성공률만 판단
-    // =============================
-
-    if (!heavyTimingPolicyActive)
-    {
-        if (habitScore <
-            heavyTimingHabitThreshold)
+        if (behaviorModel == null ||
+            playerCounter == null)
         {
             return basePrepareTime;
         }
 
-        heavyTimingPolicyActive = true;
-
-        Debug.Log(
-            $"[Heavy Timing Policy Learned] " +
-            $"SuccessScore={habitScore:F2}"
-        );
-    }
-    else if (habitScore <
-             heavyTimingReleaseThreshold)
-    {
-        heavyTimingPolicyActive = false;
-
-        Debug.Log(
-            $"[Heavy Timing Policy Released] " +
-            $"SuccessScore={habitScore:F2}"
-        );
-
-        return basePrepareTime;
-    }
+        float habitScore =
+            behaviorModel
+                .GetHeavyTimingHabitScore();
 
 
-    // =============================
-    // 성공했던 Counter Delay
-    // =============================
+        // =============================
+        // Policy 학습 / 해제
+        // 오직 성공률만 판단
+        // =============================
 
-    if (!behaviorModel
-            .TryGetHeavyCounterDelay(
-                out float responseDelay))
-    {
-        return basePrepareTime;
-    }
+        if (!heavyTimingPolicyActive)
+        {
+            if (habitScore <
+                heavyTimingHabitThreshold)
+            {
+                return basePrepareTime;
+            }
 
+            heavyTimingPolicyActive = true;
 
-    // Policy가 있어도
-    // 항상 변칙을 사용하지 않음
-    float influence =
-        Mathf.InverseLerp(
-            heavyTimingReleaseThreshold,
-            1f,
-            habitScore
-        );
+            Debug.Log(
+                $"[Heavy Timing Policy Learned] " +
+                $"SuccessScore={habitScore:F2}"
+            );
+        }
+        else if (habitScore <
+                heavyTimingReleaseThreshold)
+        {
+            heavyTimingPolicyActive = false;
 
-    float adaptChance =
-        Mathf.Lerp(
-            0.35f,
-            maxHeavyTimingAdaptChance,
-            influence
-        );
+            Debug.Log(
+                $"[Heavy Timing Policy Released] " +
+                $"SuccessScore={habitScore:F2}"
+            );
 
-    if (Random.value >
-        adaptChance)
-    {
-        return basePrepareTime;
-    }
-
-
-    // =============================
-    // 실제 Counter 활성 구간 계산
-    // =============================
-
-    float counterWindowStart =
-        responseDelay +
-        playerCounter.CounterStartupTime;
-
-    float counterWindowEnd =
-        counterWindowStart +
-        playerCounter.ParryWindow;
+            return basePrepareTime;
+        }
 
 
-    float targetHitTime;
-    string variant;
+        // =============================
+        // 성공했던 Counter Delay
+        // =============================
+
+        if (!behaviorModel
+                .TryGetHeavyCounterDelay(
+                    out float responseDelay))
+        {
+            return basePrepareTime;
+        }
 
 
-    // 기존 Heavy의 실제 타격 시점
-    float baseHitTime =
-        basePrepareTime +
-        heavyStartupTime;
+        // Policy가 있어도
+        // 항상 변칙을 사용하지 않음
+        float influence =
+            Mathf.InverseLerp(
+                heavyTimingReleaseThreshold,
+                1f,
+                habitScore
+            );
 
-    // Counter Window의 중앙
-    float counterWindowMid =
-        (
+        float adaptChance =
+            Mathf.Lerp(
+                0.35f,
+                maxHeavyTimingAdaptChance,
+                influence
+            );
+
+        if (Random.value >
+            adaptChance)
+        {
+            return basePrepareTime;
+        }
+
+
+        // =============================
+        // 실제 Counter 활성 구간 계산
+        // =============================
+
+        float counterWindowStart =
+            responseDelay +
+            playerCounter.CounterStartupTime;
+
+        float counterWindowEnd =
             counterWindowStart +
-            counterWindowEnd
-        ) * 0.5f;
+            playerCounter.ParryWindow;
 
 
-    // =====================================
-    // 기본 Hit이 Window 뒤쪽에 있음
-    //
-    // 플레이어가 비교적 일찍 Counter해서
-    // Hit 시점까지 Counter를 유지한 경우
-    //
-    // → Counter가 끝난 뒤까지 기다림
-    // =====================================
-    if (baseHitTime >=
-        counterWindowMid)
-    {
-        targetHitTime =
-            counterWindowEnd +
-            heavyTimingMargin;
-
-        variant = "Late";
-    }
-
-    // =====================================
-    // 기본 Hit이 Window 앞쪽에 있음
-    //
-    // 플레이어가 비교적 늦게 Counter해서
-    // 공격 직전에 Counter를 켠 경우
-    //
-    // → Counter가 켜지기 전에 공격
-    // =====================================
-    else
-    {
-        targetHitTime =
-            counterWindowStart -
-            heavyTimingMargin;
-
-        variant = "Early";
-    }
+        float targetHitTime;
+        string variant;
 
 
-    // 실제 타격은
-    // Prepare 이후 startup을 거쳐 발생하므로 역산
-    float targetPrepareTime =
-        targetHitTime -
-        heavyStartupTime;
+        // 기존 Heavy의 실제 타격 시점
+        float baseHitTime =
+            basePrepareTime +
+            heavyStartupTime;
+
+        // Counter Window의 중앙
+        float counterWindowMid =
+            (
+                counterWindowStart +
+                counterWindowEnd
+            ) * 0.5f;
 
 
-    // 완전히 고정된 새 타이밍 방지
-    targetPrepareTime +=
-        Random.Range(
-            -heavyTimingJitter,
-            heavyTimingJitter
+        // =====================================
+        // 기본 Hit이 Window 뒤쪽에 있음
+        //
+        // 플레이어가 비교적 일찍 Counter해서
+        // Hit 시점까지 Counter를 유지한 경우
+        //
+        // → Counter가 끝난 뒤까지 기다림
+        // =====================================
+        if (baseHitTime >=
+            counterWindowMid)
+        {
+            targetHitTime =
+                counterWindowEnd +
+                heavyTimingMargin;
+
+            variant = "Late";
+        }
+
+        // =====================================
+        // 기본 Hit이 Window 앞쪽에 있음
+        //
+        // 플레이어가 비교적 늦게 Counter해서
+        // 공격 직전에 Counter를 켠 경우
+        //
+        // → Counter가 켜지기 전에 공격
+        // =====================================
+        else
+        {
+            targetHitTime =
+                counterWindowStart -
+                heavyTimingMargin;
+
+            variant = "Early";
+        }
+
+
+        // 실제 타격은
+        // Prepare 이후 startup을 거쳐 발생하므로 역산
+        float targetPrepareTime =
+            targetHitTime -
+            heavyStartupTime;
+
+
+        // 완전히 고정된 새 타이밍 방지
+        targetPrepareTime +=
+            Random.Range(
+                -heavyTimingJitter,
+                heavyTimingJitter
+            );
+
+
+        targetPrepareTime =
+            Mathf.Clamp(
+                targetPrepareTime,
+                minHeavyPrepareTime,
+                maxHeavyPrepareTime
+            );
+
+
+        Debug.Log(
+            $"[Heavy Timing] " +
+            $"Response={responseDelay:F2} | " +
+            $"BaseHit={baseHitTime:F2} | " +
+            $"CounterWindow=" +
+            $"{counterWindowStart:F2}" +
+            $"~{counterWindowEnd:F2} | " +
+            $"Variant={variant} | " +
+            $"TargetHit={targetHitTime:F2} | " +
+            $"Prepare " +
+            $"{basePrepareTime:F2} → " +
+            $"{targetPrepareTime:F2}"
         );
 
 
-    targetPrepareTime =
-        Mathf.Clamp(
-            targetPrepareTime,
-            minHeavyPrepareTime,
-            maxHeavyPrepareTime
+        return targetPrepareTime;
+    }
+    public float GetChargePostPassDelay(
+        float basePostPassDelay,
+        float dashAttackStartupTime)
+    {
+        if (behaviorModel == null ||
+            playerCounter == null)
+        {
+            return basePostPassDelay;
+        }
+
+        float habitScore =
+            behaviorModel
+                .GetChargeTimingHabitScore();
+
+
+        // =============================
+        // Policy 학습 / 해제
+        // 성공 여부만 사용
+        // =============================
+
+        if (!chargeTimingPolicyActive)
+        {
+            if (habitScore <
+                chargeTimingHabitThreshold)
+            {
+                return basePostPassDelay;
+            }
+
+            chargeTimingPolicyActive = true;
+
+            Debug.Log(
+                $"[Charge Timing Policy Learned] " +
+                $"SuccessScore={habitScore:F2}"
+            );
+        }
+        else if (habitScore <
+                chargeTimingReleaseThreshold)
+        {
+            chargeTimingPolicyActive = false;
+
+            Debug.Log(
+                $"[Charge Timing Policy Released] " +
+                $"SuccessScore={habitScore:F2}"
+            );
+
+            return basePostPassDelay;
+        }
+
+
+        // =============================
+        // 과거 성공 Counter의
+        // Dash 종료 기준 반응시간
+        // =============================
+
+        if (!behaviorModel
+                .TryGetChargeCounterDelayFromPass(
+                    out float responseDelay))
+        {
+            return basePostPassDelay;
+        }
+
+
+        float influence =
+            Mathf.InverseLerp(
+                chargeTimingReleaseThreshold,
+                1f,
+                habitScore
+            );
+
+        float adaptChance =
+            Mathf.Lerp(
+                0.35f,
+                maxChargeTimingAdaptChance,
+                influence
+            );
+
+        if (Random.value > adaptChance)
+        {
+            return basePostPassDelay;
+        }
+
+
+        // =============================
+        // Dash 종료 기준 Counter Window
+        // =============================
+
+        float counterWindowStart =
+            responseDelay +
+            playerCounter.CounterStartupTime;
+
+        float counterWindowEnd =
+            counterWindowStart +
+            playerCounter.ParryWindow;
+
+
+        // 기존 Charge의 실제 Hit 시점
+        // Dash 종료를 0초로 본다.
+        float baseHitTime =
+            basePostPassDelay +
+            dashAttackStartupTime;
+
+        float counterWindowMid =
+            (
+                counterWindowStart +
+                counterWindowEnd
+            ) * 0.5f;
+
+
+        float targetHitTime;
+        string variant;
+
+
+        float timingDifference =
+            baseHitTime - counterWindowMid;
+
+        float centerTolerance = 0.08f;
+
+        // =====================================
+        // Counter를 매우 안정적으로
+        // 중앙 부근에서 성공시키는 경우
+        // → 한쪽으로 고정하지 않고
+        // Early / Late를 모두 활용
+        // =====================================
+        if (Mathf.Abs(timingDifference) <
+            centerTolerance)
+        {
+            bool useLate =
+                Random.value < 0.5f;
+
+            if (useLate)
+            {
+                targetHitTime =
+                    counterWindowEnd +
+                    chargeTimingMargin;
+
+                variant = "Late";
+            }
+            else
+            {
+                targetHitTime =
+                    counterWindowStart -
+                    chargeTimingMargin;
+
+                variant = "Early";
+            }
+        }
+
+        // 빠르게 Counter하는 경향→ Late
+        else if (timingDifference > 0f)
+        {
+            targetHitTime =
+                counterWindowEnd +
+                chargeTimingMargin;
+
+            variant = "Late";
+        }
+
+        // 느리게 Counter하는 경향→ Early
+        else
+        {
+            targetHitTime =
+                counterWindowStart -
+                chargeTimingMargin;
+
+            variant = "Early";
+        }
+
+
+        // DashAttack startup은 그대로 유지하므로
+        // PostPassDelay를 역산
+        float targetPostPassDelay =
+            targetHitTime -
+            dashAttackStartupTime;
+
+
+        targetPostPassDelay +=
+            Random.Range(
+                -chargeTimingJitter,
+                chargeTimingJitter
+            );
+
+
+        targetPostPassDelay =
+            Mathf.Clamp(
+                targetPostPassDelay,
+                minChargePostPassDelay,
+                maxChargePostPassDelay
+            );
+
+
+        Debug.Log(
+            $"[Charge Timing] " +
+            $"ResponseFromPass={responseDelay:F2} | " +
+            $"BaseHit={baseHitTime:F2} | " +
+            $"CounterWindow=" +
+            $"{counterWindowStart:F2}" +
+            $"~{counterWindowEnd:F2} | " +
+            $"Variant={variant} | " +
+            $"TargetHit={targetHitTime:F2} | " +
+            $"PostPass " +
+            $"{basePostPassDelay:F2} → " +
+            $"{targetPostPassDelay:F2}"
         );
 
 
-    Debug.Log(
-        $"[Heavy Timing] " +
-        $"Response={responseDelay:F2} | " +
-        $"BaseHit={baseHitTime:F2} | " +
-        $"CounterWindow=" +
-        $"{counterWindowStart:F2}" +
-        $"~{counterWindowEnd:F2} | " +
-        $"Variant={variant} | " +
-        $"TargetHit={targetHitTime:F2} | " +
-        $"Prepare " +
-        $"{basePrepareTime:F2} → " +
-        $"{targetPrepareTime:F2}"
-    );
-
-
-    return targetPrepareTime;
-}
+        return targetPostPassDelay;
+    }
 }

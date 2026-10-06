@@ -21,7 +21,17 @@ public class BossAction : MonoBehaviour
     [Header("Charge Slash")]
     [SerializeField] private float chargePostPassDelay = 0.15f;
     [SerializeField] private float dashSpeed = 12f;
+    private float nextChargePostPassDelay = -1f;
 
+    public float ChargePostPassDelay =>
+        chargePostPassDelay;
+
+    public void SetNextChargePostPassDelay(
+        float delay)
+    {
+        nextChargePostPassDelay =
+            Mathf.Max(0f, delay);
+    }
     // 공격을 결정한 순간 플레이어 위치 기준,
     // 플레이어 뒤로 얼마나 넘어갈지
     [SerializeField] private float dashBehindDistance = 1.5f;
@@ -195,10 +205,18 @@ public class BossAction : MonoBehaviour
     private IEnumerator ChargeSlashRoutine(BossAttack attack)
     {
         isAttacking = true;
-        currentHitbox = attack.hitbox;
 
         AttackData data = attack.attackData;
+        Hitbox hitbox = attack.hitbox;
 
+        currentHitbox = hitbox;
+        float postPassDelay =
+            nextChargePostPassDelay >= 0f
+                ? nextChargePostPassDelay
+                : chargePostPassDelay;
+
+        // 이번 Charge에만 적용
+        nextChargePostPassDelay = -1f;
         // 공격을 결정한 순간 방향 고정
         float direction =
             Mathf.Sign(player.position.x - transform.position.x);
@@ -215,7 +233,7 @@ public class BossAction : MonoBehaviour
         // ==========================================
 
         Vector2 dashStartCenter =
-            currentHitbox.GetWorldCenter();
+            hitbox.GetWorldCenter();
 
         bossAnimator?.PlayDash();
 
@@ -250,12 +268,12 @@ public class BossAction : MonoBehaviour
 
         // Dash 종료 위치
         Vector2 dashEndCenter =
-            currentHitbox.GetWorldCenter();
-
+            hitbox.GetWorldCenter();
+        CombatLogger.Instance?.MarkChargePassEnd();
         // ==========================================
         // 3. 제자리에서 DashAttack 모션
         // ==========================================
-        yield return new WaitForSeconds(chargePostPassDelay);
+        yield return new WaitForSeconds(postPassDelay);
         bossAnimator?.PlayDashAttack();
 
         // 실제 검을 휘두르는 프레임까지 기다림
@@ -268,9 +286,9 @@ public class BossAction : MonoBehaviour
         // 지금 이 순간 대시 궤적 전체 공격
         // ==========================================
 
-        currentHitbox.Activate(data);
+        hitbox.Activate(data);
 
-        currentHitbox.SweepFromTo(
+        hitbox.SweepFromTo(
             dashStartCenter,
             dashEndCenter
         );
@@ -280,7 +298,7 @@ public class BossAction : MonoBehaviour
             data.activeTime
         );
 
-        currentHitbox.Deactivate();
+        hitbox.Deactivate();
 
         // ==========================================
         // 5. Recovery

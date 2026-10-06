@@ -53,6 +53,11 @@ public class AttackResponseLog
     public float distanceAfter;
     public float playerXAtStart;
     public float bossDirectionAtStart;
+    public float chargePassEndTime = -1f;
+    public float chargeCounterInputTime = -1f;
+
+    public float chargeCounterDelayFromPass;
+    public bool hasChargeCounterTiming;
     public AttackResponseLog(
         int sequenceId,
         BossAttackType bossAttack,
@@ -197,7 +202,7 @@ public class CombatLogger : MonoBehaviour
         // 현재 보스 공격이 없으면 기록하지 않음
         if (currentLog == null)
             return;
-
+        RecordChargeCounterTiming(response);
         // 공격 하나당 최초의 의미 있는 대응 하나만 기록
         if (responseRecorded)
             return;
@@ -419,5 +424,85 @@ public class CombatLogger : MonoBehaviour
 
         currentLog = null;
         responseRecorded = false;
+    }
+    private void RecordChargeCounterTiming(
+        PlayerResponseType response)
+    {
+        if (currentLog == null)
+            return;
+
+        if (currentLog.bossBehavior !=
+                BossBehaviorType.Attack ||
+            currentLog.bossAttack !=
+                BossAttackType.ChargeSlash)
+        {
+            return;
+        }
+
+        if (response !=
+            PlayerResponseType.Counter)
+        {
+            return;
+        }
+
+        // Counter를 여러 번 시도할 수도 있으므로
+        // 가장 최근 입력 시점을 유지
+        currentLog.chargeCounterInputTime =
+            Time.time;
+
+        // 이미 Dash를 통과한 뒤라면
+        // 즉시 Dash 종료 기준 Delay 계산
+        if (currentLog.chargePassEndTime >= 0f)
+        {
+            currentLog.chargeCounterDelayFromPass =
+                currentLog.chargeCounterInputTime -
+                currentLog.chargePassEndTime;
+
+            currentLog.hasChargeCounterTiming = true;
+
+            Debug.Log(
+                $"[Charge Timing Sample] " +
+                $"CounterFromPass=" +
+                $"{currentLog.chargeCounterDelayFromPass:F2}"
+            );
+        }
+    }
+    public void MarkChargePassEnd()
+    {
+        if (currentLog == null)
+            return;
+
+        if (currentLog.bossBehavior !=
+                BossBehaviorType.Attack ||
+            currentLog.bossAttack !=
+                BossAttackType.ChargeSlash)
+        {
+            return;
+        }
+
+        currentLog.chargePassEndTime =
+            Time.time;
+
+        // Dash가 끝나기 전에 Counter를 눌렀다면
+        // 음수 Delay도 정상적인 데이터
+        if (currentLog.chargeCounterInputTime >= 0f)
+        {
+            currentLog.chargeCounterDelayFromPass =
+                currentLog.chargeCounterInputTime -
+                currentLog.chargePassEndTime;
+
+            currentLog.hasChargeCounterTiming = true;
+
+            Debug.Log(
+                $"[Charge Timing Sample] " +
+                $"CounterFromPass=" +
+                $"{currentLog.chargeCounterDelayFromPass:F2}"
+            );
+        }
+
+        Debug.Log(
+            $"[Charge Timing Anchor] " +
+            $"Pass End"
+        );
     }
 }

@@ -327,7 +327,8 @@ public class BossController : MonoBehaviour
 
         lastExecutedAttack = selectedAttack;
 
-        // HeavySlash의 Prepare Timing 결정
+
+        // HeavySlash Timing Adaptation
         if (selectedAttack.attackType ==
                 BossAttackType.HeavySlash &&
             adaptiveSource != null)
@@ -343,18 +344,38 @@ public class BossController : MonoBehaviour
             );
         }
 
+
+        // ChargeSlash Timing Adaptation
+        if (selectedAttack.attackType ==
+                BossAttackType.ChargeSlash &&
+            adaptiveSource != null)
+        {
+            float adaptedPostPassDelay =
+                adaptiveSource
+                    .GetChargePostPassDelay(
+                        bossAction.ChargePostPassDelay,
+                        selectedAttack.attackData.startupTime
+                    );
+
+            bossAction.SetNextChargePostPassDelay(
+                adaptedPostPassDelay
+            );
+        }
+
+
         CombatLogger.Instance?.BeginBossAttack(
             selectedAttack.attackType,
             distance
         );
 
-        bossAction.ExecuteAttack(selectedAttack);
-
-        bossAction.ExecuteAttack(selectedAttack);
+        bossAction.ExecuteAttack(
+            selectedAttack
+        );
 
         adaptiveSource?
             .ConsumeFollowUpOpportunity(
-                selectedAttack.attackType.ToString());
+                selectedAttack.attackType.ToString()
+            );
 
         ChangeState(BossState.Attack);
     }
