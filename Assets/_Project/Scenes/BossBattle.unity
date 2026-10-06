@@ -867,6 +867,9 @@ MonoBehaviour:
   recencyWindow: 5
   spatialWindow: 6
   minSpatialSamples: 3
+  heavyTimingWindow: 6
+  minHeavyTimingSamples: 3
+  heavyTimingConsistencyTolerance: 0.18
 --- !u!114 &402595768
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -880,7 +883,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossAdaptiveDecisionSource
   behaviorModel: {fileID: 402595767}
-  attackRules: []
   minMultiplier: 0.6
   maxMultiplier: 1.5
   frontStepRetreatThreshold: 0.6
@@ -890,8 +892,20 @@ MonoBehaviour:
   followUpOpportunityDuration: 1.2
   maxChaseParryChance: 0.35
   maxChaseChargeMultiplier: 1.5
-  retreatHabitThreshold: 0.4
-  maxFrontStepChance: 0.65
+  frontStepAttackThreshold: 0.6
+  maxAttackParryChance: 0.4
+  frontStepCounterThreshold: 0.6
+  maxCounterHoldChance: 0.4
+  maxCounterBackDodgeChance: 0.55
+  counterBaitHoldDuration: 0.35
+  chaseHabitReleaseThreshold: 0.4
+  frontStepHabitReleaseThreshold: 0.4
+  heavyTimingHabitThreshold: 0.65
+  heavyTimingReleaseThreshold: 0.4
+  maxHeavyTimingAdaptChance: 0.7
+  heavyEarlyOffset: 0.12
+  heavyLateOffset: 0.25
+  minHeavyPrepareTime: 0.2
 --- !u!1 &440562010
 GameObject:
   m_ObjectHideFlags: 0
@@ -1777,7 +1791,7 @@ MonoBehaviour:
   parryBox: {fileID: 1695386534}
   hurtbox: {fileID: 722405369}
   startupTime: 0.03
-  parryWindow: 0.5
+  parryWindow: 0.35
   failRecovery: 0.4
   successAnimationDuration: 0.28
 --- !u!114 &685367525

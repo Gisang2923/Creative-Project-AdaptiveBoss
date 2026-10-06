@@ -6,6 +6,18 @@ public class BossAction : MonoBehaviour
     [SerializeField] private Rigidbody2D rb;
     [Header("Heavy Slash")]
     [SerializeField] private float heavyPrepareTime = 0.5f;
+    private float nextHeavyPrepareTime = -1f;
+
+    public float HeavyPrepareTime =>
+        heavyPrepareTime;
+
+    public void SetNextHeavyPrepareTime(
+        float prepareTime)
+    {
+        nextHeavyPrepareTime =
+            Mathf.Max(0f, prepareTime);
+    }
+    
     [Header("Charge Slash")]
     [SerializeField] private float chargePostPassDelay = 0.15f;
     [SerializeField] private float dashSpeed = 12f;
@@ -126,7 +138,17 @@ public class BossAction : MonoBehaviour
         // 1. Prepare
         bossAnimator?.PlayHeavyPrepare();
 
-        yield return new WaitForSeconds(heavyPrepareTime);
+        float prepareTime =
+            nextHeavyPrepareTime >= 0f
+                ? nextHeavyPrepareTime
+                : heavyPrepareTime;
+
+        // Override는 Heavy 한 번에만 적용
+        nextHeavyPrepareTime = -1f;
+
+        yield return new WaitForSeconds(
+            prepareTime
+        );
 
         // 2. 실제 Heavy Attack
         bossAnimator?.PlayHeavyAttack();

@@ -23,6 +23,12 @@ public class PlayerBehaviorModel : MonoBehaviour
     [SerializeField] private int spatialWindow = 6;
     [SerializeField] private int minSpatialSamples = 3;
 
+    [Header("Heavy Timing Habit")]
+    [SerializeField] private int heavyTimingWindow = 6;
+    [SerializeField] private int minHeavyTimingSamples = 3;
+
+    [SerializeField]
+    private float heavyTimingConsistencyTolerance = 0.18f;
     public float GetHabitScore(
         BossAttackType bossAttack,
         PlayerResponseType response)
@@ -668,6 +674,54 @@ public class PlayerBehaviorModel : MonoBehaviour
             return 0f;
 
         return (float)counterCount /
+            checkedCount;
+    }
+    public float GetHeavyTimingHabitScore()
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null || logs.Count == 0)
+            return 0f;
+
+        int checkedCount = 0;
+        int successfulCounterCount = 0;
+
+        const int window = 5;
+
+        for (int i = logs.Count - 1;
+            i >= 0 && checkedCount < window;
+            i--)
+        {
+            AttackResponseLog log = logs[i];
+
+            if (log.bossBehavior !=
+                    BossBehaviorType.Attack ||
+                log.bossAttack !=
+                    BossAttackType.HeavySlash)
+            {
+                continue;
+            }
+
+            checkedCount++;
+
+            bool successfulCounter =
+                log.playerResponse ==
+                    PlayerResponseType.Counter &&
+                log.result ==
+                    CombatResultType.ParrySuccess;
+
+            if (successfulCounter)
+            {
+                successfulCounterCount++;
+            }
+        }
+
+        // Heavy를 최소 2번은 경험해야 학습
+        if (checkedCount < 2)
+            return 0f;
+
+        return (float)successfulCounterCount /
             checkedCount;
     }
     public void PrintSummary(

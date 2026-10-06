@@ -77,7 +77,27 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     [SerializeField, Range(0f, 1f)]
     private float frontStepHabitReleaseThreshold = 0.4f;
 
+    [Header("Heavy Timing Adaptation")]
 
+    [SerializeField, Range(0f, 1f)]
+    private float heavyTimingHabitThreshold = 0.6f;
+
+    [SerializeField, Range(0f, 1f)]
+    private float heavyTimingReleaseThreshold = 0.3f;
+
+    [SerializeField, Range(0f, 1f)]
+    private float maxHeavyTimingAdaptChance = 0.7f;
+
+    [SerializeField]
+    private float heavyEarlyOffset = 0.25f;
+
+    [SerializeField]
+    private float heavyLateOffset = 0.4f;
+
+    [SerializeField]
+    private float minHeavyPrepareTime = 0.25f;
+
+    private bool heavyTimingPolicyActive;
     // 현재 학습되어 유지 중인 Policy
     private AdaptiveHabitType backDodgePolicy =
         AdaptiveHabitType.None;
@@ -708,5 +728,97 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 frontStepPolicyScore = 0f;
             }
         }
+    }
+    public float GetHeavyPrepareTime(
+        float basePrepareTime)
+    {
+        if (behaviorModel == null)
+            return basePrepareTime;
+
+        float habitScore =
+            behaviorModel
+                .GetHeavyTimingHabitScore();
+
+        // 아직 Timing Policy 없음
+        if (!heavyTimingPolicyActive)
+        {
+            if (habitScore <
+                heavyTimingHabitThreshold)
+            {
+                return basePrepareTime;
+            }
+
+            heavyTimingPolicyActive = true;
+
+            Debug.Log(
+                $"[Heavy Timing Policy Learned] " +
+                $"Score={habitScore:F2}"
+            );
+        }
+        // 이미 활성화되어 있다면
+        // 충분히 습관이 무너질 때만 해제
+        else if (habitScore <
+                heavyTimingReleaseThreshold)
+        {
+            heavyTimingPolicyActive = false;
+
+            Debug.Log(
+                $"[Heavy Timing Policy Released] " +
+                $"Score={habitScore:F2}"
+            );
+
+            return basePrepareTime;
+        }
+
+        float influence =
+            Mathf.InverseLerp(
+                heavyTimingReleaseThreshold,
+                1f,
+                habitScore
+            );
+
+        float adaptChance =
+            Mathf.Lerp(
+                0.30f,
+                maxHeavyTimingAdaptChance,
+                influence
+            );
+
+        // Policy가 있어도 매번 타이밍을 바꾸지 않음
+        if (Random.value > adaptChance)
+            return basePrepareTime;
+
+        bool useLateTiming =
+            Random.value < 0.7f;
+
+        float adaptedPrepareTime;
+
+        if (useLateTiming)
+        {
+            adaptedPrepareTime =
+                basePrepareTime +
+                heavyLateOffset;
+        }
+        else
+        {
+            adaptedPrepareTime =
+                Mathf.Max(
+                    minHeavyPrepareTime,
+                    basePrepareTime -
+                    heavyEarlyOffset
+                );
+        }
+
+        Debug.Log(
+            $"[Heavy Timing] " +
+            $"Prepare {basePrepareTime:F2} → " +
+            $"{adaptedPrepareTime:F2} | " +
+            $"Variant=" +
+            $"{(useLateTiming ? "Late" : "Early")} | " +
+            $"Habit={habitScore:F2} | " +
+            $"Chance={adaptChance:F2}"
+        );
+
+        return adaptedPrepareTime;
     }
 }

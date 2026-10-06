@@ -327,10 +327,27 @@ public class BossController : MonoBehaviour
 
         lastExecutedAttack = selectedAttack;
 
+        // HeavySlash의 Prepare Timing 결정
+        if (selectedAttack.attackType ==
+                BossAttackType.HeavySlash &&
+            adaptiveSource != null)
+        {
+            float adaptedPrepareTime =
+                adaptiveSource.GetHeavyPrepareTime(
+                    bossAction.HeavyPrepareTime
+                );
+
+            bossAction.SetNextHeavyPrepareTime(
+                adaptedPrepareTime
+            );
+        }
+
         CombatLogger.Instance?.BeginBossAttack(
             selectedAttack.attackType,
             distance
         );
+
+        bossAction.ExecuteAttack(selectedAttack);
 
         bossAction.ExecuteAttack(selectedAttack);
 
@@ -593,6 +610,12 @@ public class BossController : MonoBehaviour
     public void EnterCounterStun(float duration)
     {
         bossParry?.ForceCancelParry();
+
+        // Counter로 공격이 강제 종료된 경우
+        // 현재 Attack 로그도 즉시 확정
+        CombatLogger.Instance?.EndBossAttack(
+            movement.DistanceToTarget
+        );
 
         stunTimer = duration;
 
