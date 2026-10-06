@@ -334,7 +334,8 @@ public class BossController : MonoBehaviour
         {
             float adaptedPrepareTime =
                 adaptiveSource.GetHeavyPrepareTime(
-                    bossAction.HeavyPrepareTime
+                    bossAction.HeavyPrepareTime,
+                    selectedAttack.attackData.startupTime
                 );
 
             bossAction.SetNextHeavyPrepareTime(

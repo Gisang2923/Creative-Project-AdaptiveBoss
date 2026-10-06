@@ -24,6 +24,11 @@ public class PlayerCounter : MonoBehaviour
     private bool counterSucceeded;
 
     public bool CounterSucceeded => counterSucceeded;
+    public float CounterStartupTime =>
+        startupTime;
+
+    public float ParryWindow =>
+        parryWindow;
     private Coroutine counterRoutine;
     private void Awake()
     {

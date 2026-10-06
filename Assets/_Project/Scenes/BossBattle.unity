@@ -903,9 +903,12 @@ MonoBehaviour:
   heavyTimingHabitThreshold: 0.65
   heavyTimingReleaseThreshold: 0.4
   maxHeavyTimingAdaptChance: 0.7
-  heavyEarlyOffset: 0.12
-  heavyLateOffset: 0.25
+  heavyReactionSplitDelay: 0.725
+  heavyTimingMargin: 0.07
   minHeavyPrepareTime: 0.2
+  maxHeavyPrepareTime: 1.1
+  heavyTimingJitter: 0.04
+  playerCounter: {fileID: 685367524}
 --- !u!1 &440562010
 GameObject:
   m_ObjectHideFlags: 0

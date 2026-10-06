@@ -89,15 +89,22 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     private float maxHeavyTimingAdaptChance = 0.7f;
 
     [SerializeField]
-    private float heavyEarlyOffset = 0.25f;
+    private float heavyTimingMargin = 0.07f;
 
     [SerializeField]
-    private float heavyLateOffset = 0.4f;
+    private float minHeavyPrepareTime = 0.34f;
 
     [SerializeField]
-    private float minHeavyPrepareTime = 0.25f;
+    private float maxHeavyPrepareTime = 1.1f;
+
+    [SerializeField]
+    private float heavyTimingJitter = 0.04f;
+
+    [SerializeField]
+    private PlayerCounter playerCounter;
 
     private bool heavyTimingPolicyActive;
+    
     // 현재 학습되어 유지 중인 Policy
     private AdaptiveHabitType backDodgePolicy =
         AdaptiveHabitType.None;
@@ -730,95 +737,193 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         }
     }
     public float GetHeavyPrepareTime(
-        float basePrepareTime)
+    float basePrepareTime,
+    float heavyStartupTime)
+{
+    if (behaviorModel == null ||
+        playerCounter == null)
     {
-        if (behaviorModel == null)
-            return basePrepareTime;
+        return basePrepareTime;
+    }
 
-        float habitScore =
-            behaviorModel
-                .GetHeavyTimingHabitScore();
+    float habitScore =
+        behaviorModel
+            .GetHeavyTimingHabitScore();
 
-        // 아직 Timing Policy 없음
-        if (!heavyTimingPolicyActive)
+
+    // =============================
+    // Policy 학습 / 해제
+    // 오직 성공률만 판단
+    // =============================
+
+    if (!heavyTimingPolicyActive)
+    {
+        if (habitScore <
+            heavyTimingHabitThreshold)
         {
-            if (habitScore <
-                heavyTimingHabitThreshold)
-            {
-                return basePrepareTime;
-            }
-
-            heavyTimingPolicyActive = true;
-
-            Debug.Log(
-                $"[Heavy Timing Policy Learned] " +
-                $"Score={habitScore:F2}"
-            );
-        }
-        // 이미 활성화되어 있다면
-        // 충분히 습관이 무너질 때만 해제
-        else if (habitScore <
-                heavyTimingReleaseThreshold)
-        {
-            heavyTimingPolicyActive = false;
-
-            Debug.Log(
-                $"[Heavy Timing Policy Released] " +
-                $"Score={habitScore:F2}"
-            );
-
             return basePrepareTime;
         }
 
-        float influence =
-            Mathf.InverseLerp(
-                heavyTimingReleaseThreshold,
-                1f,
-                habitScore
-            );
-
-        float adaptChance =
-            Mathf.Lerp(
-                0.30f,
-                maxHeavyTimingAdaptChance,
-                influence
-            );
-
-        // Policy가 있어도 매번 타이밍을 바꾸지 않음
-        if (Random.value > adaptChance)
-            return basePrepareTime;
-
-        bool useLateTiming =
-            Random.value < 0.7f;
-
-        float adaptedPrepareTime;
-
-        if (useLateTiming)
-        {
-            adaptedPrepareTime =
-                basePrepareTime +
-                heavyLateOffset;
-        }
-        else
-        {
-            adaptedPrepareTime =
-                Mathf.Max(
-                    minHeavyPrepareTime,
-                    basePrepareTime -
-                    heavyEarlyOffset
-                );
-        }
+        heavyTimingPolicyActive = true;
 
         Debug.Log(
-            $"[Heavy Timing] " +
-            $"Prepare {basePrepareTime:F2} → " +
-            $"{adaptedPrepareTime:F2} | " +
-            $"Variant=" +
-            $"{(useLateTiming ? "Late" : "Early")} | " +
-            $"Habit={habitScore:F2} | " +
-            $"Chance={adaptChance:F2}"
+            $"[Heavy Timing Policy Learned] " +
+            $"SuccessScore={habitScore:F2}"
+        );
+    }
+    else if (habitScore <
+             heavyTimingReleaseThreshold)
+    {
+        heavyTimingPolicyActive = false;
+
+        Debug.Log(
+            $"[Heavy Timing Policy Released] " +
+            $"SuccessScore={habitScore:F2}"
         );
 
-        return adaptedPrepareTime;
+        return basePrepareTime;
     }
+
+
+    // =============================
+    // 성공했던 Counter Delay
+    // =============================
+
+    if (!behaviorModel
+            .TryGetHeavyCounterDelay(
+                out float responseDelay))
+    {
+        return basePrepareTime;
+    }
+
+
+    // Policy가 있어도
+    // 항상 변칙을 사용하지 않음
+    float influence =
+        Mathf.InverseLerp(
+            heavyTimingReleaseThreshold,
+            1f,
+            habitScore
+        );
+
+    float adaptChance =
+        Mathf.Lerp(
+            0.35f,
+            maxHeavyTimingAdaptChance,
+            influence
+        );
+
+    if (Random.value >
+        adaptChance)
+    {
+        return basePrepareTime;
+    }
+
+
+    // =============================
+    // 실제 Counter 활성 구간 계산
+    // =============================
+
+    float counterWindowStart =
+        responseDelay +
+        playerCounter.CounterStartupTime;
+
+    float counterWindowEnd =
+        counterWindowStart +
+        playerCounter.ParryWindow;
+
+
+    float targetHitTime;
+    string variant;
+
+
+    // 기존 Heavy의 실제 타격 시점
+    float baseHitTime =
+        basePrepareTime +
+        heavyStartupTime;
+
+    // Counter Window의 중앙
+    float counterWindowMid =
+        (
+            counterWindowStart +
+            counterWindowEnd
+        ) * 0.5f;
+
+
+    // =====================================
+    // 기본 Hit이 Window 뒤쪽에 있음
+    //
+    // 플레이어가 비교적 일찍 Counter해서
+    // Hit 시점까지 Counter를 유지한 경우
+    //
+    // → Counter가 끝난 뒤까지 기다림
+    // =====================================
+    if (baseHitTime >=
+        counterWindowMid)
+    {
+        targetHitTime =
+            counterWindowEnd +
+            heavyTimingMargin;
+
+        variant = "Late";
+    }
+
+    // =====================================
+    // 기본 Hit이 Window 앞쪽에 있음
+    //
+    // 플레이어가 비교적 늦게 Counter해서
+    // 공격 직전에 Counter를 켠 경우
+    //
+    // → Counter가 켜지기 전에 공격
+    // =====================================
+    else
+    {
+        targetHitTime =
+            counterWindowStart -
+            heavyTimingMargin;
+
+        variant = "Early";
+    }
+
+
+    // 실제 타격은
+    // Prepare 이후 startup을 거쳐 발생하므로 역산
+    float targetPrepareTime =
+        targetHitTime -
+        heavyStartupTime;
+
+
+    // 완전히 고정된 새 타이밍 방지
+    targetPrepareTime +=
+        Random.Range(
+            -heavyTimingJitter,
+            heavyTimingJitter
+        );
+
+
+    targetPrepareTime =
+        Mathf.Clamp(
+            targetPrepareTime,
+            minHeavyPrepareTime,
+            maxHeavyPrepareTime
+        );
+
+
+    Debug.Log(
+        $"[Heavy Timing] " +
+        $"Response={responseDelay:F2} | " +
+        $"BaseHit={baseHitTime:F2} | " +
+        $"CounterWindow=" +
+        $"{counterWindowStart:F2}" +
+        $"~{counterWindowEnd:F2} | " +
+        $"Variant={variant} | " +
+        $"TargetHit={targetHitTime:F2} | " +
+        $"Prepare " +
+        $"{basePrepareTime:F2} → " +
+        $"{targetPrepareTime:F2}"
+    );
+
+
+    return targetPrepareTime;
+}
 }

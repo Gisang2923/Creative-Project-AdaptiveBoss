@@ -22,13 +22,7 @@ public class PlayerBehaviorModel : MonoBehaviour
     [Header("Spatial Habit")]
     [SerializeField] private int spatialWindow = 6;
     [SerializeField] private int minSpatialSamples = 3;
-
-    [Header("Heavy Timing Habit")]
-    [SerializeField] private int heavyTimingWindow = 6;
-    [SerializeField] private int minHeavyTimingSamples = 3;
-
-    [SerializeField]
-    private float heavyTimingConsistencyTolerance = 0.18f;
+    
     public float GetHabitScore(
         BossAttackType bossAttack,
         PlayerResponseType response)
@@ -685,12 +679,10 @@ public class PlayerBehaviorModel : MonoBehaviour
             return 0f;
 
         int checkedCount = 0;
-        int successfulCounterCount = 0;
-
-        const int window = 5;
+        int successCount = 0;
 
         for (int i = logs.Count - 1;
-            i >= 0 && checkedCount < window;
+            i >= 0 && checkedCount < 5;
             i--)
         {
             AttackResponseLog log = logs[i];
@@ -705,24 +697,90 @@ public class PlayerBehaviorModel : MonoBehaviour
 
             checkedCount++;
 
-            bool successfulCounter =
-                log.playerResponse ==
+            if (log.playerResponse ==
                     PlayerResponseType.Counter &&
                 log.result ==
-                    CombatResultType.ParrySuccess;
-
-            if (successfulCounter)
+                    CombatResultType.ParrySuccess)
             {
-                successfulCounterCount++;
+                successCount++;
             }
         }
 
-        // Heavy를 최소 2번은 경험해야 학습
-        if (checkedCount < 2)
+        if (checkedCount < 3)
             return 0f;
 
-        return (float)successfulCounterCount /
+        return (float)successCount /
             checkedCount;
+    }
+    public bool TryGetHeavyCounterDelay(
+        out float medianDelay)
+    {
+        medianDelay = 0f;
+
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null || logs.Count == 0)
+            return false;
+
+        List<float> delays =
+            new List<float>();
+
+        int checkedCount = 0;
+
+        for (int i = logs.Count - 1;
+            i >= 0 && checkedCount < 5;
+            i--)
+        {
+            AttackResponseLog log = logs[i];
+
+            if (log.bossBehavior !=
+                    BossBehaviorType.Attack ||
+                log.bossAttack !=
+                    BossAttackType.HeavySlash)
+            {
+                continue;
+            }
+
+            checkedCount++;
+
+            if (log.playerResponse !=
+                    PlayerResponseType.Counter ||
+                log.result !=
+                    CombatResultType.ParrySuccess ||
+                log.responseDelay < 0f)
+            {
+                continue;
+            }
+
+            delays.Add(
+                log.responseDelay
+            );
+        }
+
+        if (delays.Count < 2)
+            return false;
+
+        delays.Sort();
+
+        int middle =
+            delays.Count / 2;
+
+        if (delays.Count % 2 == 1)
+        {
+            medianDelay =
+                delays[middle];
+        }
+        else
+        {
+            medianDelay =
+                (
+                    delays[middle - 1] +
+                    delays[middle]
+                ) * 0.5f;
+        }
+
+        return true;
     }
     public void PrintSummary(
         BossAttackType bossAttack)
