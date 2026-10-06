@@ -43,16 +43,26 @@ public class BossAction : MonoBehaviour
     [SerializeField] private Collider2D bodyCollider;
 
     [SerializeField] private float jumpSlamVanishTime = 0.35f;
-    [SerializeField] private float jumpSlamSpawnHeight = 5f;
-    [SerializeField] private float jumpSlamFallSpeed = 12f;
-    [SerializeField] private float jumpSlamHorizontalSpeed = 2f;
+
+    [SerializeField] private float jumpSlamHoverTime = 0.4f;
+
+    [SerializeField] private float jumpSlamSpawnHeight = 8f;
+
+    [SerializeField]
+    private float jumpSlamFallSpeed = 30f;
+
+    [SerializeField]
+    private float jumpSlamSpawnSideOffset = 4.0f;
+
+    [SerializeField]
+    private float jumpSlamLandingHitDelay = 0.03f;
     [SerializeField] private float jumpSlamGroundY = 0f;
     [SerializeField] private float jumpLandingOffset = 0.6f;
     [Header("Jump Slam Ground Check")]
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float groundCheckDistance = 10f;
     [SerializeField] private float groundOffset = 0.7f;
-
+    [SerializeField] private float jumpSlamAttackLeadTime = 0.12f;
     [Header("Back Dodge")]
     [SerializeField] private float backDodgeDistance = 5f;
     [SerializeField] private float backDodgeDuration = 0.6f;
@@ -80,10 +90,14 @@ public class BossAction : MonoBehaviour
     [SerializeField] private LayerMask playerLayer;
     public bool IsAttacking => isAttacking;
     [SerializeField] private BossMovement movement;
+    private float defaultGravityScale;
     private void Awake()
     {
         if (rb == null)
             rb = GetComponent<Rigidbody2D>();
+
+        if (rb != null)
+            defaultGravityScale = rb.gravityScale;
     }
     public void ExecuteAttack(BossAttack attack)
     {
@@ -361,8 +375,7 @@ public class BossAction : MonoBehaviour
         yield return new WaitForSeconds(jumpSlamVanishTime);
 
         // 3. 플레이어 위쪽으로 위치 이동
-        // ==========================================
-        // 3. 왼쪽 / 오른쪽 상공 랜덤 등장
+        // 왼쪽 / 오른쪽 상공 랜덤 등장
         // ==========================================
 
         // -1 = 플레이어 왼쪽에서 등장
@@ -370,46 +383,87 @@ public class BossAction : MonoBehaviour
         float spawnSide =
             Random.value < 0.5f ? -1f : 1f;
 
-        // 등장한 쪽의 반대 방향으로 내려찍음
-        float slamDirection = -spawnSide;
+        // 등장한 쪽 반대 방향으로 내려찍음
+        float slamDirection =
+            -spawnSide;
 
-        // 예상 낙하 시간
-        float estimatedFallTime =
-            jumpSlamSpawnHeight / jumpSlamFallSpeed;
 
-        // 낙하 중 예상 수평 이동 거리
-        float horizontalTravel =
-            jumpSlamHorizontalSpeed * estimatedFallTime;
+        // ==========================================
+        // 착지 목표
+        // 플레이어를 살짝 지나가는 위치
+        // ==========================================
 
-        // 플레이어를 살짝 지나가는 지점을 착지 목표로 설정
         float landingX =
-            player.position.x +
+            player.position.x -
             slamDirection * jumpLandingOffset;
 
-        // 착지 목표에서 역산하여 Spawn 위치 결정
+
+        // ==========================================
+        // 등장 위치
+        // 반드시 플레이어의 왼쪽 / 오른쪽으로 분리
+        // ==========================================
+
         float spawnX =
-            landingX -
-            slamDirection * horizontalTravel;
+            player.position.x +
+            spawnSide * jumpSlamSpawnSideOffset;
+
+
+        // ==========================================
+        // 빠른 낙하에서도 정확히 landingX까지
+        // 도달하도록 수평 속도를 역산
+        // ==========================================
+
+        float fallDistance =
+            Mathf.Max(
+                0.1f,
+                jumpSlamSpawnHeight - groundOffset
+            );
+
+        float estimatedFallTime =
+            fallDistance /
+            jumpSlamFallSpeed;
+
+        float horizontalDistance =
+            landingX - spawnX;
+
+        float slamHorizontalVelocity =
+            horizontalDistance /
+            estimatedFallTime;
 
         transform.position = new Vector3(
             spawnX,
             jumpSlamGroundY + jumpSlamSpawnHeight,
             transform.position.z
         );
+        rb.linearVelocity = Vector2.zero;
+        rb.gravityScale = 0f;
 
-        // 4. 재등장
+        // ==========================================
+        // 4. 재등장 + 회피 경고 시간
+        // ==========================================
+
         if (visual != null)
             visual.gameObject.SetActive(true);
 
         movement.FaceTarget();
-        // 재등장하는 순간 JumpAttack 재생
-        bossAnimator?.PlayJumpAttack();
 
-        // 5. 아래로 낙하
+        rb.linearVelocity = Vector2.zero;
+        bossAnimator?.PlayJumpHover();
+        // 이 시점에서 이미 landingX / 궤적은 확정되어 있음.
+        // 플레이어는 이 시간 안에 위험 지점에서 벗어나야 한다.
+        yield return new WaitForSeconds(
+            jumpSlamHoverTime
+        );
+
+        // ==========================================
+        // 5. Commit 아래로 낙하
+        // 여기부터는 플레이어 위치를 다시 추적하지 않음
+        // ==========================================
+        bool jumpAttackStarted = false;
         while (true)
         {
             rb.linearVelocity = new Vector2(
-                slamDirection * jumpSlamHorizontalSpeed,
+                slamHorizontalVelocity,
                 -jumpSlamFallSpeed
             );
 
@@ -425,15 +479,47 @@ public class BossAction : MonoBehaviour
                 float distanceToGround =
                     transform.position.y - hit.point.y;
 
-                if (distanceToGround <= groundOffset)
-                {
-                    rb.linearVelocity = Vector2.zero;
+                // =====================================
+                // 착지 직전에 공격 모션 선행 재생
+                // =====================================
 
-                    transform.position = new Vector3(
-                        transform.position.x,
-                        hit.point.y + groundOffset,
-                        transform.position.z
+                float remainingFallDistance =
+                    Mathf.Max(
+                        0f,
+                        distanceToGround - groundOffset
                     );
+
+                float timeToGround =
+                    remainingFallDistance /
+                    jumpSlamFallSpeed;
+
+                if (!jumpAttackStarted &&
+                    timeToGround <=
+                        jumpSlamAttackLeadTime)
+                {
+                    bossAnimator?.PlayJumpAttack();
+
+                    jumpAttackStarted = true;
+                }
+
+
+                // =====================================
+                // 착지
+                // =====================================
+
+                if (distanceToGround <=
+                    groundOffset)
+                {
+                    rb.linearVelocity =
+                        Vector2.zero;
+
+                    transform.position =
+                        new Vector3(
+                            transform.position.x,
+                            hit.point.y +
+                                groundOffset,
+                            transform.position.z
+                        );
 
                     break;
                 }
@@ -441,15 +527,24 @@ public class BossAction : MonoBehaviour
 
             yield return new WaitForFixedUpdate();
         }
+        rb.gravityScale = defaultGravityScale;
 
         // 6. 착지 후 몸 충돌 복구
         if (bodyCollider != null)
             bodyCollider.enabled = true;
 
+        // ==========================================
         // 7. 착지 공격 판정
-        yield return new WaitForSeconds(0.3f);
+        // 회피 판단은 공중 Hover 동안 끝났으므로
+        // 착지 후 추가 회피시간은 거의 주지 않음
+        // ==========================================
+
+        yield return new WaitForSeconds(
+            jumpSlamLandingHitDelay
+        );
+
         hitbox.Activate(data);
-        
+
         yield return new WaitForSeconds(
             data.activeTime
         );
@@ -598,5 +693,8 @@ public class BossAction : MonoBehaviour
 
         if (bodyCollider != null)
             bodyCollider.enabled = true;
+
+        if (rb != null)
+            rb.gravityScale = defaultGravityScale;
     }
 }

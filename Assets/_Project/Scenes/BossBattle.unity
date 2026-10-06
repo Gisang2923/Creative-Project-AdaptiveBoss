@@ -576,16 +576,19 @@ MonoBehaviour:
   visual: {fileID: 1266593679}
   bodyCollider: {fileID: 402595763}
   jumpSlamVanishTime: 0.3
-  jumpSlamSpawnHeight: 6
-  jumpSlamFallSpeed: 18
-  jumpSlamHorizontalSpeed: 8
+  jumpSlamHoverTime: 0.4
+  jumpSlamSpawnHeight: 7
+  jumpSlamFallSpeed: 30
+  jumpSlamSpawnSideOffset: 4
+  jumpSlamLandingHitDelay: 0.3
   jumpSlamGroundY: 0
-  jumpLandingOffset: 0.2
+  jumpLandingOffset: 1
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
   groundCheckDistance: 10
   groundOffset: 0.7
+  jumpSlamAttackLeadTime: 0.6
   backDodgeDistance: 4
   backDodgeDuration: 0.3
   bossAnimator: {fileID: 402595765}
@@ -912,6 +915,7 @@ MonoBehaviour:
   minChargePostPassDelay: 0.12
   maxChargePostPassDelay: 0.8
   chargeTimingJitter: 0.04
+  chargeTimingPolicyActive: 0
 --- !u!1 &440562010
 GameObject:
   m_ObjectHideFlags: 0

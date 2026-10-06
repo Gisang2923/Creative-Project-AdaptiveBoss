@@ -55,6 +55,8 @@ public class BossAnimator : MonoBehaviour
     private static readonly int CounterThrust =
         Animator.StringToHash("CounterThrust");   
 
+    private static readonly int JumpHover =
+    Animator.StringToHash("JumpHover");
     public void PlayReady()
     {
         animator.Play(Ready, 0, 0f);
@@ -147,7 +149,10 @@ public class BossAnimator : MonoBehaviour
     {
         PlayAction(Jump);
     }
-
+    public void PlayJumpHover()
+    {
+        PlayAction(JumpHover);
+    }
     public void PlayJumpAttack()
     {
         PlayAction(JumpAttack);
