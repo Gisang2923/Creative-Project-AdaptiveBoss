@@ -9,6 +9,12 @@ public enum AdaptiveHabitType
     Attack,
     Counter
 }
+public enum TimingAdaptMode
+{
+    None,
+    Early,
+    Late
+}
 public class BossAdaptiveDecisionSource : MonoBehaviour
 {
     [Header("References")]
@@ -92,18 +98,22 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     private float heavyTimingMargin = 0.07f;
 
     [SerializeField]
-    private float minHeavyPrepareTime = 0.34f;
+    private float minHeavyHoldTime = 0.15f;
 
     [SerializeField]
-    private float maxHeavyPrepareTime = 1.1f;
+    private float maxHeavyHoldTime = 0.9f;
 
     [SerializeField]
     private float heavyTimingJitter = 0.04f;
+
+    
 
     [SerializeField]
     private PlayerCounter playerCounter;
 
     private bool heavyTimingPolicyActive;
+    private TimingAdaptMode heavyTimingMode =
+        TimingAdaptMode.None;
     
     // 현재 학습되어 유지 중인 Policy
     private AdaptiveHabitType backDodgePolicy =
@@ -111,6 +121,9 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     private AdaptiveHabitType frontStepPolicy =
         AdaptiveHabitType.None;
+
+
+        
     [Header("Charge Timing Adaptation")]
 
     [SerializeField, Range(0f, 1f)]
@@ -135,6 +148,16 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     private float chargeTimingJitter = 0.04f;
     [SerializeField]
     private bool chargeTimingPolicyActive;
+    private TimingAdaptMode chargeTimingMode =
+        TimingAdaptMode.None;
+
+    [Header("Timing Mode Reevaluation")]
+
+    [SerializeField]
+    private int timingModeReevaluationInterval = 3;
+
+    private int heavyAdaptiveUsesSinceMode = 0;
+    private int chargeAdaptiveUsesSinceMode = 0;    
     private float backDodgePolicyScore;
     private float frontStepPolicyScore;
     private float followUpHabitScore;
@@ -759,24 +782,23 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             }
         }
     }
-    public float GetHeavyPrepareTime(
-        float basePrepareTime,
+    public float GetHeavyHoldTime(
+        float baseHoldTime,
+        float prepareCueTime,
         float heavyStartupTime)
     {
         if (behaviorModel == null ||
             playerCounter == null)
         {
-            return basePrepareTime;
+            return baseHoldTime;
         }
 
         float habitScore =
-            behaviorModel
-                .GetHeavyTimingHabitScore();
+            behaviorModel.GetHeavyTimingHabitScore();
 
 
         // =============================
         // Policy 학습 / 해제
-        // 오직 성공률만 판단
         // =============================
 
         if (!heavyTimingPolicyActive)
@@ -784,7 +806,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             if (habitScore <
                 heavyTimingHabitThreshold)
             {
-                return basePrepareTime;
+                return baseHoldTime;
             }
 
             heavyTimingPolicyActive = true;
@@ -798,54 +820,27 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 heavyTimingReleaseThreshold)
         {
             heavyTimingPolicyActive = false;
+            heavyTimingMode =
+                TimingAdaptMode.None;
 
+            heavyAdaptiveUsesSinceMode = 0;
             Debug.Log(
                 $"[Heavy Timing Policy Released] " +
                 $"SuccessScore={habitScore:F2}"
             );
 
-            return basePrepareTime;
+            return baseHoldTime;
         }
 
 
-        // =============================
-        // 성공했던 Counter Delay
-        // =============================
-
+        // 성공했던 Counter Timing
         if (!behaviorModel
                 .TryGetHeavyCounterDelay(
                     out float responseDelay))
         {
-            return basePrepareTime;
+            return baseHoldTime;
         }
 
-
-        // Policy가 있어도
-        // 항상 변칙을 사용하지 않음
-        float influence =
-            Mathf.InverseLerp(
-                heavyTimingReleaseThreshold,
-                1f,
-                habitScore
-            );
-
-        float adaptChance =
-            Mathf.Lerp(
-                0.35f,
-                maxHeavyTimingAdaptChance,
-                influence
-            );
-
-        if (Random.value >
-            adaptChance)
-        {
-            return basePrepareTime;
-        }
-
-
-        // =============================
-        // 실제 Counter 활성 구간 계산
-        // =============================
 
         float counterWindowStart =
             responseDelay +
@@ -855,17 +850,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             counterWindowStart +
             playerCounter.ParryWindow;
 
-
-        float targetHitTime;
-        string variant;
-
-
-        // 기존 Heavy의 실제 타격 시점
-        float baseHitTime =
-            basePrepareTime +
-            heavyStartupTime;
-
-        // Counter Window의 중앙
         float counterWindowMid =
             (
                 counterWindowStart +
@@ -873,81 +857,184 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             ) * 0.5f;
 
 
-        // =====================================
-        // 기본 Hit이 Window 뒤쪽에 있음
-        //
-        // 플레이어가 비교적 일찍 Counter해서
-        // Hit 시점까지 Counter를 유지한 경우
-        //
-        // → Counter가 끝난 뒤까지 기다림
-        // =====================================
-        if (baseHitTime >=
-            counterWindowMid)
+        // 기본 Heavy 실제 Hit
+        float baseHitTime =
+            prepareCueTime +
+            baseHoldTime +
+            heavyStartupTime;
+
+
+        // =============================
+        // 처음 Timing Mode 학습
+        // =============================
+
+        if (heavyTimingMode ==
+            TimingAdaptMode.None)
+        {
+            if (baseHitTime >=
+                counterWindowMid)
+            {
+                heavyTimingMode =
+                    TimingAdaptMode.Late;
+            }
+            else
+            {
+                heavyTimingMode =
+                    TimingAdaptMode.Early;
+            }
+
+            heavyAdaptiveUsesSinceMode = 0;
+
+            Debug.Log(
+                $"[Heavy Timing Mode] " +
+                $"학습 → {heavyTimingMode}"
+            );
+        }
+
+
+        // =============================
+        // 적응된 Heavy에도 계속 성공하면
+        // Timing Mode 재평가
+        // =============================
+
+        else if (
+            heavyAdaptiveUsesSinceMode >=
+                timingModeReevaluationInterval &&
+            habitScore >=
+                heavyTimingHabitThreshold)
+        {
+            TimingAdaptMode newMode;
+
+            if (baseHitTime >=
+                counterWindowMid)
+            {
+                newMode =
+                    TimingAdaptMode.Late;
+            }
+            else
+            {
+                newMode =
+                    TimingAdaptMode.Early;
+            }
+
+
+            if (newMode != heavyTimingMode)
+            {
+                Debug.Log(
+                    $"[Heavy Timing Mode] 재적응 | " +
+                    $"{heavyTimingMode} → {newMode} | " +
+                    $"이유: 적응된 Heavy에도 계속 Counter 성공"
+                );
+
+                heavyTimingMode = newMode;
+            }
+            else
+            {
+                Debug.Log(
+                    $"[Heavy Timing Mode] 재평가 | " +
+                    $"{heavyTimingMode} 유지"
+                );
+            }
+
+            heavyAdaptiveUsesSinceMode = 0;
+        }
+
+
+        // =============================
+        // 대부분 적응 타이밍,
+        // 가끔 Normal
+        // =============================
+
+        float influence =
+            Mathf.InverseLerp(
+                heavyTimingReleaseThreshold,
+                1f,
+                habitScore
+            );
+
+        float adaptChance =
+            Mathf.Lerp(
+                0.75f,
+                maxHeavyTimingAdaptChance,
+                influence
+            );
+
+        if (Random.value >
+            adaptChance)
+        {
+            Debug.Log(
+                $"[Heavy Timing] 기본 공격 | " +
+                $"Hold {baseHoldTime:F2}"
+            );
+
+            return baseHoldTime;
+        }
+
+
+        float targetHitTime;
+
+        if (heavyTimingMode ==
+            TimingAdaptMode.Late)
         {
             targetHitTime =
                 counterWindowEnd +
                 heavyTimingMargin;
-
-            variant = "Late";
         }
-
-        // =====================================
-        // 기본 Hit이 Window 앞쪽에 있음
-        //
-        // 플레이어가 비교적 늦게 Counter해서
-        // 공격 직전에 Counter를 켠 경우
-        //
-        // → Counter가 켜지기 전에 공격
-        // =====================================
         else
         {
             targetHitTime =
                 counterWindowStart -
                 heavyTimingMargin;
-
-            variant = "Early";
         }
 
 
-        // 실제 타격은
-        // Prepare 이후 startup을 거쳐 발생하므로 역산
-        float targetPrepareTime =
+        float targetHoldTime =
             targetHitTime -
+            prepareCueTime -
             heavyStartupTime;
 
 
-        // 완전히 고정된 새 타이밍 방지
-        targetPrepareTime +=
+        targetHoldTime +=
             Random.Range(
                 -heavyTimingJitter,
                 heavyTimingJitter
             );
 
 
-        targetPrepareTime =
+        targetHoldTime =
             Mathf.Clamp(
-                targetPrepareTime,
-                minHeavyPrepareTime,
-                maxHeavyPrepareTime
+                targetHoldTime,
+                minHeavyHoldTime,
+                maxHeavyHoldTime
             );
 
+        heavyAdaptiveUsesSinceMode++;
 
-        Debug.Log(
-            $"[Heavy Timing] " +
-            $"Response={responseDelay:F2} | " +
-            $"BaseHit={baseHitTime:F2} | " +
-            $"CounterWindow=" +
-            $"{counterWindowStart:F2}" +
-            $"~{counterWindowEnd:F2} | " +
-            $"Variant={variant} | " +
-            $"TargetHit={targetHitTime:F2} | " +
-            $"Prepare " +
-            $"{basePrepareTime:F2} → " +
-            $"{targetPrepareTime:F2}"
-        );
+        if (targetHoldTime >
+            baseHoldTime)
+        {
+            Debug.Log(
+                $"[Heavy Timing] 느려진 공격 | " +
+                $"이유: 플레이어가 일찍 Counter해서 " +
+                $"Counter 종료 뒤를 노림 | " +
+                $"Hold {baseHoldTime:F2} → " +
+                $"{targetHoldTime:F2}"
+            );
+        }
+        else if (targetHoldTime <
+                baseHoldTime)
+        {
+            Debug.Log(
+                $"[Heavy Timing] 빠른 공격 | " +
+                $"이유: 플레이어가 늦게 Counter해서 " +
+                $"Counter 시작 전에 공격 | " +
+                $"Hold {baseHoldTime:F2} → " +
+                $"{targetHoldTime:F2}"
+            );
+        }
 
 
-        return targetPrepareTime;
+        return targetHoldTime;
     }
     public float GetChargePostPassDelay(
         float basePostPassDelay,
@@ -966,7 +1053,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
         // =============================
         // Policy 학습 / 해제
-        // 성공 여부만 사용
         // =============================
 
         if (!chargeTimingPolicyActive)
@@ -988,6 +1074,10 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 chargeTimingReleaseThreshold)
         {
             chargeTimingPolicyActive = false;
+            chargeTimingMode =
+                TimingAdaptMode.None;
+                
+            chargeAdaptiveUsesSinceMode = 0;
 
             Debug.Log(
                 $"[Charge Timing Policy Released] " +
@@ -998,11 +1088,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         }
 
 
-        // =============================
-        // 과거 성공 Counter의
-        // Dash 종료 기준 반응시간
-        // =============================
-
+        // Dash 종료 이후 Counter Timing
         if (!behaviorModel
                 .TryGetChargeCounterDelayFromPass(
                     out float responseDelay))
@@ -1010,6 +1096,127 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             return basePostPassDelay;
         }
 
+
+        float counterWindowStart =
+            responseDelay +
+            playerCounter.CounterStartupTime;
+
+        float counterWindowEnd =
+            counterWindowStart +
+            playerCounter.ParryWindow;
+
+        float counterWindowMid =
+            (
+                counterWindowStart +
+                counterWindowEnd
+            ) * 0.5f;
+
+
+        float baseHitTime =
+            basePostPassDelay +
+            dashAttackStartupTime;
+
+
+        // =============================
+        // 처음 한 번만 Early/Late 결정
+        // =============================
+
+        // =============================
+        // 처음 Timing Mode 학습
+        // =============================
+
+        if (chargeTimingMode ==
+            TimingAdaptMode.None)
+        {
+            float timingDifference =
+                baseHitTime -
+                counterWindowMid;
+
+            const float centerTolerance =
+                0.08f;
+
+            if (Mathf.Abs(timingDifference) <
+                centerTolerance)
+            {
+                chargeTimingMode =
+                    Random.value < 0.5f
+                        ? TimingAdaptMode.Early
+                        : TimingAdaptMode.Late;
+            }
+            else if (timingDifference > 0f)
+            {
+                chargeTimingMode =
+                    TimingAdaptMode.Late;
+            }
+            else
+            {
+                chargeTimingMode =
+                    TimingAdaptMode.Early;
+            }
+
+            chargeAdaptiveUsesSinceMode = 0;
+
+            Debug.Log(
+                $"[Charge Timing Mode] " +
+                $"학습 → {chargeTimingMode}"
+            );
+        }
+
+
+        // =============================
+        // 적응된 Charge에도 계속 성공하면
+        // Timing Mode 재평가
+        // =============================
+
+        else if (
+            chargeAdaptiveUsesSinceMode >=
+                timingModeReevaluationInterval &&
+            habitScore >=
+                chargeTimingHabitThreshold)
+        {
+            TimingAdaptMode newMode;
+
+            float timingDifference =
+                baseHitTime -
+                counterWindowMid;
+
+            if (timingDifference > 0f)
+            {
+                newMode =
+                    TimingAdaptMode.Late;
+            }
+            else
+            {
+                newMode =
+                    TimingAdaptMode.Early;
+            }
+
+
+            if (newMode != chargeTimingMode)
+            {
+                Debug.Log(
+                    $"[Charge Timing Mode] 재적응 | " +
+                    $"{chargeTimingMode} → {newMode} | " +
+                    $"이유: 적응된 Charge에도 계속 Counter 성공"
+                );
+
+                chargeTimingMode = newMode;
+            }
+            else
+            {
+                Debug.Log(
+                    $"[Charge Timing Mode] 재평가 | " +
+                    $"{chargeTimingMode} 유지"
+                );
+            }
+
+            chargeAdaptiveUsesSinceMode = 0;
+        }
+
+        // =============================
+        // 대부분 Policy 적용
+        // 가끔 Normal
+        // =============================
 
         float influence =
             Mathf.InverseLerp(
@@ -1020,105 +1227,40 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
         float adaptChance =
             Mathf.Lerp(
-                0.35f,
+                0.75f,
                 maxChargeTimingAdaptChance,
                 influence
             );
 
-        if (Random.value > adaptChance)
+        if (Random.value >
+            adaptChance)
         {
+            Debug.Log(
+                $"[Charge Timing] 기본 공격 | " +
+                $"PostPass {basePostPassDelay:F2}"
+            );
+
             return basePostPassDelay;
         }
 
 
-        // =============================
-        // Dash 종료 기준 Counter Window
-        // =============================
-
-        float counterWindowStart =
-            responseDelay +
-            playerCounter.CounterStartupTime;
-
-        float counterWindowEnd =
-            counterWindowStart +
-            playerCounter.ParryWindow;
-
-
-        // 기존 Charge의 실제 Hit 시점
-        // Dash 종료를 0초로 본다.
-        float baseHitTime =
-            basePostPassDelay +
-            dashAttackStartupTime;
-
-        float counterWindowMid =
-            (
-                counterWindowStart +
-                counterWindowEnd
-            ) * 0.5f;
-
-
         float targetHitTime;
-        string variant;
 
-
-        float timingDifference =
-            baseHitTime - counterWindowMid;
-
-        float centerTolerance = 0.08f;
-
-        // =====================================
-        // Counter를 매우 안정적으로
-        // 중앙 부근에서 성공시키는 경우
-        // → 한쪽으로 고정하지 않고
-        // Early / Late를 모두 활용
-        // =====================================
-        if (Mathf.Abs(timingDifference) <
-            centerTolerance)
-        {
-            bool useLate =
-                Random.value < 0.5f;
-
-            if (useLate)
-            {
-                targetHitTime =
-                    counterWindowEnd +
-                    chargeTimingMargin;
-
-                variant = "Late";
-            }
-            else
-            {
-                targetHitTime =
-                    counterWindowStart -
-                    chargeTimingMargin;
-
-                variant = "Early";
-            }
-        }
-
-        // 빠르게 Counter하는 경향→ Late
-        else if (timingDifference > 0f)
+        if (chargeTimingMode ==
+            TimingAdaptMode.Late)
         {
             targetHitTime =
                 counterWindowEnd +
                 chargeTimingMargin;
-
-            variant = "Late";
         }
-
-        // 느리게 Counter하는 경향→ Early
         else
         {
             targetHitTime =
                 counterWindowStart -
                 chargeTimingMargin;
-
-            variant = "Early";
         }
 
 
-        // DashAttack startup은 그대로 유지하므로
-        // PostPassDelay를 역산
         float targetPostPassDelay =
             targetHitTime -
             dashAttackStartupTime;
@@ -1138,20 +1280,29 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 maxChargePostPassDelay
             );
 
-
-        Debug.Log(
-            $"[Charge Timing] " +
-            $"ResponseFromPass={responseDelay:F2} | " +
-            $"BaseHit={baseHitTime:F2} | " +
-            $"CounterWindow=" +
-            $"{counterWindowStart:F2}" +
-            $"~{counterWindowEnd:F2} | " +
-            $"Variant={variant} | " +
-            $"TargetHit={targetHitTime:F2} | " +
-            $"PostPass " +
-            $"{basePostPassDelay:F2} → " +
-            $"{targetPostPassDelay:F2}"
-        );
+        chargeAdaptiveUsesSinceMode++;
+        if (targetPostPassDelay >
+            basePostPassDelay)
+        {
+            Debug.Log(
+                $"[Charge Timing] 느려진 공격 | " +
+                $"이유: 플레이어가 일찍 Counter해서 " +
+                $"Counter 종료 뒤를 노림 | " +
+                $"PostPass {basePostPassDelay:F2} → " +
+                $"{targetPostPassDelay:F2}"
+            );
+        }
+        else if (targetPostPassDelay <
+                basePostPassDelay)
+        {
+            Debug.Log(
+                $"[Charge Timing] 빠른 공격 | " +
+                $"이유: 플레이어가 늦게 Counter해서 " +
+                $"Counter 시작 전에 공격 | " +
+                $"PostPass {basePostPassDelay:F2} → " +
+                $"{targetPostPassDelay:F2}"
+            );
+        }
 
 
         return targetPostPassDelay;

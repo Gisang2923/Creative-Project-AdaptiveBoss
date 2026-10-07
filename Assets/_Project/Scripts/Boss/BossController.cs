@@ -333,14 +333,15 @@ public class BossController : MonoBehaviour
                 BossAttackType.HeavySlash &&
             adaptiveSource != null)
         {
-            float adaptedPrepareTime =
-                adaptiveSource.GetHeavyPrepareTime(
-                    bossAction.HeavyPrepareTime,
+            float adaptedHoldTime =
+                adaptiveSource.GetHeavyHoldTime(
+                    bossAction.HeavyBaseHoldTime,
+                    bossAction.HeavyPrepareCueTime,
                     selectedAttack.attackData.startupTime
                 );
 
-            bossAction.SetNextHeavyPrepareTime(
-                adaptedPrepareTime
+            bossAction.SetNextHeavyHoldTime(
+                adaptedHoldTime
             );
         }
 

@@ -140,6 +140,10 @@ public class BossAnimator : MonoBehaviour
     {
         PlayAction(HeavyPrepare);
     }
+    public void SetPlaybackSpeed(float speed)
+    {
+        animator.speed = speed;
+    }
     public void PlayHeavyAttack()
     {
         PlayAction(HeavyAttack);

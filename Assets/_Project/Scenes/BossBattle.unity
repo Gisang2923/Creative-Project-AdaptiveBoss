@@ -567,7 +567,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossAction
   rb: {fileID: 402595759}
-  heavyPrepareTime: 0.75
+  heavyPrepareCueTime: 0.35
+  heavyBaseHoldTime: 0.45
+  heavyPreHoldTime: 0.3
   chargePostPassDelay: 0.3
   dashSpeed: 30
   dashBehindDistance: 2
@@ -904,8 +906,8 @@ MonoBehaviour:
   heavyTimingReleaseThreshold: 0.4
   maxHeavyTimingAdaptChance: 0.9
   heavyTimingMargin: 0.12
-  minHeavyPrepareTime: 0.45
-  maxHeavyPrepareTime: 1.45
+  minHeavyHoldTime: 0.3
+  maxHeavyHoldTime: 1.2
   heavyTimingJitter: 0.04
   playerCounter: {fileID: 685367524}
   chargeTimingHabitThreshold: 0.6

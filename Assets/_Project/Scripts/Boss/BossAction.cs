@@ -5,17 +5,29 @@ public class BossAction : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D rb;
     [Header("Heavy Slash")]
-    [SerializeField] private float heavyPrepareTime = 0.5f;
-    private float nextHeavyPrepareTime = -1f;
 
-    public float HeavyPrepareTime =>
-        heavyPrepareTime;
+    // 빤짝 Prepare를 보여주는 고정 시간
+    [SerializeField] private float heavyPrepareCueTime = 0.2f;
 
-    public void SetNextHeavyPrepareTime(
-        float prepareTime)
+    // 찌르기 직전 자세에서 기본적으로 기다리는 시간
+    [SerializeField] private float heavyBaseHoldTime = 0.3f;
+
+    // HeavyAttack 시작 후
+    // '찌르기 직전 자세'까지 도달하는 시간
+    [SerializeField] private float heavyPreHoldTime = 0.18f;
+
+    private float nextHeavyHoldTime = -1f;
+
+    public float HeavyPrepareCueTime =>
+        heavyPrepareCueTime;
+
+    public float HeavyBaseHoldTime =>
+        heavyBaseHoldTime;
+
+    public void SetNextHeavyHoldTime(float holdTime)
     {
-        nextHeavyPrepareTime =
-            Mathf.Max(0f, prepareTime);
+        nextHeavyHoldTime =
+            Mathf.Max(0f, holdTime);
     }
     
     [Header("Charge Slash")]
@@ -159,37 +171,93 @@ public class BossAction : MonoBehaviour
 
         currentHitbox = hitbox;
 
-        // 1. Prepare
+        // =====================================
+        // 1. Heavy 예고
+        // 검을 들고 빤짝하는 고정 모션
+        // =====================================
+
         bossAnimator?.PlayHeavyPrepare();
 
-        float prepareTime =
-            nextHeavyPrepareTime >= 0f
-                ? nextHeavyPrepareTime
-                : heavyPrepareTime;
-
-        // Override는 Heavy 한 번에만 적용
-        nextHeavyPrepareTime = -1f;
-
         yield return new WaitForSeconds(
-            prepareTime
+            heavyPrepareCueTime
         );
 
-        // 2. 실제 Heavy Attack
+
+        // =====================================
+        // 2. 실제 HeavyAttack 시작
+        // =====================================
+
         bossAnimator?.PlayHeavyAttack();
 
-        // 기존 Heavy 애니메이션 안에서
-        // 실제 공격 프레임까지의 시간
-        yield return new WaitForSeconds(data.startupTime);
 
-        // 3. Active
+        // 찌르기 직전 자세까지 이동
+        yield return new WaitForSeconds(
+            heavyPreHoldTime
+        );
+
+
+        // =====================================
+        // 3. 찌르기 직전 자세에서 Adaptive Hold
+        // =====================================
+
+        float holdTime =
+            nextHeavyHoldTime >= 0f
+                ? nextHeavyHoldTime
+                : heavyBaseHoldTime;
+
+        nextHeavyHoldTime = -1f;
+
+
+        // 현재 공격 자세에서 애니메이션 정지
+        bossAnimator?.SetPlaybackSpeed(0f);
+
+        yield return new WaitForSeconds(
+            holdTime
+        );
+
+        // 다시 재생
+        bossAnimator?.SetPlaybackSpeed(1f);
+
+
+        // =====================================
+        // 4. Hold 이후 실제 타격까지 재생
+        //
+        // startupTime = HeavyAttack 시작부터
+        // Hit까지 전체 시간
+        // =====================================
+
+        float releaseTime =
+            Mathf.Max(
+                0f,
+                data.startupTime -
+                heavyPreHoldTime
+            );
+
+        yield return new WaitForSeconds(
+            releaseTime
+        );
+
+
+        // =====================================
+        // 5. Active
+        // =====================================
+
         hitbox.Activate(data);
 
-        yield return new WaitForSeconds(data.activeTime);
+        yield return new WaitForSeconds(
+            data.activeTime
+        );
 
         hitbox.Deactivate();
 
-        // 4. Recovery
-        yield return new WaitForSeconds(data.recoveryTime);
+
+        // =====================================
+        // 6. Recovery
+        // =====================================
+
+        yield return new WaitForSeconds(
+            data.recoveryTime
+        );
 
         currentHitbox = null;
         isAttacking = false;
@@ -688,6 +756,7 @@ public class BossAction : MonoBehaviour
     }
     private void RestoreBossState()
     {
+        bossAnimator?.SetPlaybackSpeed(1f);
         if (visual != null)
             visual.gameObject.SetActive(true);
 
