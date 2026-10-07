@@ -567,7 +567,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossAction
   rb: {fileID: 402595759}
-  heavyPrepareTime: 0.5
+  heavyPrepareTime: 0.75
   chargePostPassDelay: 0.3
   dashSpeed: 30
   dashBehindDistance: 2
@@ -576,7 +576,7 @@ MonoBehaviour:
   visual: {fileID: 1266593679}
   bodyCollider: {fileID: 402595763}
   jumpSlamVanishTime: 0.3
-  jumpSlamHoverTime: 0.4
+  jumpSlamHoverTime: 0.2
   jumpSlamSpawnHeight: 7
   jumpSlamFallSpeed: 30
   jumpSlamSpawnSideOffset: 4
@@ -643,7 +643,7 @@ MonoBehaviour:
   attackSelector: {fileID: 402595761}
   adaptiveSource: {fileID: 402595768}
   damageReceiver: {fileID: 402595764}
-  repositionDuration: 0.8
+  repositionDuration: 0.4
   backDodgeTriggerDistance: 3
   backDodgeCooldown: 3
   backDodgeResponseWindow: 0.6
@@ -757,7 +757,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossMovement
   target: {fileID: 685367515}
   facingRoot: {fileID: 298533617}
-  moveSpeed: 3
+  moveSpeed: 3.5
   facingDeadZone: 0.2
   bossAnimator: {fileID: 402595765}
 --- !u!70 &402595763
@@ -902,17 +902,17 @@ MonoBehaviour:
   frontStepHabitReleaseThreshold: 0.4
   heavyTimingHabitThreshold: 0.65
   heavyTimingReleaseThreshold: 0.4
-  maxHeavyTimingAdaptChance: 0.7
-  heavyTimingMargin: 0.07
-  minHeavyPrepareTime: 0.2
-  maxHeavyPrepareTime: 1.1
+  maxHeavyTimingAdaptChance: 0.9
+  heavyTimingMargin: 0.12
+  minHeavyPrepareTime: 0.45
+  maxHeavyPrepareTime: 1.45
   heavyTimingJitter: 0.04
   playerCounter: {fileID: 685367524}
   chargeTimingHabitThreshold: 0.6
   chargeTimingReleaseThreshold: 0.3
   maxChargeTimingAdaptChance: 0.7
   chargeTimingMargin: 0.07
-  minChargePostPassDelay: 0.12
+  minChargePostPassDelay: 0.18
   maxChargePostPassDelay: 0.8
   chargeTimingJitter: 0.04
   chargeTimingPolicyActive: 0

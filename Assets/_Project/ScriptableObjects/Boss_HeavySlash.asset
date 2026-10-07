@@ -13,9 +13,9 @@ MonoBehaviour:
   m_Name: Boss_HeavySlash
   m_EditorClassIdentifier: Assembly-CSharp::AttackData
   attackId: 
-  damage: 35
-  startupTime: 0.65
+  damage: 50
+  startupTime: 0.38
   activeTime: 0.18
   recoveryTime: 1
-  knockbackForce: 6
+  knockbackForce: 3
   parryable: 1

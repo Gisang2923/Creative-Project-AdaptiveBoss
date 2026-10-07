@@ -642,9 +642,9 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
             if (counterValid &&
                 (!attackValid ||
-                    counterHabit >= attackHabit) &&
+                    counterHabit > attackHabit) &&
                 (!retreatValid ||
-                    counterHabit >= retreatHabit))
+                    counterHabit > retreatHabit))
             {
                 frontStepPolicy =
                     AdaptiveHabitType.Counter;
