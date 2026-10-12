@@ -842,9 +842,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         }
 
 
-        float counterWindowStart =
-            responseDelay +
-            playerCounter.CounterStartupTime;
+        float counterWindowStart = responseDelay;
 
         float counterWindowEnd =
             counterWindowStart +
@@ -1097,9 +1095,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         }
 
 
-        float counterWindowStart =
-            responseDelay +
-            playerCounter.CounterStartupTime;
+        float counterWindowStart = responseDelay;
 
         float counterWindowEnd =
             counterWindowStart +

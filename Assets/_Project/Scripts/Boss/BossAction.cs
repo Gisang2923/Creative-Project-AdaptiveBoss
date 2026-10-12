@@ -4,8 +4,11 @@ using UnityEngine;
 public class BossAction : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D rb;
-    [Header("Heavy Slash")]
 
+    [Header("Basic Slash")]
+    [SerializeField] private float basicPreAttackDelay = 0.18f;
+    
+    [Header("Heavy Slash")]
     // 빤짝 Prepare를 보여주는 고정 시간
     [SerializeField] private float heavyPrepareCueTime = 0.2f;
 
@@ -119,10 +122,8 @@ public class BossAction : MonoBehaviour
         switch (attack.attackType)
         {
             case BossAttackType.BasicSlash:
-                bossAnimator?.PlayLightAttack();
                 StartCoroutine(SlashRoutine(attack));
                 break;
-
             case BossAttackType.HeavySlash:
                 StartCoroutine(HeavySlashRoutine(attack));
                 break;
@@ -146,18 +147,33 @@ public class BossAction : MonoBehaviour
 
         currentHitbox = hitbox;
 
-        // Startup
-        yield return new WaitForSeconds(data.startupTime);
+        // 걷기 → 공격 사이를 분리
+        // 이 시간 동안 BossController의 StartAttack()에서
+        // 이미 movement.Stop() 상태이므로 제자리에서 잠깐 멈춘다.
+        yield return new WaitForSeconds(
+            basicPreAttackDelay
+        );
+
+        bossAnimator?.PlayLightAttack();
+
+        // 기존 Basic Slash Startup
+        yield return new WaitForSeconds(
+            data.startupTime
+        );
 
         // Active
         hitbox.Activate(data);
 
-        yield return new WaitForSeconds(data.activeTime);
+        yield return new WaitForSeconds(
+            data.activeTime
+        );
 
         hitbox.Deactivate();
 
         // Recovery
-        yield return new WaitForSeconds(data.recoveryTime);
+        yield return new WaitForSeconds(
+            data.recoveryTime
+        );
 
         currentHitbox = null;
         isAttacking = false;

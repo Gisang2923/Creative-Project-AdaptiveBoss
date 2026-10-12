@@ -11,7 +11,6 @@ public class PlayerCounter : MonoBehaviour
     [SerializeField] private GameObject hurtbox;
 
     [Header("Timing")]
-    [SerializeField] private float startupTime = 0.03f;
     [SerializeField] private float parryWindow = 0.15f;
     [SerializeField] private float failRecovery = 0.4f;
     [SerializeField] private float successAnimationDuration = 0.35f;
@@ -24,8 +23,6 @@ public class PlayerCounter : MonoBehaviour
     private bool counterSucceeded;
 
     public bool CounterSucceeded => counterSucceeded;
-    public float CounterStartupTime =>
-        startupTime;
 
     public float ParryWindow =>
         parryWindow;
@@ -67,8 +64,6 @@ public class PlayerCounter : MonoBehaviour
     {
         isCountering = true;
         counterSucceeded = false;
-        // Startup
-        yield return new WaitForSeconds(startupTime);
 
         // Parry Window
         hurtbox.SetActive(false);
