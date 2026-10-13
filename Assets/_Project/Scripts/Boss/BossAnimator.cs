@@ -27,6 +27,10 @@ public class BossAnimator : MonoBehaviour
 
     private static readonly int LightAttack =
         Animator.StringToHash("LightAtk1");
+    private static readonly int LightAttack2 =
+        Animator.StringToHash("LightAtk2");
+    private static readonly int LightAttack3 =
+        Animator.StringToHash("LightAtk3");
 
     private static readonly int DashAttack =
         Animator.StringToHash("DashAtk");
@@ -132,18 +136,37 @@ public class BossAnimator : MonoBehaviour
         PlayAction(DashAttack);
     }
 
-    public void PlayLightAttack()
-    {
-        PlayAction(LightAttack);
-    }
-    public void RestartLightAttack()
+    public void PlayLightAttack1()
     {
         animator.SetBool(IsMoving, false);
-
         currentState = LightAttack;
 
         animator.Play(
             LightAttack,
+            0,
+            0f
+        );
+    }
+
+    public void PlayLightAttack2()
+    {
+        animator.SetBool(IsMoving, false);
+        currentState = LightAttack2;
+
+        animator.Play(
+            LightAttack2,
+            0,
+            0f
+        );
+    }
+
+    public void PlayLightAttack3()
+    {
+        animator.SetBool(IsMoving, false);
+        currentState = LightAttack3;
+
+        animator.Play(
+            LightAttack3,
             0,
             0f
         );

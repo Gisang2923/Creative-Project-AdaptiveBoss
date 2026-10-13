@@ -567,7 +567,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossAction
   rb: {fileID: 402595759}
-  basicPreAttackDelay: 0.18
+  basicPreHoldTime: 0.06
+  basicPrepareHoldTime: 0.18
+  basicComboGap: 0.18
   heavyPrepareCueTime: 0.35
   heavyBaseHoldTime: 0.45
   heavyPreHoldTime: 0.3

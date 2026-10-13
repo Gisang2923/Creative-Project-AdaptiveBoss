@@ -8,7 +8,7 @@ public class BossAction : MonoBehaviour
     [Header("Basic Slash")]
     [SerializeField] private float basicPreHoldTime = 0.06f;
     [SerializeField] private float basicPrepareHoldTime = 0.18f;
-    [SerializeField] private float basicComboGap = 0.12f;
+    [SerializeField] private float basicComboGap = 0.18f;
     
     [Header("Heavy Slash")]
     // 빤짝 Prepare를 보여주는 고정 시간
@@ -154,17 +154,12 @@ public class BossAction : MonoBehaviour
         // 1타
         // =====================================
 
-        // 공격 모션 시작
-        bossAnimator?.RestartLightAttack();
+        bossAnimator?.PlayLightAttack1();
 
-
-        // 초반 준비 자세까지 이동
         yield return new WaitForSeconds(
             basicPreHoldTime
         );
 
-
-        // 플레이어가 볼 수 있는 전조 자세
         bossAnimator?.SetPlaybackSpeed(0f);
 
         yield return new WaitForSeconds(
@@ -173,8 +168,6 @@ public class BossAction : MonoBehaviour
 
         bossAnimator?.SetPlaybackSpeed(1f);
 
-
-        // 기존 LightAtk의 실제 타격 프레임까지 진행
         float firstReleaseTime =
             Mathf.Max(
                 0f,
@@ -186,8 +179,6 @@ public class BossAction : MonoBehaviour
             firstReleaseTime
         );
 
-
-        // 1타 Active
         hitbox.Activate(data);
 
         yield return new WaitForSeconds(
@@ -198,7 +189,7 @@ public class BossAction : MonoBehaviour
 
 
         // =====================================
-        // Combo Gap
+        // 1 → 2 Gap
         // =====================================
 
         yield return new WaitForSeconds(
@@ -210,15 +201,39 @@ public class BossAction : MonoBehaviour
         // 2타
         // =====================================
 
-        bossAnimator?.RestartLightAttack();
+        bossAnimator?.PlayLightAttack2();
 
-
-        // 2타는 이미 1타가 전조 역할을 했으므로
-        // 별도 Hold 없이 기존 공격 타이밍 그대로 사용
         yield return new WaitForSeconds(
             data.startupTime
         );
 
+        hitbox.Activate(data);
+
+        yield return new WaitForSeconds(
+            data.activeTime
+        );
+
+        hitbox.Deactivate();
+
+
+        // =====================================
+        // 2 → 3 Gap
+        // =====================================
+
+        yield return new WaitForSeconds(
+            basicComboGap
+        );
+
+
+        // =====================================
+        // 3타
+        // =====================================
+
+        bossAnimator?.PlayLightAttack3();
+
+        yield return new WaitForSeconds(
+            data.startupTime
+        );
 
         hitbox.Activate(data);
 
@@ -236,7 +251,6 @@ public class BossAction : MonoBehaviour
         yield return new WaitForSeconds(
             data.recoveryTime
         );
-
 
         currentHitbox = null;
         isAttacking = false;
