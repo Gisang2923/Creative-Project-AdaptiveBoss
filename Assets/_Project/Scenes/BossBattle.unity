@@ -567,6 +567,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossAction
   rb: {fileID: 402595759}
+  basicPreAttackDelay: 0.18
   heavyPrepareCueTime: 0.35
   heavyBaseHoldTime: 0.45
   heavyPreHoldTime: 0.3
@@ -675,30 +676,6 @@ MonoBehaviour:
   - intent: 0
     attackType: 0
     attackData: {fileID: 11400000, guid: c8b7ef5cc21a87b4096b6cfb36d1bd2b, type: 2}
-    hitbox: {fileID: 234565048}
-    minRange: 0
-    maxRange: 1.6
-    baseWeight: 1.2
-    repeatWeightMultiplier: 0.35
-    decisionCooldown: 0
-    holdWeight: 0.4
-    approachWeight: 1
-    retreatWeight: 0.1
-  - intent: 0
-    attackType: 0
-    attackData: {fileID: 11400000, guid: ef22968520759c64ea9e0eb53148af3a, type: 2}
-    hitbox: {fileID: 234565048}
-    minRange: 0
-    maxRange: 1.6
-    baseWeight: 1.2
-    repeatWeightMultiplier: 0.35
-    decisionCooldown: 0
-    holdWeight: 0.4
-    approachWeight: 1
-    retreatWeight: 0.1
-  - intent: 0
-    attackType: 0
-    attackData: {fileID: 11400000, guid: e6157d64dc0c0fd469f313643b7c028e, type: 2}
     hitbox: {fileID: 234565048}
     minRange: 0
     maxRange: 1.6
@@ -918,6 +895,7 @@ MonoBehaviour:
   maxChargePostPassDelay: 0.8
   chargeTimingJitter: 0.04
   chargeTimingPolicyActive: 0
+  timingModeReevaluationInterval: 3
 --- !u!1 &440562010
 GameObject:
   m_ObjectHideFlags: 0
@@ -1802,8 +1780,8 @@ MonoBehaviour:
   counterAttackData: {fileID: 11400000, guid: 7617769d75c454846bbfdb763dae1fbd, type: 2}
   parryBox: {fileID: 1695386534}
   hurtbox: {fileID: 722405369}
-  startupTime: 0.03
   parryWindow: 0.35
+  perfectParryWindow: 0.13
   failRecovery: 0.4
   successAnimationDuration: 0.28
 --- !u!114 &685367525

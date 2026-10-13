@@ -136,6 +136,18 @@ public class BossAnimator : MonoBehaviour
     {
         PlayAction(LightAttack);
     }
+    public void RestartLightAttack()
+    {
+        animator.SetBool(IsMoving, false);
+
+        currentState = LightAttack;
+
+        animator.Play(
+            LightAttack,
+            0,
+            0f
+        );
+    }
     public void PlayHeavyPrepare()
     {
         PlayAction(HeavyPrepare);

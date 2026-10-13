@@ -6,7 +6,9 @@ public class BossAction : MonoBehaviour
     [SerializeField] private Rigidbody2D rb;
 
     [Header("Basic Slash")]
-    [SerializeField] private float basicPreAttackDelay = 0.18f;
+    [SerializeField] private float basicPreHoldTime = 0.06f;
+    [SerializeField] private float basicPrepareHoldTime = 0.18f;
+    [SerializeField] private float basicComboGap = 0.12f;
     
     [Header("Heavy Slash")]
     // 빤짝 Prepare를 보여주는 고정 시간
@@ -147,21 +149,45 @@ public class BossAction : MonoBehaviour
 
         currentHitbox = hitbox;
 
-        // 걷기 → 공격 사이를 분리
-        // 이 시간 동안 BossController의 StartAttack()에서
-        // 이미 movement.Stop() 상태이므로 제자리에서 잠깐 멈춘다.
+
+        // =====================================
+        // 1타
+        // =====================================
+
+        // 공격 모션 시작
+        bossAnimator?.RestartLightAttack();
+
+
+        // 초반 준비 자세까지 이동
         yield return new WaitForSeconds(
-            basicPreAttackDelay
+            basicPreHoldTime
         );
 
-        bossAnimator?.PlayLightAttack();
 
-        // 기존 Basic Slash Startup
+        // 플레이어가 볼 수 있는 전조 자세
+        bossAnimator?.SetPlaybackSpeed(0f);
+
         yield return new WaitForSeconds(
-            data.startupTime
+            basicPrepareHoldTime
         );
 
-        // Active
+        bossAnimator?.SetPlaybackSpeed(1f);
+
+
+        // 기존 LightAtk의 실제 타격 프레임까지 진행
+        float firstReleaseTime =
+            Mathf.Max(
+                0f,
+                data.startupTime -
+                basicPreHoldTime
+            );
+
+        yield return new WaitForSeconds(
+            firstReleaseTime
+        );
+
+
+        // 1타 Active
         hitbox.Activate(data);
 
         yield return new WaitForSeconds(
@@ -170,10 +196,47 @@ public class BossAction : MonoBehaviour
 
         hitbox.Deactivate();
 
+
+        // =====================================
+        // Combo Gap
+        // =====================================
+
+        yield return new WaitForSeconds(
+            basicComboGap
+        );
+
+
+        // =====================================
+        // 2타
+        // =====================================
+
+        bossAnimator?.RestartLightAttack();
+
+
+        // 2타는 이미 1타가 전조 역할을 했으므로
+        // 별도 Hold 없이 기존 공격 타이밍 그대로 사용
+        yield return new WaitForSeconds(
+            data.startupTime
+        );
+
+
+        hitbox.Activate(data);
+
+        yield return new WaitForSeconds(
+            data.activeTime
+        );
+
+        hitbox.Deactivate();
+
+
+        // =====================================
         // Recovery
+        // =====================================
+
         yield return new WaitForSeconds(
             data.recoveryTime
         );
+
 
         currentHitbox = null;
         isAttacking = false;

@@ -11,9 +11,14 @@ public class PlayerCounter : MonoBehaviour
     [SerializeField] private GameObject hurtbox;
 
     [Header("Timing")]
-    [SerializeField] private float parryWindow = 0.15f;
+    [SerializeField] private float parryWindow = 0.35f;
+
+    [SerializeField]
+    private float perfectParryWindow = 0.13f;
+
     [SerializeField] private float failRecovery = 0.4f;
     [SerializeField] private float successAnimationDuration = 0.35f;
+
     private PlayerDamageReceiver damageReceiver;
     private PlayerCombat playerCombat;
 
@@ -22,16 +27,29 @@ public class PlayerCounter : MonoBehaviour
     public bool IsCountering => isCountering;
     private bool counterSucceeded;
 
+    private float counterStartTime;
+    private PlayerPrecisionStack precisionStack;
+
+
     public bool CounterSucceeded => counterSucceeded;
 
     public float ParryWindow =>
         parryWindow;
     private Coroutine counterRoutine;
+
     private void Awake()
     {
-        damageReceiver = GetComponent<PlayerDamageReceiver>();
-        playerCombat = GetComponent<PlayerCombat>();
-        playerHeal = GetComponent<PlayerHeal>();
+        damageReceiver =
+            GetComponent<PlayerDamageReceiver>();
+
+        playerCombat =
+            GetComponent<PlayerCombat>();
+
+        playerHeal =
+            GetComponent<PlayerHeal>();
+
+        precisionStack =
+            GetComponent<PlayerPrecisionStack>();
 
         parryBox.SetActive(false);
         hurtbox.SetActive(true);
@@ -65,6 +83,8 @@ public class PlayerCounter : MonoBehaviour
         isCountering = true;
         counterSucceeded = false;
 
+        counterStartTime = Time.time;
+
         // Parry Window
         hurtbox.SetActive(false);
         parryBox.SetActive(true);
@@ -89,49 +109,124 @@ public class PlayerCounter : MonoBehaviour
         if (!incomingDamage.Parryable)
         {
             EndCounter();
-            damageReceiver.TakeDamage(incomingDamage);
+
+            damageReceiver.TakeDamage(
+                incomingDamage
+            );
+
             return;
         }
 
-        // 성공한 순간 Counter 종료
+
+        // =====================================
+        // Perfect 판정
+        // Counter 입력 후 실제 공격이
+        // 얼마나 빨리 도착했는지 확인
+        // =====================================
+
+        float responseTime =
+            Time.time - counterStartTime;
+
+        bool isPerfect =
+            responseTime <= perfectParryWindow;
+
+
+        // Parry 자체는 성공
         counterSucceeded = true;
+
         EndCounter();
-        StartCoroutine(CounterSuccessRoutine());
 
-        CombatLogger.Instance?.RecordParrySuccess();
+        StartCoroutine(
+            CounterSuccessRoutine()
+        );
 
-        GameObject attacker = incomingDamage.Attacker;
 
-        // 보스 공격 중단
-        BossAction bossAction = attacker.GetComponent<BossAction>();
+        // Normal / Perfect 모두
+        // AI 입장에서는 Counter 성공으로 기록
+        CombatLogger.Instance?
+            .RecordParrySuccess();
+
+
+        // =====================================
+        // Normal Parry
+        // 피해만 무효화하고 종료
+        // =====================================
+
+        if (!isPerfect)
+        {
+            Debug.Log(
+                $"[Normal Parry] " +
+                $"Timing={responseTime:F3}"
+            );
+
+            return;
+        }
+
+
+        // =====================================
+        // Perfect Parry
+        // =====================================
+
+        Debug.Log(
+            $"[Perfect Parry] " +
+            $"Timing={responseTime:F3}"
+        );
+
+
+        // Precision Stack 획득
+        precisionStack?.GainStack();
+
+
+        GameObject attacker =
+            incomingDamage.Attacker;
+
+
+        // 기존 Perfect Counter 보상 유지
+        BossAction bossAction =
+            attacker.GetComponent<BossAction>();
+
         bossAction?.ForceCancelAttack();
+
+
         BossAnimator bossAnimator =
             attacker.GetComponent<BossAnimator>();
 
         BossController bossController =
             attacker.GetComponent<BossController>();
 
-        bossController?.EnterCounterStun(0.5f);
-        bossAnimator?.PlayCounterHit();
-        
-        // 반격 데미지
-        IDamageable target = attacker.GetComponent<IDamageable>();
+
+        bossController?
+            .EnterCounterStun(0.5f);
+
+        bossAnimator?
+            .PlayCounterHit();
+
+
+        // 기존 Counter Damage 유지
+        IDamageable target =
+            attacker.GetComponent<IDamageable>();
 
         if (target != null)
         {
             Vector2 direction =
-                (attacker.transform.position - transform.position).normalized;
+                (
+                    attacker.transform.position -
+                    transform.position
+                ).normalized;
 
-            DamageInfo counterDamage = new DamageInfo(
-                counterAttackData.damage,
-                direction,
-                counterAttackData.knockbackForce,
-                gameObject,
-                counterAttackData.attackId,
-                false
+            DamageInfo counterDamage =
+                new DamageInfo(
+                    counterAttackData.damage,
+                    direction,
+                    counterAttackData.knockbackForce,
+                    gameObject,
+                    counterAttackData.attackId,
+                    false
+                );
+
+            target.TakeDamage(
+                counterDamage
             );
-
-            target.TakeDamage(counterDamage);
         }
     }
     private IEnumerator CounterSuccessRoutine()
