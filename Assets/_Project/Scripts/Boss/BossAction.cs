@@ -11,7 +11,8 @@ public class BossAction : MonoBehaviour
     [SerializeField] private float basicAttack1Duration = 1.10f;
     [SerializeField] private float basicAttack2Duration = 1.05f;
     [SerializeField] private float basicAttack3Duration = 1.40f;
-    
+    [SerializeField] private float basicForwardSpeed = 1.5f;
+    [SerializeField] private float basicForwardStopDistance = 0.7f;
     private AttackData currentBasicAttackData;
     private bool basicHitTriggered;
 
@@ -144,7 +145,6 @@ public class BossAction : MonoBehaviour
                 break;
         }
     }
-
     private IEnumerator SlashRoutine(BossAttack attack)
     {
         isAttacking = true;
@@ -162,9 +162,36 @@ public class BossAction : MonoBehaviour
 
         basicHitTriggered = false;
 
+        // 1타 시작 전에만 플레이어 방향으로 Facing
+        movement?.FaceTarget();
+
+        float firstDeltaX =
+            player.position.x -
+            transform.position.x;
+
+        float firstDistance =
+            Mathf.Abs(firstDeltaX);
+
+        float firstDirection =
+            Mathf.Sign(firstDeltaX);
+
+        float firstForwardSpeed =
+            firstDistance > basicForwardStopDistance
+                ? basicForwardSpeed
+                : 0f;
+
+
         float firstStartTime = Time.time;
 
         bossAnimator?.PlayLightAttack1();
+
+
+        // 공격 모션과 함께 살짝 전진
+        rb.linearVelocity =
+            new Vector2(
+                firstDirection * firstForwardSpeed,
+                rb.linearVelocity.y
+            );
 
 
         // 준비 자세까지 애니메이션 진행
@@ -173,7 +200,17 @@ public class BossAction : MonoBehaviour
         );
 
 
-        // 준비 자세에서 잠시 정지
+        // =====================================
+        // 준비 자세 Hold
+        // 이때는 미끄러지지 않도록 이동도 정지
+        // =====================================
+
+        rb.linearVelocity =
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
+
         bossAnimator?.SetPlaybackSpeed(0f);
 
         yield return new WaitForSeconds(
@@ -181,6 +218,14 @@ public class BossAction : MonoBehaviour
         );
 
         bossAnimator?.SetPlaybackSpeed(1f);
+
+
+        // Hold 종료 후 다시 같은 방향으로 전진
+        rb.linearVelocity =
+            new Vector2(
+                firstDirection * firstForwardSpeed,
+                rb.linearVelocity.y
+            );
 
 
         // 실제 검 타격 프레임의 Animation Event 대기
@@ -198,7 +243,6 @@ public class BossAction : MonoBehaviour
 
 
         // LightAtk1의 나머지 모션까지 전부 재생
-        // Prepare Hold는 애니메이션이 멈춰있던 시간이므로 추가
         float firstTotalDuration =
             basicAttack1Duration +
             basicPrepareHoldTime;
@@ -209,9 +253,18 @@ public class BossAction : MonoBehaviour
         yield return new WaitForSeconds(
             Mathf.Max(
                 0f,
-                firstTotalDuration - firstElapsed
+                firstTotalDuration -
+                firstElapsed
             )
         );
+
+
+        // 1타 이동 종료
+        rb.linearVelocity =
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
 
 
         // =====================================
@@ -220,9 +273,39 @@ public class BossAction : MonoBehaviour
 
         basicHitTriggered = false;
 
+
+        // 1 → 2타 사이에서만 다시 Facing
+        movement?.FaceTarget();
+
+
+        float secondDeltaX =
+            player.position.x -
+            transform.position.x;
+
+        float secondDistance =
+            Mathf.Abs(secondDeltaX);
+
+        float secondDirection =
+            Mathf.Sign(secondDeltaX);
+
+        float secondForwardSpeed =
+            secondDistance > basicForwardStopDistance
+                ? basicForwardSpeed
+                : 0f;
+
+
         float secondStartTime = Time.time;
 
         bossAnimator?.PlayLightAttack2();
+
+
+        // 2타를 휘두르는 동안 살짝 전진
+        rb.linearVelocity =
+            new Vector2(
+                secondDirection *
+                secondForwardSpeed,
+                rb.linearVelocity.y
+            );
 
 
         // 실제 타격 프레임 대기
@@ -245,9 +328,18 @@ public class BossAction : MonoBehaviour
         yield return new WaitForSeconds(
             Mathf.Max(
                 0f,
-                basicAttack2Duration - secondElapsed
+                basicAttack2Duration -
+                secondElapsed
             )
         );
+
+
+        // 2타 이동 종료
+        rb.linearVelocity =
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
 
 
         // =====================================
@@ -256,9 +348,39 @@ public class BossAction : MonoBehaviour
 
         basicHitTriggered = false;
 
+
+        // 2 → 3타 사이에서만 다시 Facing
+        movement?.FaceTarget();
+
+
+        float thirdDeltaX =
+            player.position.x -
+            transform.position.x;
+
+        float thirdDistance =
+            Mathf.Abs(thirdDeltaX);
+
+        float thirdDirection =
+            Mathf.Sign(thirdDeltaX);
+
+        float thirdForwardSpeed =
+            thirdDistance > basicForwardStopDistance
+                ? basicForwardSpeed
+                : 0f;
+
+
         float thirdStartTime = Time.time;
 
         bossAnimator?.PlayLightAttack3();
+
+
+        // 3타를 휘두르는 동안 살짝 전진
+        rb.linearVelocity =
+            new Vector2(
+                thirdDirection *
+                thirdForwardSpeed,
+                rb.linearVelocity.y
+            );
 
 
         // 실제 타격 프레임 대기
@@ -281,9 +403,18 @@ public class BossAction : MonoBehaviour
         yield return new WaitForSeconds(
             Mathf.Max(
                 0f,
-                basicAttack3Duration - thirdElapsed
+                basicAttack3Duration -
+                thirdElapsed
             )
         );
+
+
+        // 3타 이동 종료
+        rb.linearVelocity =
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
 
 
         // =====================================
@@ -295,6 +426,7 @@ public class BossAction : MonoBehaviour
 
         isAttacking = false;
     }
+   
     private void TryPerfectDodgeDistanceGrace()
     {
         if (player == null)

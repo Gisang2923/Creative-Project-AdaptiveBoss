@@ -572,6 +572,8 @@ MonoBehaviour:
   basicAttack1Duration: 1.1
   basicAttack2Duration: 1.05
   basicAttack3Duration: 1.4
+  basicForwardSpeed: 3
+  basicForwardStopDistance: 0.7
   heavyPrepareCueTime: 0.35
   heavyBaseHoldTime: 0.45
   heavyPreHoldTime: 0.3
