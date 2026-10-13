@@ -8,8 +8,13 @@ public class BossAction : MonoBehaviour
     [Header("Basic Slash")]
     [SerializeField] private float basicPreHoldTime = 0.06f;
     [SerializeField] private float basicPrepareHoldTime = 0.18f;
-    [SerializeField] private float basicComboGap = 0.18f;
+    [SerializeField] private float basicAttack1Duration = 1.10f;
+    [SerializeField] private float basicAttack2Duration = 1.05f;
+    [SerializeField] private float basicAttack3Duration = 1.40f;
     
+    private AttackData currentBasicAttackData;
+    private bool basicHitTriggered;
+
     [Header("Heavy Slash")]
     // 빤짝 Prepare를 보여주는 고정 시간
     [SerializeField] private float heavyPrepareCueTime = 0.2f;
@@ -148,18 +153,27 @@ public class BossAction : MonoBehaviour
         Hitbox hitbox = attack.hitbox;
 
         currentHitbox = hitbox;
+        currentBasicAttackData = data;
 
 
         // =====================================
         // 1타
         // =====================================
 
+        basicHitTriggered = false;
+
+        float firstStartTime = Time.time;
+
         bossAnimator?.PlayLightAttack1();
 
+
+        // 준비 자세까지 애니메이션 진행
         yield return new WaitForSeconds(
             basicPreHoldTime
         );
 
+
+        // 준비 자세에서 잠시 정지
         bossAnimator?.SetPlaybackSpeed(0f);
 
         yield return new WaitForSeconds(
@@ -168,19 +182,14 @@ public class BossAction : MonoBehaviour
 
         bossAnimator?.SetPlaybackSpeed(1f);
 
-        float firstReleaseTime =
-            Mathf.Max(
-                0f,
-                data.startupTime -
-                basicPreHoldTime
-            );
 
-        yield return new WaitForSeconds(
-            firstReleaseTime
+        // 실제 검 타격 프레임의 Animation Event 대기
+        yield return new WaitUntil(
+            () => basicHitTriggered
         );
 
-        hitbox.Activate(data);
 
+        // Hitbox 유지 시간
         yield return new WaitForSeconds(
             data.activeTime
         );
@@ -188,12 +197,20 @@ public class BossAction : MonoBehaviour
         hitbox.Deactivate();
 
 
-        // =====================================
-        // 1 → 2 Gap
-        // =====================================
+        // LightAtk1의 나머지 모션까지 전부 재생
+        // Prepare Hold는 애니메이션이 멈춰있던 시간이므로 추가
+        float firstTotalDuration =
+            basicAttack1Duration +
+            basicPrepareHoldTime;
+
+        float firstElapsed =
+            Time.time - firstStartTime;
 
         yield return new WaitForSeconds(
-            basicComboGap
+            Mathf.Max(
+                0f,
+                firstTotalDuration - firstElapsed
+            )
         );
 
 
@@ -201,13 +218,18 @@ public class BossAction : MonoBehaviour
         // 2타
         // =====================================
 
+        basicHitTriggered = false;
+
+        float secondStartTime = Time.time;
+
         bossAnimator?.PlayLightAttack2();
 
-        yield return new WaitForSeconds(
-            data.startupTime
+
+        // 실제 타격 프레임 대기
+        yield return new WaitUntil(
+            () => basicHitTriggered
         );
 
-        hitbox.Activate(data);
 
         yield return new WaitForSeconds(
             data.activeTime
@@ -216,12 +238,15 @@ public class BossAction : MonoBehaviour
         hitbox.Deactivate();
 
 
-        // =====================================
-        // 2 → 3 Gap
-        // =====================================
+        // LightAtk2 전체 길이까지 재생
+        float secondElapsed =
+            Time.time - secondStartTime;
 
         yield return new WaitForSeconds(
-            basicComboGap
+            Mathf.Max(
+                0f,
+                basicAttack2Duration - secondElapsed
+            )
         );
 
 
@@ -229,13 +254,18 @@ public class BossAction : MonoBehaviour
         // 3타
         // =====================================
 
+        basicHitTriggered = false;
+
+        float thirdStartTime = Time.time;
+
         bossAnimator?.PlayLightAttack3();
 
-        yield return new WaitForSeconds(
-            data.startupTime
+
+        // 실제 타격 프레임 대기
+        yield return new WaitUntil(
+            () => basicHitTriggered
         );
 
-        hitbox.Activate(data);
 
         yield return new WaitForSeconds(
             data.activeTime
@@ -244,16 +274,42 @@ public class BossAction : MonoBehaviour
         hitbox.Deactivate();
 
 
-        // =====================================
-        // Recovery
-        // =====================================
+        // LightAtk3 전체 길이까지 재생
+        float thirdElapsed =
+            Time.time - thirdStartTime;
 
         yield return new WaitForSeconds(
-            data.recoveryTime
+            Mathf.Max(
+                0f,
+                basicAttack3Duration - thirdElapsed
+            )
         );
 
+
+        // =====================================
+        // 종료
+        // =====================================
+
+        currentBasicAttackData = null;
         currentHitbox = null;
+
         isAttacking = false;
+    }
+    public void OnBasicHit()
+    {
+        if (!isAttacking ||
+            currentHitbox == null ||
+            currentBasicAttackData == null ||
+            basicHitTriggered)
+        {
+            return;
+        }
+
+        basicHitTriggered = true;
+
+        currentHitbox.Activate(
+            currentBasicAttackData
+        );
     }
     private IEnumerator HeavySlashRoutine(BossAttack attack)
     {
@@ -376,6 +432,8 @@ public class BossAction : MonoBehaviour
         isAttacking = false;
         isDodging = false;
         isFrontStepping = false;
+        currentBasicAttackData = null;
+        basicHitTriggered = false;
     }
     private IEnumerator ChargeSlashRoutine(BossAttack attack)
     {

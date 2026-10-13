@@ -415,7 +415,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0, y: 0}
+  m_Offset: {x: 0.31773734, y: 0.15339047}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -425,7 +425,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1, y: 1}
+  m_Size: {x: 1.6354747, y: 1.3067809}
   m_EdgeRadius: 0
 --- !u!1 &298533616
 GameObject:
@@ -569,7 +569,9 @@ MonoBehaviour:
   rb: {fileID: 402595759}
   basicPreHoldTime: 0.06
   basicPrepareHoldTime: 0.18
-  basicComboGap: 0.18
+  basicAttack1Duration: 1.1
+  basicAttack2Duration: 1.05
+  basicAttack3Duration: 1.4
   heavyPrepareCueTime: 0.35
   heavyBaseHoldTime: 0.45
   heavyPreHoldTime: 0.3
@@ -2318,6 +2320,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossAnimationEventReceiver
   bossParry: {fileID: 402595766}
+  bossAction: {fileID: 402595758}
 --- !u!1 &1383829618
 GameObject:
   m_ObjectHideFlags: 0
@@ -2723,7 +2726,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.2, y: 0}
+  m_Offset: {x: 0.22739118, y: 0.26021594}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -2733,7 +2736,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.2, y: 0.9}
+  m_Size: {x: 1.2547823, y: 1.4204321}
   m_EdgeRadius: 0
 --- !u!1 &1695386534
 GameObject:
