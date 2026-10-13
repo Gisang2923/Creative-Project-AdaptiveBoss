@@ -39,8 +39,19 @@ public class PlayerDamageReceiver : DamageReceiver
     }
     public override void TakeDamage(DamageInfo damageInfo)
     {
-        if (isInvincible || health == null || health.IsDead)
+        if (health == null || health.IsDead)
             return;
+
+        if (isInvincible)
+            return;
+
+        // 실제 공격 판정이 닿은 순간
+        // Dash 시작 직후라면 Perfect Dodge
+        if (playerDash != null &&
+            playerDash.TryPerfectDodge())
+        {
+            return;
+        }
 
         playerHeal?.ForceCancelHeal();
         playerCombat?.ForceCancelAttack();

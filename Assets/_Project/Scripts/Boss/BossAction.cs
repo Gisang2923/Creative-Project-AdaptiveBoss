@@ -295,6 +295,19 @@ public class BossAction : MonoBehaviour
 
         isAttacking = false;
     }
+    private void TryPerfectDodgeDistanceGrace()
+    {
+        if (player == null)
+            return;
+
+        PlayerDash playerDash =
+            player.GetComponent<PlayerDash>();
+
+        playerDash?
+            .TryPerfectDodgeByDistance(
+                transform
+            );
+    }
     public void OnBasicHit()
     {
         if (!isAttacking ||
@@ -310,6 +323,7 @@ public class BossAction : MonoBehaviour
         currentHitbox.Activate(
             currentBasicAttackData
         );
+        TryPerfectDodgeDistanceGrace();
     }
     private IEnumerator HeavySlashRoutine(BossAttack attack)
     {
@@ -393,9 +407,15 @@ public class BossAction : MonoBehaviour
 
         hitbox.Activate(data);
 
-        yield return new WaitForSeconds(
-            data.activeTime
-        );
+        float activeElapsed = 0f;
+
+        while (activeElapsed < data.activeTime)
+        {
+            TryPerfectDodgeDistanceGrace();
+
+            activeElapsed += Time.deltaTime;
+            yield return null;
+        }
 
         hitbox.Deactivate();
 
@@ -758,15 +778,17 @@ public class BossAction : MonoBehaviour
         // 착지 후 추가 회피시간은 거의 주지 않음
         // ==========================================
 
-        yield return new WaitForSeconds(
-            jumpSlamLandingHitDelay
-        );
-
         hitbox.Activate(data);
 
-        yield return new WaitForSeconds(
-            data.activeTime
-        );
+        float activeElapsed = 0f;
+
+        while (activeElapsed < data.activeTime)
+        {
+            TryPerfectDodgeDistanceGrace();
+
+            activeElapsed += Time.deltaTime;
+            yield return null;
+        }
 
         hitbox.Deactivate();
         currentHitbox = null;

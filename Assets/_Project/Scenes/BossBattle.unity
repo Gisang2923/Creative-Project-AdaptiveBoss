@@ -1418,6 +1418,7 @@ GameObject:
   - component: {fileID: 685367524}
   - component: {fileID: 685367525}
   - component: {fileID: 685367526}
+  - component: {fileID: 685367527}
   m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
@@ -1719,6 +1720,8 @@ MonoBehaviour:
   groundLayer:
     serializedVersion: 2
     m_Bits: 64
+  perfectDodgeWindow: 0.2
+  perfectDodgeDistance: 2.5
 --- !u!114 &685367521
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1817,6 +1820,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimator
   animator: {fileID: 1726732469}
+--- !u!114 &685367527
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 685367513}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 2febe83221210d14fbe8ab788451376b, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerPrecisionStack
+  maxStacks: 1
 --- !u!1 &687523293
 GameObject:
   m_ObjectHideFlags: 0

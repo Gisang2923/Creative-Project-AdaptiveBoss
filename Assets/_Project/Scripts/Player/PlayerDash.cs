@@ -14,6 +14,9 @@ public class PlayerDash : MonoBehaviour
     [SerializeField] private float groundCheckRadius = 0.15f;
     [SerializeField] private LayerMask groundLayer;
 
+    [Header("Perfect Dodge")]
+    [SerializeField] private float perfectDodgeWindow = 0.10f;
+    [SerializeField] private float perfectDodgeDistance = 2.0f;
     private Rigidbody2D rb;
 
     private bool isDashing;
@@ -21,6 +24,10 @@ public class PlayerDash : MonoBehaviour
     private bool airDashAvailable = true;
 
     private float dashDirection = 1f;
+    private float dashStartTime;
+    private bool perfectDodgeTriggered;
+
+    private PlayerPrecisionStack precisionStack;
 
     public bool IsDashing => isDashing;
 
@@ -38,6 +45,7 @@ public class PlayerDash : MonoBehaviour
         damageReceiver = GetComponent<PlayerDamageReceiver>();
         playerCounter = GetComponent<PlayerCounter>();
         playerHeal = GetComponent<PlayerHeal>();
+        precisionStack = GetComponent<PlayerPrecisionStack>();
     }
 
     private void Update()
@@ -92,6 +100,9 @@ public class PlayerDash : MonoBehaviour
         isDashing = true;
         canDash = false;
 
+        dashStartTime = Time.time;
+        perfectDodgeTriggered = false;
+
         if (!IsGrounded())
             airDashAvailable = false;
 
@@ -126,7 +137,77 @@ public class PlayerDash : MonoBehaviour
             groundLayer
         );
     }
+    public bool TryPerfectDodge()
+    {
+        if (!isDashing)
+            return false;
 
+        if (perfectDodgeTriggered)
+            return false;
+
+        float dodgeTiming =
+            Time.time - dashStartTime;
+
+        if (dodgeTiming > perfectDodgeWindow)
+            return false;
+
+        perfectDodgeTriggered = true;
+
+        precisionStack?.GainStack();
+
+        Debug.Log(
+            $"[Perfect Dodge] " +
+            $"Timing={dodgeTiming:F3}"
+        );
+
+        return true;
+    }
+    public bool TryPerfectDodgeByDistance(Transform attacker)
+    {
+        if (!isDashing)
+            return false;
+
+        if (perfectDodgeTriggered)
+            return false;
+
+        if (attacker == null)
+            return false;
+
+        // 이미 피격 무적 상태면
+        // 위험한 공격을 회피한 것이 아니므로 제외
+        if (damageReceiver != null &&
+            damageReceiver.IsInvincible)
+        {
+            return false;
+        }
+
+        float dodgeTiming =
+            Time.time - dashStartTime;
+
+        if (dodgeTiming > perfectDodgeWindow)
+            return false;
+
+        float distance =
+            Mathf.Abs(
+                transform.position.x -
+                attacker.position.x
+            );
+
+        if (distance > perfectDodgeDistance)
+            return false;
+
+        perfectDodgeTriggered = true;
+
+        precisionStack?.GainStack();
+
+        Debug.Log(
+            $"[Perfect Dodge - Distance] " +
+            $"Timing={dodgeTiming:F3} | " +
+            $"Distance={distance:F2}"
+        );
+
+        return true;
+    }
     public void ForceCancelDash()
     {
         if (!isDashing)
