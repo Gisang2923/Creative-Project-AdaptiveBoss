@@ -85,6 +85,9 @@ public class PlayerCombat : MonoBehaviour
 
     [SerializeField] private float enhancedDashMoveDistance = 6f;
     [SerializeField] private float enhancedDashMoveDuration = 0.4f;
+    
+    [Header("Enhanced Heavy")]
+    [SerializeField] private AttackData enhancedHeavyAttackData;
     private float enhancedDashDirection;
 
     private Vector2 enhancedDashSweepStart;
@@ -157,7 +160,9 @@ public class PlayerCombat : MonoBehaviour
                 );
 
                 StartCoroutine(
-                    ChargeAttack()
+                    ChargeAttack(
+                        enhancedHeavyAttackData
+                    )
                 );
 
                 return;
@@ -289,42 +294,60 @@ public class PlayerCombat : MonoBehaviour
 
         if (chargeState == ChargeState.Charged)
         {
-            StartCoroutine(ChargeAttack());
+            StartCoroutine(
+                ChargeAttack(
+                    chargeAttackData
+                )
+            );
         }
 
         chargeState = ChargeState.None;
         chargeTimer = 0f;
     }
 
-    private IEnumerator ChargeAttack()
+    private IEnumerator ChargeAttack(
+        AttackData data)
     {
-        currentAttackType = AttackType.Charge;
-        currentPhase = AttackPhase.Startup;
-        CombatLogger.Instance?.RecordPlayerResponse(
-            PlayerResponseType.ChargeAttack
-        );
-        yield return new WaitForSeconds(
-            chargeAttackData.startupTime
-        );
+        currentAttackType =
+            AttackType.Charge;
 
-        currentPhase = AttackPhase.Active;
+        currentPhase =
+            AttackPhase.Startup;
 
-        chargeAttackHitbox.Activate(chargeAttackData);
+        CombatLogger.Instance?
+            .RecordPlayerResponse(
+                PlayerResponseType.ChargeAttack
+            );
 
         yield return new WaitForSeconds(
-            chargeAttackData.activeTime
+            data.startupTime
+        );
+
+        currentPhase =
+            AttackPhase.Active;
+
+        chargeAttackHitbox.Activate(
+            data
+        );
+
+        yield return new WaitForSeconds(
+            data.activeTime
         );
 
         chargeAttackHitbox.Deactivate();
 
-        currentPhase = AttackPhase.Recovery;
+        currentPhase =
+            AttackPhase.Recovery;
 
         yield return new WaitForSeconds(
-            chargeAttackData.recoveryTime
+            data.recoveryTime
         );
 
-        currentAttackType = AttackType.None;
-        currentPhase = AttackPhase.None;
+        currentAttackType =
+            AttackType.None;
+
+        currentPhase =
+            AttackPhase.None;
     }
     private void StartDashAttack()
     {

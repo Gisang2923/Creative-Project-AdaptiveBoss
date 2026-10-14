@@ -14,7 +14,12 @@ public class BossController : MonoBehaviour
         Stunned,
         Dead
     }
-
+    public enum PrecisionStunPhase
+    {
+        None,
+        Stunned,
+        Recovering
+    }
     [Header("References")]
     [SerializeField] private BossMovement movement;
     [SerializeField] private BossAction bossAction;
@@ -74,7 +79,26 @@ public class BossController : MonoBehaviour
     private float parryChance = 0.15f;
 
     [SerializeField] private float parryCooldown = 4f;
+    
+    [Header("Precision Stun")]
+    [SerializeField] private BossAnimator bossAnimator;
 
+    [SerializeField] private float precisionStunDuration = 2.5f;
+    [SerializeField] private int precisionStunHitLimit = 3;
+
+    private PrecisionStunPhase precisionStunPhase =
+        PrecisionStunPhase.None;
+
+    private float precisionStunTimer;
+    private int precisionStunHitCount;
+
+    public bool IsPrecisionStunned =>
+        precisionStunPhase ==
+        PrecisionStunPhase.Stunned;
+
+    public bool IsInPrecisionStun =>
+        precisionStunPhase !=
+        PrecisionStunPhase.None;
     private float parryCooldownTimer;
     private bool wasParrying;
 
@@ -87,6 +111,29 @@ public class BossController : MonoBehaviour
     {
         if (!battleStarted)
             return;
+        // =====================================
+        // Precision Stun
+        // =====================================
+
+        if (precisionStunPhase !=
+            PrecisionStunPhase.None)
+        {
+            if (precisionStunPhase ==
+                PrecisionStunPhase.Stunned)
+            {
+                precisionStunTimer -=
+                    Time.deltaTime;
+
+                if (precisionStunTimer <= 0f)
+                {
+                    BeginPrecisionStunRecovery();
+                }
+            }
+
+            // Stun / StunOut 동안
+            // Boss AI 전체 정지
+            return;
+        }    
         if (stunTimer > 0f)
         {
             stunTimer -= Time.deltaTime;
@@ -692,6 +739,126 @@ public class BossController : MonoBehaviour
 
         bossParry.StartParry();
     }
+    public void EnterPrecisionStun()
+    {
+        if (currentState == BossState.Dead)
+            return;
+
+        if (precisionStunPhase !=
+            PrecisionStunPhase.None)
+        {
+            return;
+        }
+
+
+        // 공격 중이었다면 현재 공격 종료
+        if (bossAction != null &&
+            bossAction.IsAttacking)
+        {
+            CombatLogger.Instance?
+                .EndBossAttack(
+                    movement.DistanceToTarget
+                );
+        }
+
+
+        bossAction?.ForceCancelAttack();
+        bossParry?.ForceCancelParry();
+
+        movement?.Stop();
+
+        // 기존 Counter Stun과 겹치지 않게
+        stunTimer = 0f;
+
+        precisionStunTimer =
+            precisionStunDuration;
+
+        precisionStunHitCount = 0;
+
+        precisionStunPhase =
+            PrecisionStunPhase.Stunned;
+
+        ChangeState(
+            BossState.Stunned
+        );
+
+        bossAnimator?
+            .PlayPrecisionStunIn();
+
+
+        Debug.Log(
+            "[Boss Precision Stun] Start | 0/" +
+            precisionStunHitLimit
+        );
+    }
+
+    public void RegisterPrecisionStunHit()
+    {
+        if (precisionStunPhase !=
+            PrecisionStunPhase.Stunned)
+        {
+            return;
+        }
+
+        precisionStunHitCount++;
+
+        Debug.Log(
+            $"[Boss Precision Stun] Hit | " +
+            $"{precisionStunHitCount}/" +
+            $"{precisionStunHitLimit}"
+        );
+
+
+        if (precisionStunHitCount >=
+            precisionStunHitLimit)
+        {
+            BeginPrecisionStunRecovery();
+        }
+    }
+
+    private void BeginPrecisionStunRecovery()
+    {
+        if (precisionStunPhase !=
+            PrecisionStunPhase.Stunned)
+        {
+            return;
+        }
+
+        precisionStunPhase =
+            PrecisionStunPhase.Recovering;
+
+        precisionStunTimer = 0f;
+
+        bossAnimator?
+            .PlayPrecisionStunOut();
+
+        Debug.Log(
+            "[Boss Precision Stun] Recover"
+        );
+    }
+
+    public void OnPrecisionStunRecoverEnd()
+    {
+        if (precisionStunPhase !=
+            PrecisionStunPhase.Recovering)
+        {
+            return;
+        }
+
+        precisionStunPhase =
+            PrecisionStunPhase.None;
+
+        precisionStunHitCount = 0;
+        precisionStunTimer = 0f;
+
+        ChangeState(
+            BossState.Idle
+        );
+
+        Debug.Log(
+            "[Boss Precision Stun] End"
+        );
+    }
     public void SetDead()
     {
         bossParry?.ForceCancelParry();
@@ -699,7 +866,10 @@ public class BossController : MonoBehaviour
         ChangeState(BossState.Dead);
 
         movement.Stop();
+        precisionStunPhase = PrecisionStunPhase.None;
 
+        precisionStunTimer = 0f;
+        precisionStunHitCount = 0;
         enabled = false;
     }
     public void StartBattle()

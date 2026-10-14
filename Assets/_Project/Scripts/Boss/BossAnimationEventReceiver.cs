@@ -4,7 +4,7 @@ public class BossAnimationEventReceiver : MonoBehaviour
 {
     [SerializeField] private BossParry bossParry;
     [SerializeField] private BossAction bossAction;
-
+    [SerializeField] private BossController bossController;
     public void BasicHit()
     {
         bossAction?.OnBasicHit();
@@ -22,5 +22,10 @@ public class BossAnimationEventReceiver : MonoBehaviour
     public void CounterThrustEnd()
     {
         bossParry?.OnCounterThrustEnd();
+    }
+    public void PrecisionStunRecoverEnd()
+    {
+        bossController?
+            .OnPrecisionStunRecoverEnd();
     }
 }

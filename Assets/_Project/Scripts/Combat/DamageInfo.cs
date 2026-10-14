@@ -8,6 +8,7 @@ public struct DamageInfo
     public GameObject Attacker;
     public string AttackId;
     public bool Parryable;
+    public bool CausesBossStun;
 
     public DamageInfo(
         int damage,
@@ -15,7 +16,8 @@ public struct DamageInfo
         float knockbackForce,
         GameObject attacker,
         string attackId,
-        bool parryable)
+        bool parryable,
+        bool causesBossStun = false)
     {
         Damage = damage;
         HitDirection = hitDirection;
@@ -23,5 +25,6 @@ public struct DamageInfo
         Attacker = attacker;
         AttackId = attackId;
         Parryable = parryable;
+        CausesBossStun = causesBossStun;
     }
 }

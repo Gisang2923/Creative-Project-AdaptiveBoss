@@ -19,3 +19,4 @@ MonoBehaviour:
   recoveryTime: 0.15
   knockbackForce: 2
   parryable: 1
+  causesBossStun: 1

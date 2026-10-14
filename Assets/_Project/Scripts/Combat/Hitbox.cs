@@ -165,7 +165,8 @@ public class Hitbox : MonoBehaviour
             attackData.knockbackForce,
             owner,
             attackData.attackId,
-            attackData.parryable
+            attackData.parryable,
+            attackData.causesBossStun
         );
     }
     private void OnDrawGizmosSelected()

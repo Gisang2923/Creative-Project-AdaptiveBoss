@@ -40,15 +40,56 @@ public class BossDamageReceiver : DamageReceiver
             health.OnDied -= HandleDeath;
     }
 
-    public override void TakeDamage(DamageInfo damageInfo)
+    public override void TakeDamage(
+        DamageInfo damageInfo)
     {
         if (isDead)
             return;
 
-        base.TakeDamage(damageInfo);
+
+        bool wasPrecisionStunned =
+            bossController != null &&
+            bossController.IsPrecisionStunned;
+
+
+        base.TakeDamage(
+            damageInfo
+        );
 
         hitFlash?.Flash();
-    
+
+
+        // 데미지 처리 중 사망했다면 종료
+        if (isDead)
+            return;
+
+
+        // =====================================
+        // 이미 기절 중
+        // → 추가타 카운트
+        // =====================================
+
+        if (wasPrecisionStunned)
+        {
+            bossController?
+                .RegisterPrecisionStunHit();
+
+            return;
+        }
+
+
+        // =====================================
+        // 강화공격 적중
+        // → Precision Stun 시작
+        // =====================================
+
+        if (damageInfo.CausesBossStun &&
+            bossController != null &&
+            !bossController.IsInPrecisionStun)
+        {
+            bossController
+                .EnterPrecisionStun();
+        }
     }
 
     private void HandleDeath()

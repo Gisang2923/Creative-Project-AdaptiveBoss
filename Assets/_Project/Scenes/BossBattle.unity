@@ -666,6 +666,9 @@ MonoBehaviour:
   bossParry: {fileID: 402595766}
   parryChance: 0.15
   parryCooldown: 4
+  bossAnimator: {fileID: 402595765}
+  precisionStunDuration: 2.5
+  precisionStunHitLimit: 3
 --- !u!114 &402595761
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1749,6 +1752,7 @@ MonoBehaviour:
   enhancedDashAttackHitbox: {fileID: 810163817}
   enhancedDashMoveDistance: 6
   enhancedDashMoveDuration: 0.2
+  enhancedHeavyAttackData: {fileID: 11400000, guid: 3958880f905b2f3448e0106dac745f83, type: 2}
 --- !u!114 &685367522
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2437,6 +2441,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::BossAnimationEventReceiver
   bossParry: {fileID: 402595766}
   bossAction: {fileID: 402595758}
+  bossController: {fileID: 402595760}
 --- !u!1 &1383829618
 GameObject:
   m_ObjectHideFlags: 0

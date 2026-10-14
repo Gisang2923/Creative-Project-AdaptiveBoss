@@ -61,6 +61,15 @@ public class BossAnimator : MonoBehaviour
 
     private static readonly int JumpHover =
     Animator.StringToHash("JumpHover");
+    private static readonly int PrecisionStunIn =
+        Animator.StringToHash(
+            "StunIn"
+        );
+
+    private static readonly int PrecisionStunOut =
+        Animator.StringToHash(
+            "StunOut"
+        );
     public void PlayReady()
     {
         animator.Play(Ready, 0, 0f);
@@ -208,5 +217,18 @@ public class BossAnimator : MonoBehaviour
     public void PlayCounterThrust()
     {
         animator.Play(CounterThrust, 0, 0f);
+    }
+    public void PlayPrecisionStunIn()
+    {
+        PlayAction(
+            PrecisionStunIn
+        );
+    }
+
+    public void PlayPrecisionStunOut()
+    {
+        PlayAction(
+            PrecisionStunOut
+        );
     }
 }

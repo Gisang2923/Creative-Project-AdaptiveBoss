@@ -20,4 +20,7 @@ public class AttackData : ScriptableObject
     [Header("Combat")]
     public float knockbackForce = 2f;
     public bool parryable = true;
+
+    [Header("Special")]
+    public bool causesBossStun = false;
 }
