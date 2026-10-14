@@ -57,6 +57,8 @@ public class PlayerCombat : MonoBehaviour
     private PlayerHeal playerHeal;
     private PlayerDash playerDash;
     private PlayerMovement playerMovement;
+    private PlayerPrecisionStack precisionStack;
+
     [Header("Dash Attack")]
     [SerializeField] private AttackData dashAttackData;
     [SerializeField] private Hitbox dashAttackHitbox;
@@ -69,6 +71,7 @@ public class PlayerCombat : MonoBehaviour
         playerHeal = GetComponent<PlayerHeal>();
         playerDash = GetComponent<PlayerDash>();
         playerMovement = GetComponent<PlayerMovement>();
+        precisionStack = GetComponent<PlayerPrecisionStack>();
     }
 
     private void Update()
@@ -108,7 +111,36 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
+
+        // =====================================
+        // Precision Point 5 / 5
+        // 다음 기본공격 1회를 Heavy로 대체
+        // =====================================
+
+        if (precisionStack != null &&
+            precisionStack.CanUseEnhancedAttack)
+        {
+            if (precisionStack.TryConsumeEnhancedAttack())
+            {
+                Debug.Log(
+                    "[Precision Attack] " +
+                    "Normal Attack -> Heavy"
+                );
+
+                StartCoroutine(
+                    ChargeAttack()
+                );
+
+                return;
+            }
+        }
+
+
+        // =====================================
+        // 일반 기본공격
+        // =====================================
         StartCoroutine(NormalAttack());
+    
 }
 
     public void CancelAttack()
@@ -198,11 +230,13 @@ public class PlayerCombat : MonoBehaviour
         if (IsAttacking)
             return;
 
-        if (playerCounter != null && playerCounter.IsCountering)
+        if (playerCounter != null &&
+            playerCounter.IsCountering)
             return;
 
         if (damageReceiver != null &&
-            (damageReceiver.IsStunned || damageReceiver.IsDead))
+            (damageReceiver.IsStunned ||
+            damageReceiver.IsDead))
             return;
 
         chargeState = ChargeState.Charging;

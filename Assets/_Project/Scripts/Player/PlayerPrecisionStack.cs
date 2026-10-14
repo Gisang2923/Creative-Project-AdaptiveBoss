@@ -2,43 +2,70 @@ using UnityEngine;
 
 public class PlayerPrecisionStack : MonoBehaviour
 {
-    [Header("Precision Stack")]
-    [SerializeField] private int maxStacks = 1;
+    [Header("Precision Point")]
+    [SerializeField] private int maxPoints = 5;
 
-    private int currentStacks;
+    private int currentPoints;
 
-    public int CurrentStacks => currentStacks;
-    public bool HasStack => currentStacks > 0;
+    public int CurrentPoints => currentPoints;
+    public int MaxPoints => maxPoints;
+
+    public bool IsFull =>
+        currentPoints >= maxPoints;
+
+    public bool CanUseEnhancedAttack =>
+        IsFull;
+
+
+    // =====================================
+    // Perfect Dodge / Perfect Parry 성공
+    // =====================================
 
     public void GainStack()
     {
-        int previousStacks = currentStacks;
+        if (currentPoints >= maxPoints)
+            return;
 
-        currentStacks =
-            Mathf.Min(
-                currentStacks + 1,
-                maxStacks
+        currentPoints++;
+
+        currentPoints =
+            Mathf.Clamp(
+                currentPoints,
+                0,
+                maxPoints
             );
 
-        if (currentStacks > previousStacks)
+        Debug.Log(
+            $"[Precision Point] Gain | " +
+            $"{currentPoints}/{maxPoints}"
+        );
+
+
+        if (currentPoints >= maxPoints)
         {
             Debug.Log(
-                $"[Precision Stack] Gain | " +
-                $"{currentStacks}/{maxStacks}"
+                "[Precision Point] " +
+                "Enhanced Attack Ready"
             );
         }
     }
 
-    public bool TryConsumeStack()
+
+    // =====================================
+    // 강화공격 사용
+    // =====================================
+
+    public bool TryConsumeEnhancedAttack()
     {
-        if (currentStacks <= 0)
+        if (!CanUseEnhancedAttack)
             return false;
 
-        currentStacks--;
+        currentPoints = 0;
 
         Debug.Log(
-            $"[Precision Stack] Consume | " +
-            $"{currentStacks}/{maxStacks}"
+            $"[Precision Point] " +
+            $"Enhanced Attack Consume | " +
+            $"{currentPoints}/{maxPoints}"
         );
 
         return true;
