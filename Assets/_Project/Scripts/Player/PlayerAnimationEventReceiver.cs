@@ -28,4 +28,21 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
     {
         playerCombat?.OnDashAttackEnd();
     }
+    public void EnhancedDashPrepareEnd()
+    {
+        playerCombat?
+            .OnEnhancedDashPrepareEnd();
+    }
+
+    public void EnhancedDashAttackStart()
+    {
+        playerCombat?
+            .OnEnhancedDashAttackStart();
+    }
+
+    public void EnhancedDashAttackEnd()
+    {
+        playerCombat?
+            .OnEnhancedDashAttackEnd();
+    }
 }

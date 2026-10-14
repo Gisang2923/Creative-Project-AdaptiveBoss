@@ -63,37 +63,101 @@ public class PlayerDash : MonoBehaviour
             dashDirection = Mathf.Sign(direction);
         }
     }
-
     public void OnDash(InputAction.CallbackContext context)
     {
-        if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
+        if (damageReceiver != null &&
+            (damageReceiver.IsStunned ||
+            damageReceiver.IsDead))
+        {
             return;
-        if (playerCounter != null && playerCounter.IsCountering)
+        }
+
+        if (playerCounter != null &&
+            playerCounter.IsCountering)
+        {
             return;
+        }
+
         if (!context.performed)
             return;
 
-        if (playerCombat != null && !playerCombat.CanDashCancel)
+
+        if (playerCombat != null &&
+            !playerCombat.CanDashCancel)
+        {
             return;
+        }
+
 
         if (!canDash)
             return;
-        if (!IsGrounded() && !airDashAvailable)
+
+
+        if (!IsGrounded() &&
+            !airDashAvailable)
+        {
             return;
-            
+        }
+
+
+        // Recovery 중 Dash Cancel
         if (playerCombat != null &&
-            playerCombat.CurrentPhase == PlayerCombat.AttackPhase.Recovery)
+            playerCombat.CurrentPhase ==
+                PlayerCombat.AttackPhase.Recovery)
         {
             playerCombat.CancelAttack();
         }
-        if (playerCombat != null && playerCombat.IsCharging)
-            return;
 
-        if (playerHeal != null && playerHeal.IsHealing)
+
+        if (playerCombat != null &&
+            playerCombat.IsCharging)
+        {
             return;
-  
-        dashCoroutine = StartCoroutine(Dash());
-    }
+        }
+
+
+        if (playerHeal != null &&
+            playerHeal.IsHealing)
+        {
+            return;
+        }
+
+
+        // =====================================
+        // Precision 5 / 5
+        // Dash → Enhanced Dash Attack
+        // =====================================
+
+        if (playerCombat != null &&
+            playerCombat.TryStartEnhancedDashAttack())
+        {
+            canDash = false;
+
+
+            if (!IsGrounded())
+            {
+                airDashAvailable = false;
+            }
+
+
+            StartCoroutine(
+                ResetDashCooldown()
+            );
+
+
+            return;
+        }
+
+
+        // =====================================
+        // 일반 Dash
+        // =====================================
+
+        dashCoroutine =
+            StartCoroutine(
+                Dash()
+            );
+    }   
 
     private IEnumerator Dash()
     {
