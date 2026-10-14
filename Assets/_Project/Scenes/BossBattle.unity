@@ -1716,7 +1716,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::PlayerDash
   dashSpeed: 20
   dashDuration: 0.2
-  dashCooldown: 0.4
+  dashCooldown: 0.6
   groundCheck: {fileID: 119292375}
   groundCheckRadius: 0.15
   groundLayer:
@@ -1743,12 +1743,12 @@ MonoBehaviour:
   chargeTime: 0.7
   dashAttackData: {fileID: 11400000, guid: 20a81b7eb9cf19245ba48552492f41d8, type: 2}
   dashAttackHitbox: {fileID: 1383829620}
-  dashAttackMoveDistance: 0.63
-  dashAttackMoveDuration: 0.2
+  dashAttackMoveDistance: 2
+  dashAttackMoveDuration: 0.4
   enhancedDashAttackData: {fileID: 11400000, guid: 6b9c97ea654576d4eae791f647ebc71c, type: 2}
   enhancedDashAttackHitbox: {fileID: 810163817}
   enhancedDashMoveDistance: 6
-  enhancedDashMoveDuration: 0.4
+  enhancedDashMoveDuration: 0.2
 --- !u!114 &685367522
 MonoBehaviour:
   m_ObjectHideFlags: 0

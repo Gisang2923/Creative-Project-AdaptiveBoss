@@ -36,6 +36,7 @@ public class PlayerDash : MonoBehaviour
     private PlayerDamageReceiver damageReceiver;
     private Coroutine dashCoroutine;
     private float originalGravity;
+    private PlayerMovement playerMovement;
     private PlayerCounter playerCounter;
     private PlayerHeal playerHeal;
     private void Awake()
@@ -43,6 +44,7 @@ public class PlayerDash : MonoBehaviour
         rb = GetComponent<Rigidbody2D>();
         playerCombat = GetComponent<PlayerCombat>();
         damageReceiver = GetComponent<PlayerDamageReceiver>();
+        playerMovement = GetComponent<PlayerMovement>();
         playerCounter = GetComponent<PlayerCounter>();
         playerHeal = GetComponent<PlayerHeal>();
         precisionStack = GetComponent<PlayerPrecisionStack>();
@@ -122,7 +124,18 @@ public class PlayerDash : MonoBehaviour
             return;
         }
 
+        float actionDirection =
+            playerMovement != null
+            ? playerMovement.GetActionDirection()
+            : dashDirection;
 
+        playerMovement?
+            .ForceFacing(
+                actionDirection
+            );
+
+        dashDirection =
+            actionDirection;
         // =====================================
         // Precision 5 / 5
         // Dash → Enhanced Dash Attack

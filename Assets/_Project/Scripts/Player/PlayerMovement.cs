@@ -175,6 +175,40 @@ public class PlayerMovement : MonoBehaviour
 
         playerDash?.SetDirection(facingDirection);
     }
+    public float GetActionDirection()
+    {
+        if (Mathf.Abs(moveInput.x) > 0.01f)
+        {
+            return Mathf.Sign(
+                moveInput.x
+            );
+        }
+
+        return facingDirection;
+    }
+    public void ForceFacing(float direction)
+    {
+        if (Mathf.Abs(direction) <= 0.01f)
+            return;
+
+        facingDirection =
+            Mathf.Sign(direction);
+
+        if (facingRoot != null)
+        {
+            facingRoot.localScale =
+                new Vector3(
+                    facingDirection,
+                    1f,
+                    1f
+                );
+        }
+
+        playerDash?
+            .SetDirection(
+                facingDirection
+            );
+    }
     public void OnJump(InputAction.CallbackContext context)
     {
         if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
