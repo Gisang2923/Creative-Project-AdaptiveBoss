@@ -9,6 +9,7 @@ public class BossDamageReceiver : DamageReceiver
     [SerializeField] private BossController bossController;
     [SerializeField] private BossAnimator bossAnimator;
     [SerializeField] private HitFlash hitFlash;
+    [SerializeField] private BossHitReaction hitReaction;
     private bool isDead;
 
     public bool IsDead => isDead;
@@ -32,6 +33,9 @@ public class BossDamageReceiver : DamageReceiver
 
         if (health != null)
             health.OnDied += HandleDeath;
+        if (hitReaction == null)
+            hitReaction = GetComponent<BossHitReaction>();
+            
     }
 
     private void OnDestroy()
@@ -57,7 +61,10 @@ public class BossDamageReceiver : DamageReceiver
         );
 
         hitFlash?.Flash();
-
+        hitReaction?.Play(
+            damageInfo.HitDirection,
+            damageInfo.CausesBossStun
+        );
 
         // 데미지 처리 중 사망했다면 종료
         if (isDead)

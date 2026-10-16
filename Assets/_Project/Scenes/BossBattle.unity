@@ -517,6 +517,7 @@ GameObject:
   - component: {fileID: 402595766}
   - component: {fileID: 402595767}
   - component: {fileID: 402595768}
+  - component: {fileID: 402595769}
   m_Layer: 8
   m_Name: Boss
   m_TagString: Untagged
@@ -804,6 +805,7 @@ MonoBehaviour:
   bossController: {fileID: 402595760}
   bossAnimator: {fileID: 402595765}
   hitFlash: {fileID: 1266593683}
+  hitReaction: {fileID: 402595769}
 --- !u!114 &402595765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -905,6 +907,23 @@ MonoBehaviour:
   chargeTimingJitter: 0.04
   chargeTimingPolicyActive: 0
   timingModeReevaluationInterval: 3
+--- !u!114 &402595769
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 402595753}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e13642d9dc6434a4ca2d138f42c4c4d8, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossHitReaction
+  visual: {fileID: 1266593679}
+  recoilDistance: 0.18
+  recoilOutDuration: 0.05
+  recoilReturnDuration: 0.1
+  enhancedMultiplier: 1.6
 --- !u!1 &440562010
 GameObject:
   m_ObjectHideFlags: 0
