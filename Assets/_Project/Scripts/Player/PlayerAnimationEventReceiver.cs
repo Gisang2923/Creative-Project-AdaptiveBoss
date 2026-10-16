@@ -2,6 +2,7 @@ using UnityEngine;
 
 public class PlayerAnimationEventReceiver : MonoBehaviour
 {
+    [SerializeField] private PlayerDamageReceiver playerDamageReceiver;
     public void OnResetVelocity(){}
     public void OnDash(){}
     public void OnBreak(){}
@@ -45,4 +46,9 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
         playerCombat?
             .OnEnhancedDashAttackEnd();
     }
-}
+    public void GetUpEnd()
+    {
+        playerDamageReceiver?
+            .OnGetUpEnd();
+    }
+}  

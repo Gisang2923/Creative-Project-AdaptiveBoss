@@ -52,6 +52,15 @@ public class PlayerAnimator : MonoBehaviour
     Animator.StringToHash(
         "EnhancedDashAttack"
     );
+    private static readonly int Knockdown =
+        Animator.StringToHash(
+            "Knockdown"
+        );
+
+    private static readonly int GetUp =
+        Animator.StringToHash(
+            "GetUp"
+        );
     private int currentState = -1;
 
     private void Awake()
@@ -74,6 +83,25 @@ public class PlayerAnimator : MonoBehaviour
         if (damageReceiver != null && damageReceiver.IsDead)
         {
             PlayState(Death);
+            return;
+        }
+        if (damageReceiver != null &&
+            damageReceiver.IsKnockedDown)
+        {
+            PlayState(
+                Knockdown
+            );
+
+            return;
+        }
+
+        if (damageReceiver != null &&
+            damageReceiver.IsGettingUp)
+        {
+            PlayState(
+                GetUp
+            );
+
             return;
         }
         if (damageReceiver != null && damageReceiver.IsStunned)

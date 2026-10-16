@@ -17,5 +17,10 @@ MonoBehaviour:
   startupTime: 0.45
   activeTime: 0.15
   recoveryTime: 1.2
-  knockbackForce: 25
+  knockbackForce: 0
   parryable: 0
+  causesBossStun: 0
+  causesKnockdown: 1
+  knockdownX: 9
+  knockdownY: 8
+  knockdownDuration: 0.5

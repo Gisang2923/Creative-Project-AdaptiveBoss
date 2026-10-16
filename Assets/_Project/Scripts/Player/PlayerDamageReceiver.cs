@@ -4,7 +4,7 @@ using UnityEngine;
 public class PlayerDamageReceiver : DamageReceiver
 {
     [Header("Hit Settings")]
-    [SerializeField] private float hitStunDuration = 0.25f;
+    [SerializeField] private float hitStunDuration = 0.4f;
     [SerializeField] private float invincibilityDuration = 0.7f;
     [SerializeField] private HitFlash hitFlash;
     private bool isInvincible;
@@ -12,6 +12,19 @@ public class PlayerDamageReceiver : DamageReceiver
 
     public bool IsInvincible => isInvincible;
     public bool IsStunned => isStunned;
+
+    private bool isKnockedDown;
+    private bool isGettingUp;
+
+    private PlayerMovement playerMovement;
+
+    private Coroutine knockdownRoutine;
+
+    public bool IsKnockedDown =>
+        isKnockedDown;
+
+    public bool IsGettingUp =>
+        isGettingUp;
     private PlayerCombat playerCombat;
 
     private Rigidbody2D rb;
@@ -26,6 +39,7 @@ public class PlayerDamageReceiver : DamageReceiver
         playerHeal = GetComponent<PlayerHeal>();
         if (hitFlash == null)
             hitFlash = GetComponentInChildren<HitFlash>();
+        playerMovement =GetComponent<PlayerMovement>();
     }
     private void ApplyKnockback(DamageInfo damageInfo)
     {
@@ -36,6 +50,25 @@ public class PlayerDamageReceiver : DamageReceiver
 
         rb.linearVelocity =
             knockbackDirection * damageInfo.KnockbackForce;
+    }
+    private void ApplyKnockdown(
+        DamageInfo damageInfo)
+    {
+        float directionX =
+            Mathf.Sign(
+                damageInfo.HitDirection.x
+            );
+
+        if (directionX == 0f)
+            directionX = 1f;
+
+
+        rb.linearVelocity =
+            new Vector2(
+                directionX *
+                    damageInfo.KnockdownX,
+                damageInfo.KnockdownY
+            );
     }
     public override void TakeDamage(DamageInfo damageInfo)
     {
@@ -69,10 +102,61 @@ public class PlayerDamageReceiver : DamageReceiver
             return;
         }
 
-        ApplyKnockback(damageInfo);
-        StartCoroutine(HitRoutine());
-    }
+        // =====================================
+        // Jump Slam 등의 Knockdown 공격
+        // =====================================
 
+        if (damageInfo.CausesKnockdown)
+        {
+            ApplyKnockdown(
+                damageInfo
+            );
+
+            if (knockdownRoutine != null)
+            {
+                StopCoroutine(
+                    knockdownRoutine
+                );
+            }
+
+            knockdownRoutine =
+                StartCoroutine(
+                    KnockdownRoutine(
+                        damageInfo.KnockdownDuration
+                    )
+                );
+
+            return;
+        }
+
+
+        // =====================================
+        // 일반 피격
+        // =====================================
+
+        ApplyKnockback(
+            damageInfo
+        );
+
+        StartCoroutine(
+            HitRoutine()
+        );
+    }
+    public void OnGetUpEnd()
+    {
+        if (!isGettingUp)
+            return;
+
+        isGettingUp = false;
+        isKnockedDown = false;
+
+        isStunned = false;
+        isInvincible = false;
+
+        Debug.Log(
+            "[Player Knockdown] GetUp End"
+        );
+    }
     private IEnumerator HitRoutine()
     {
         isStunned = true;
@@ -89,7 +173,48 @@ public class PlayerDamageReceiver : DamageReceiver
 
         isInvincible = false;
     }
+    private IEnumerator KnockdownRoutine(
+        float duration)
+    {
+        isStunned = true;
+        isInvincible = true;
 
+        isKnockedDown = true;
+        isGettingUp = false;
+
+
+        // 최소 Knockdown 시간
+        yield return new WaitForSeconds(
+            duration
+        );
+
+
+        // 아직 공중이면 착지할 때까지 기다림
+        if (playerMovement != null)
+        {
+            while (!playerMovement.IsGroundedState)
+            {
+                yield return null;
+            }
+        }
+
+
+        // 일어나는 동안 미끄러지지 않도록
+        rb.linearVelocity =
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
+
+
+        isKnockedDown = false;
+        isGettingUp = true;
+
+        knockdownRoutine = null;
+
+        // 여기서는 Stunned를 풀지 않음.
+        // GetUp 애니메이션이 끝나야 조작 가능.
+    }
     private void HandleDeath()
     {
         playerCombat?.ForceCancelAttack();

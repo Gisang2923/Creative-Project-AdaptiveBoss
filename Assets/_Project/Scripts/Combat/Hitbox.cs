@@ -166,7 +166,11 @@ public class Hitbox : MonoBehaviour
             owner,
             attackData.attackId,
             attackData.parryable,
-            attackData.causesBossStun
+            attackData.causesBossStun,
+            attackData.causesKnockdown,
+            attackData.knockdownX,
+            attackData.knockdownY,
+            attackData.knockdownDuration
         );
     }
     private void OnDrawGizmosSelected()

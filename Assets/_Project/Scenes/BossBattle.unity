@@ -3097,6 +3097,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: bd6ec2db417a1614a9a7f50435213a06, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationEventReceiver
+  playerDamageReceiver: {fileID: 685367523}
   playerCombat: {fileID: 685367521}
 --- !u!114 &1726732471
 MonoBehaviour:
