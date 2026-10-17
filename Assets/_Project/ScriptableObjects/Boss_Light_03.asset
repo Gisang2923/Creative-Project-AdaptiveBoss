@@ -19,3 +19,10 @@ MonoBehaviour:
   recoveryTime: 0.26
   knockbackForce: 2
   parryable: 1
+  causesBossStun: 0
+  causesKnockdown: 0
+  knockdownX: 9
+  knockdownY: 3.5
+  knockdownDuration: 0.8
+  cameraShakeDuration: 0.05
+  cameraShakeStrength: 0.035

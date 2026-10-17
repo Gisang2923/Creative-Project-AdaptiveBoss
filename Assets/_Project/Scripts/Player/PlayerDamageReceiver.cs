@@ -110,13 +110,7 @@ public class PlayerDamageReceiver : DamageReceiver
         hitVfxSpawner?.Play(
             damageInfo.HitDirection
         );
-        if (damageInfo.CameraShakeStrength > 0f)
-    {
-        CameraShake.Instance?.Shake(
-            damageInfo.CameraShakeDuration,
-            damageInfo.CameraShakeStrength
-        );
-    }
+
         if (health.IsDead)
         {
             HandleDeath();

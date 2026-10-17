@@ -24,3 +24,5 @@ MonoBehaviour:
   knockdownX: 9
   knockdownY: 8
   knockdownDuration: 0.5
+  cameraShakeDuration: 0.5
+  cameraShakeStrength: 0.45

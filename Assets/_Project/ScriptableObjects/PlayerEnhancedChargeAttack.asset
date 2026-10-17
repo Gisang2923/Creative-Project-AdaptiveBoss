@@ -20,3 +20,9 @@ MonoBehaviour:
   knockbackForce: 2
   parryable: 1
   causesBossStun: 1
+  causesKnockdown: 0
+  knockdownX: 9
+  knockdownY: 3.5
+  knockdownDuration: 0.8
+  cameraShakeDuration: 0.12
+  cameraShakeStrength: 0.12

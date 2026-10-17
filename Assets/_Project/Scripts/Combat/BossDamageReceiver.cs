@@ -11,7 +11,6 @@ public class BossDamageReceiver : DamageReceiver
     [SerializeField] private HitFlash hitFlash;
     [SerializeField] private BossHitReaction hitReaction;
     [SerializeField] private HitVFXSpawner hitVfxSpawner;
-    [SerializeField] private CameraShake cameraShake;
     private bool isDead;
 
     public bool IsDead => isDead;

@@ -77,8 +77,6 @@ public class BossAction : MonoBehaviour
     [SerializeField]
     private float jumpSlamSpawnSideOffset = 4.0f;
 
-    [SerializeField]
-    private float jumpSlamLandingHitDelay = 0.03f;
     [SerializeField] private float jumpSlamGroundY = 0f;
     [SerializeField] private float jumpLandingOffset = 0.6f;
     [Header("Jump Slam Ground Check")]
@@ -110,7 +108,6 @@ public class BossAction : MonoBehaviour
     private bool isAttacking;
     private Hitbox currentHitbox;
 
-    [SerializeField] private LayerMask playerLayer;
     public bool IsAttacking => isAttacking;
     [SerializeField] private BossMovement movement;
     private float defaultGravityScale;

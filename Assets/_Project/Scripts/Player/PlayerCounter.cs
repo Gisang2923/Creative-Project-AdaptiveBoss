@@ -172,7 +172,10 @@ public class PlayerCounter : MonoBehaviour
             $"Timing={responseTime:F3}"
         );
 
-
+        CameraShake.Instance?.Shake(
+            0.07f,
+            0.10f
+        );
         // Precision Stack 획득
         precisionStack?.GainStack();
 
