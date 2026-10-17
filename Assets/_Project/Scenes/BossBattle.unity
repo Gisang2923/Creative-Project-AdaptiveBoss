@@ -518,6 +518,7 @@ GameObject:
   - component: {fileID: 402595767}
   - component: {fileID: 402595768}
   - component: {fileID: 402595769}
+  - component: {fileID: 402595770}
   m_Layer: 8
   m_Name: Boss
   m_TagString: Untagged
@@ -553,6 +554,7 @@ Transform:
   m_Children:
   - {fileID: 298533617}
   - {fileID: 214384419}
+  - {fileID: 1139810872}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!114 &402595758
@@ -806,6 +808,7 @@ MonoBehaviour:
   bossAnimator: {fileID: 402595765}
   hitFlash: {fileID: 1266593683}
   hitReaction: {fileID: 402595769}
+  hitVfxSpawner: {fileID: 402595770}
 --- !u!114 &402595765
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -924,6 +927,23 @@ MonoBehaviour:
   recoilOutDuration: 0.05
   recoilReturnDuration: 0.1
   enhancedMultiplier: 1.6
+--- !u!114 &402595770
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 402595753}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fab23ef386c236d489a2d3042a95cb77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitVFXSpawner
+  hitVfxPrefabs:
+  - {fileID: 9001806828168439975, guid: 5fbc0f396e5fe0a41b817ca5739aff3d, type: 3}
+  - {fileID: 9001806828168439975, guid: a0a6ebfb58a24724694d2bc135ba1f6e, type: 3}
+  - {fileID: 9001806828168439975, guid: 4d40784d898c5ad4da49a7b2e4ebf847, type: 3}
+  spawnPoint: {fileID: 1139810872}
 --- !u!1 &440562010
 GameObject:
   m_ObjectHideFlags: 0
@@ -1443,6 +1463,7 @@ GameObject:
   - component: {fileID: 685367525}
   - component: {fileID: 685367526}
   - component: {fileID: 685367527}
+  - component: {fileID: 685367528}
   m_Layer: 7
   m_Name: Player
   m_TagString: Untagged
@@ -1467,6 +1488,7 @@ Transform:
   - {fileID: 119292375}
   - {fileID: 1695386535}
   - {fileID: 722405370}
+  - {fileID: 792650135}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!70 &685367516
@@ -1801,6 +1823,7 @@ MonoBehaviour:
   hitStunDuration: 0.25
   invincibilityDuration: 0.7
   hitFlash: {fileID: 0}
+  hitVfxSpawner: {fileID: 0}
 --- !u!114 &685367524
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1862,6 +1885,23 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerPrecisionStack
   maxPoints: 1
+--- !u!114 &685367528
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 685367513}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fab23ef386c236d489a2d3042a95cb77, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::HitVFXSpawner
+  hitVfxPrefabs:
+  - {fileID: 9001806828168439975, guid: 5fbc0f396e5fe0a41b817ca5739aff3d, type: 3}
+  - {fileID: 9001806828168439975, guid: a0a6ebfb58a24724694d2bc135ba1f6e, type: 3}
+  - {fileID: 9001806828168439975, guid: 4d40784d898c5ad4da49a7b2e4ebf847, type: 3}
+  spawnPoint: {fileID: 792650135}
 --- !u!1 &687523293
 GameObject:
   m_ObjectHideFlags: 0
@@ -2038,6 +2078,37 @@ Transform:
   m_ConstrainProportionsScale: 0
   m_Children: []
   m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &792650134
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 792650135}
+  m_Layer: 7
+  m_Name: HitVFXPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &792650135
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 792650134}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.2, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 685367515}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &792907618
 GameObject:
@@ -2303,6 +2374,37 @@ BoxCollider2D:
   m_AutoTiling: 0
   m_Size: {x: 2, y: 1}
   m_EdgeRadius: 0
+--- !u!1 &1139810871
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1139810872}
+  m_Layer: 8
+  m_Name: HitVFXPoint
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1139810872
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1139810871}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0.2, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 402595756}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &1266593678
 GameObject:
   m_ObjectHideFlags: 0

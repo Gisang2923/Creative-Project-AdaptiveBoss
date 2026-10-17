@@ -7,6 +7,8 @@ public class PlayerDamageReceiver : DamageReceiver
     [SerializeField] private float hitStunDuration = 0.4f;
     [SerializeField] private float invincibilityDuration = 0.7f;
     [SerializeField] private HitFlash hitFlash;
+    [Header("Hit VFX")]
+    [SerializeField] private HitVFXSpawner hitVfxSpawner;
     private bool isInvincible;
     private bool isStunned;
 
@@ -40,6 +42,10 @@ public class PlayerDamageReceiver : DamageReceiver
         if (hitFlash == null)
             hitFlash = GetComponentInChildren<HitFlash>();
         playerMovement =GetComponent<PlayerMovement>();
+        if (hitVfxSpawner == null)
+        {
+            hitVfxSpawner = GetComponent<HitVFXSpawner>();
+        }
     }
     private void ApplyKnockback(DamageInfo damageInfo)
     {
@@ -95,7 +101,9 @@ public class PlayerDamageReceiver : DamageReceiver
         CombatLogger.Instance?.RecordPlayerHit();
         
         hitFlash?.Flash();
-
+        hitVfxSpawner?.Play(
+            damageInfo.HitDirection
+        );
         if (health.IsDead)
         {
             HandleDeath();
@@ -225,4 +233,5 @@ public class PlayerDamageReceiver : DamageReceiver
 
         rb.linearVelocity = Vector2.zero;
     }
+
 }

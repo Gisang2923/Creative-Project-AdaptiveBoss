@@ -1,0 +1,703 @@
+fileFormatVersion: 2
+guid: 200f0950b333ec54ca82d51f71ab8ffb
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 5995619124270778734
+    second: VFX_NomalHit_Sheet_0
+  - first:
+      213: 7351518670407994989
+    second: VFX_NomalHit_Sheet_1
+  - first:
+      213: -8599839569473459344
+    second: VFX_NomalHit_Sheet_2
+  - first:
+      213: 1096427840428569399
+    second: VFX_NomalHit_Sheet_3
+  - first:
+      213: -2194546887702490674
+    second: VFX_NomalHit_Sheet_4
+  - first:
+      213: -6050024331628551006
+    second: VFX_NomalHit_Sheet_5
+  - first:
+      213: 4617739867559794159
+    second: VFX_NomalHit_Sheet_6
+  - first:
+      213: 2827550430775646958
+    second: VFX_NomalHit_Sheet_7
+  - first:
+      213: -5153127717929814616
+    second: VFX_NomalHit_Sheet_8
+  - first:
+      213: -2245886899970746497
+    second: VFX_NomalHit_Sheet_9
+  - first:
+      213: -7566883516332058040
+    second: VFX_NomalHit_Sheet_10
+  - first:
+      213: 4213186437089726866
+    second: VFX_NomalHit_Sheet_11
+  - first:
+      213: -5203066836796499624
+    second: VFX_NomalHit_Sheet_12
+  - first:
+      213: -4971676582481634856
+    second: VFX_NomalHit_Sheet_13
+  - first:
+      213: -5747971378178207081
+    second: VFX_NomalHit_Sheet_14
+  - first:
+      213: -7553367179208880472
+    second: VFX_NomalHit_Sheet_15
+  - first:
+      213: 7595930907213639696
+    second: VFX_NomalHit_Sheet_16
+  - first:
+      213: -6581352847765287768
+    second: VFX_NomalHit_Sheet_17
+  - first:
+      213: 688488561986426091
+    second: VFX_NomalHit_Sheet_18
+  - first:
+      213: 1784651181040150916
+    second: VFX_NomalHit_Sheet_19
+  - first:
+      213: 8676178447135186493
+    second: VFX_NomalHit_Sheet_20
+  - first:
+      213: 6093295216451902879
+    second: VFX_NomalHit_Sheet_21
+  - first:
+      213: 6900405531156106295
+    second: VFX_NomalHit_Sheet_22
+  - first:
+      213: -3972979697965114004
+    second: VFX_NomalHit_Sheet_23
+  - first:
+      213: 412790688907546260
+    second: VFX_NomalHit_Sheet_24
+  - first:
+      213: -542444375249212803
+    second: VFX_NomalHit_Sheet_25
+  - first:
+      213: 6502752899340917025
+    second: VFX_NomalHit_Sheet_26
+  - first:
+      213: -8340494477148317351
+    second: VFX_NomalHit_Sheet_27
+  - first:
+      213: 7659061197253197049
+    second: VFX_NomalHit_Sheet_28
+  - first:
+      213: 3207969170621898731
+    second: VFX_NomalHit_Sheet_29
+  - first:
+      213: 85920219500167993
+    second: VFX_NomalHit_Sheet_30
+  - first:
+      213: -526796214819110858
+    second: VFX_NomalHit_Sheet_31
+  - first:
+      213: -8291957410577232013
+    second: VFX_NomalHit_Sheet_32
+  - first:
+      213: 7025288120675303917
+    second: VFX_NomalHit_Sheet_33
+  - first:
+      213: -272079321415550563
+    second: VFX_NomalHit_Sheet_34
+  - first:
+      213: 1861448480093922735
+    second: VFX_NomalHit_Sheet_35
+  - first:
+      213: 4680895575741372799
+    second: VFX_NomalHit_Sheet_36
+  - first:
+      213: 3707036851461365597
+    second: VFX_NomalHit_Sheet_37
+  - first:
+      213: 5428539948270076280
+    second: VFX_NomalHit_Sheet_38
+  - first:
+      213: 4247665374832378236
+    second: VFX_NomalHit_Sheet_39
+  - first:
+      213: 7686622222393445514
+    second: VFX_NomalHit_Sheet_40
+  - first:
+      213: -8012744582463283197
+    second: VFX_NomalHit_Sheet_41
+  - first:
+      213: -4151296837457629091
+    second: VFX_NomalHit_Sheet_42
+  - first:
+      213: 208117800067432501
+    second: VFX_NomalHit_Sheet_43
+  - first:
+      213: 8090438752012757732
+    second: VFX_NomalHit_Sheet_44
+  - first:
+      213: -1392192449711001773
+    second: VFX_NomalHit_Sheet_45
+  - first:
+      213: -6720838954381905247
+    second: VFX_NomalHit_Sheet_46
+  - first:
+      213: -6497109936322543994
+    second: VFX_NomalHit_Sheet_47
+  - first:
+      213: -212476068271085847
+    second: VFX_NomalHit_Sheet_48
+  - first:
+      213: -5555004104041632922
+    second: VFX_NomalHit_Sheet_49
+  - first:
+      213: -5705420654810637568
+    second: VFX_NomalHit_Sheet_50
+  - first:
+      213: -8340869308937176563
+    second: VFX_NomalHit_Sheet_51
+  - first:
+      213: -4926897669424719628
+    second: VFX_NomalHit_Sheet_52
+  - first:
+      213: -2311060491046436334
+    second: VFX_NomalHit_Sheet_53
+  - first:
+      213: -3063692524570762482
+    second: VFX_NomalHit_Sheet_54
+  - first:
+      213: 1569839581292564324
+    second: VFX_NomalHit_Sheet_55
+  - first:
+      213: 3279924816365303914
+    second: VFX_NomalHit_Sheet_56
+  - first:
+      213: 1459630307756637911
+    second: VFX_NomalHit_Sheet_57
+  - first:
+      213: -8307667715847762074
+    second: VFX_NomalHit_Sheet_58
+  - first:
+      213: -2579195250225556863
+    second: VFX_NomalHit_Sheet_59
+  - first:
+      213: -1672306270845302069
+    second: VFX_NomalHit_Sheet_60
+  - first:
+      213: -8923253064795021710
+    second: VFX_NomalHit_Sheet_61
+  - first:
+      213: -8922706178826381070
+    second: VFX_NomalHit_Sheet_62
+  - first:
+      213: -7257013399819625009
+    second: VFX_NomalHit_Sheet_63
+  - first:
+      213: 757113540509073169
+    second: VFX_NomalHit_Sheet_64
+  - first:
+      213: -8713329533690214999
+    second: VFX_NomalHit_Sheet_65
+  - first:
+      213: -935884878163332152
+    second: VFX_NomalHit_Sheet_66
+  - first:
+      213: -2460665446641223070
+    second: VFX_NomalHit_Sheet_67
+  - first:
+      213: 761279513419823837
+    second: VFX_NomalHit_Sheet_68
+  - first:
+      213: -3885940609713457502
+    second: VFX_NomalHit_Sheet_69
+  - first:
+      213: -596886122562847616
+    second: VFX_NomalHit_Sheet_70
+  - first:
+      213: 8671416714919259158
+    second: VFX_NomalHit_Sheet_71
+  - first:
+      213: 5451838499183471748
+    second: VFX_NomalHit_Sheet_72
+  - first:
+      213: 1915648712874766218
+    second: VFX_NomalHit_Sheet_73
+  - first:
+      213: 3579914906935591232
+    second: VFX_NomalHit_Sheet_74
+  - first:
+      213: -753370550364997651
+    second: VFX_NomalHit_Sheet_75
+  - first:
+      213: -4657414562522484694
+    second: VFX_NomalHit_Sheet_76
+  - first:
+      213: 1339382036819578672
+    second: VFX_NomalHit_Sheet_77
+  - first:
+      213: -4531310816457151091
+    second: VFX_NomalHit_Sheet_78
+  - first:
+      213: -864295029368574236
+    second: VFX_NomalHit_Sheet_79
+  - first:
+      213: 6471812011692221127
+    second: VFX_NomalHit_Sheet_80
+  - first:
+      213: 4456683236023117608
+    second: VFX_NomalHit_Sheet_81
+  - first:
+      213: 2445177278968864246
+    second: VFX_NomalHit_Sheet_82
+  - first:
+      213: 1030835896380894334
+    second: VFX_NomalHit_Sheet_83
+  - first:
+      213: -8857456481861167161
+    second: VFX_NomalHit_Sheet_84
+  - first:
+      213: 8825639807088383307
+    second: VFX_NomalHit_Sheet_85
+  - first:
+      213: -1784454717534683381
+    second: VFX_NomalHit_Sheet_86
+  - first:
+      213: 2028364125047319910
+    second: VFX_NomalHit_Sheet_87
+  - first:
+      213: 8645060887636484126
+    second: VFX_NomalHit_Sheet_88
+  - first:
+      213: -939078493499062158
+    second: VFX_NomalHit_Sheet_89
+  - first:
+      213: 7045361085371039891
+    second: VFX_NomalHit_Sheet_90
+  - first:
+      213: 614713050420967982
+    second: VFX_NomalHit_Sheet_91
+  - first:
+      213: 7126031172886759304
+    second: VFX_NomalHit_Sheet_92
+  - first:
+      213: -2274364164473350762
+    second: VFX_NomalHit_Sheet_93
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 0
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 0
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 32
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 0
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Android
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: VFX_NomalHit_Sheet_0
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 700
+        width: 313
+        height: 417
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: e69c2bec3d7b43350800000000000000
+      internalID: 5995619124270778734
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VFX_NomalHit_Sheet_1
+      rect:
+        serializedVersion: 2
+        x: 319
+        y: 700
+        width: 313
+        height: 417
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d6e025dd747d50660800000000000000
+      internalID: 7351518670407994989
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VFX_NomalHit_Sheet_2
+      rect:
+        serializedVersion: 2
+        x: 623
+        y: 700
+        width: 313
+        height: 417
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 07baf28b97b37a880800000000000000
+      internalID: -8599839569473459344
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VFX_NomalHit_Sheet_3
+      rect:
+        serializedVersion: 2
+        x: 941
+        y: 700
+        width: 313
+        height: 417
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 733f79ecf4b473f00800000000000000
+      internalID: 1096427840428569399
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VFX_NomalHit_Sheet_4
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 364
+        width: 313
+        height: 417
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: ec1dd8b9b376b81e0800000000000000
+      internalID: -2194546887702490674
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VFX_NomalHit_Sheet_5
+      rect:
+        serializedVersion: 2
+        x: 313
+        y: 364
+        width: 313
+        height: 417
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2a46fcebceef90ca0800000000000000
+      internalID: -6050024331628551006
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VFX_NomalHit_Sheet_6
+      rect:
+        serializedVersion: 2
+        x: 626
+        y: 364
+        width: 313
+        height: 417
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: fe59f0791f1851040800000000000000
+      internalID: 4617739867559794159
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VFX_NomalHit_Sheet_7
+      rect:
+        serializedVersion: 2
+        x: 939
+        y: 364
+        width: 313
+        height: 417
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: eea92e2c22a7d3720800000000000000
+      internalID: 2827550430775646958
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VFX_NomalHit_Sheet_8
+      rect:
+        serializedVersion: 2
+        x: 0
+        y: 2
+        width: 313
+        height: 417
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 8a5f29a94a96c78b0800000000000000
+      internalID: -5153127717929814616
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VFX_NomalHit_Sheet_9
+      rect:
+        serializedVersion: 2
+        x: 313
+        y: 2
+        width: 313
+        height: 417
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: f775a8183c105d0e0800000000000000
+      internalID: -2245886899970746497
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VFX_NomalHit_Sheet_10
+      rect:
+        serializedVersion: 2
+        x: 626
+        y: 2
+        width: 313
+        height: 417
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 84ad44078870df690800000000000000
+      internalID: -7566883516332058040
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: VFX_NomalHit_Sheet_11
+      rect:
+        serializedVersion: 2
+        x: 939
+        y: 2
+        width: 313
+        height: 417
+      alignment: 0
+      pivot: {x: 0.5, y: 0.5}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 2911a3bfdbe387a30800000000000000
+      internalID: 4213186437089726866
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 456d312c327461643bac529148112645
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries:
+      - key: SpriteEditor.SliceSettings
+        value: '{"sliceOnImport":false,"gridCellCount":{"x":4.0,"y":3.0},"gridSpriteSize":{"x":313.0,"y":417.0},"gridSpriteOffset":{"x":0.0,"y":1.0},"gridSpritePadding":{"x":0.0,"y":0.0},"pivot":{"x":0.5,"y":0.5},"pivotPixels":{"x":0.0,"y":0.0},"autoSlicingMethod":0,"spriteAlignment":0,"pivotUnitMode":0,"slicingType":2,"keepEmptyRects":false,"isAlternate":false}'
+    nameFileIdTable:
+      VFX_NomalHit_Sheet_0: 5995619124270778734
+      VFX_NomalHit_Sheet_1: 7351518670407994989
+      VFX_NomalHit_Sheet_10: -7566883516332058040
+      VFX_NomalHit_Sheet_11: 4213186437089726866
+      VFX_NomalHit_Sheet_2: -8599839569473459344
+      VFX_NomalHit_Sheet_3: 1096427840428569399
+      VFX_NomalHit_Sheet_4: -2194546887702490674
+      VFX_NomalHit_Sheet_5: -6050024331628551006
+      VFX_NomalHit_Sheet_6: 4617739867559794159
+      VFX_NomalHit_Sheet_7: 2827550430775646958
+      VFX_NomalHit_Sheet_8: -5153127717929814616
+      VFX_NomalHit_Sheet_9: -2245886899970746497
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 

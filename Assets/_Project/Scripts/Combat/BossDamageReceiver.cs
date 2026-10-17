@@ -10,6 +10,7 @@ public class BossDamageReceiver : DamageReceiver
     [SerializeField] private BossAnimator bossAnimator;
     [SerializeField] private HitFlash hitFlash;
     [SerializeField] private BossHitReaction hitReaction;
+    [SerializeField] private HitVFXSpawner hitVfxSpawner;
     private bool isDead;
 
     public bool IsDead => isDead;
@@ -35,6 +36,10 @@ public class BossDamageReceiver : DamageReceiver
             health.OnDied += HandleDeath;
         if (hitReaction == null)
             hitReaction = GetComponent<BossHitReaction>();
+        if (hitVfxSpawner == null)
+        {
+            hitVfxSpawner = GetComponent<HitVFXSpawner>();
+        }
             
     }
 
@@ -65,7 +70,9 @@ public class BossDamageReceiver : DamageReceiver
             damageInfo.HitDirection,
             damageInfo.CausesBossStun
         );
-
+        hitVfxSpawner?.Play(
+            damageInfo.HitDirection
+        );
         // 데미지 처리 중 사망했다면 종료
         if (isDead)
             return;
