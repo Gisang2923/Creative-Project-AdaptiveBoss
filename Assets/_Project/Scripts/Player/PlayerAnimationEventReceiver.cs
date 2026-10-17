@@ -3,6 +3,8 @@ using UnityEngine;
 public class PlayerAnimationEventReceiver : MonoBehaviour
 {
     [SerializeField] private PlayerDamageReceiver playerDamageReceiver;
+    [SerializeField] private PlayerAnimator playerAnimator;
+    [SerializeField] private PerfectDodgeAfterimage perfectDodgeAfterimage;
     public void OnResetVelocity(){}
     public void OnDash(){}
     public void OnBreak(){}
@@ -50,5 +52,20 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
     {
         playerDamageReceiver?
             .OnGetUpEnd();
+    }
+    public void PerfectDodgeEnd()
+    {
+        playerAnimator?.OnPerfectDodgeEnd();
+    }
+    public void AfterimageStart()
+    {
+        perfectDodgeAfterimage?
+            .StartAfterimage();
+    }
+
+    public void AfterimageEnd()
+    {
+        perfectDodgeAfterimage?
+            .StopAfterimage();
     }
 }  

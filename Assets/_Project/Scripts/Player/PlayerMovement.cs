@@ -44,6 +44,7 @@ public class PlayerMovement : MonoBehaviour
     private PlayerCounter playerCounter;
     private PlayerCombat playerCombat;
     private PlayerHeal playerHeal;
+    private PlayerAnimator playerAnimator;
     private bool isGrounded;
     private bool isDashAttacking;
     private float dashAttackDirection;
@@ -59,6 +60,7 @@ public class PlayerMovement : MonoBehaviour
         playerCounter = GetComponent<PlayerCounter>();
         playerCombat = GetComponent<PlayerCombat>();
         playerHeal = GetComponent<PlayerHeal>();
+        playerAnimator = GetComponent<PlayerAnimator>();
     }
 
     private void Update()
@@ -139,7 +141,9 @@ public class PlayerMovement : MonoBehaviour
 
         if (playerDash != null && playerDash.IsDashing)
             return false;
-
+        if (playerAnimator != null && playerAnimator.IsPerfectDodging)
+            return false;
+        
         if (playerCounter != null && playerCounter.IsCountering)
             return false;
 

@@ -3200,6 +3200,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimationEventReceiver
   playerDamageReceiver: {fileID: 685367523}
+  playerAnimator: {fileID: 685367526}
   playerCombat: {fileID: 685367521}
 --- !u!114 &1726732471
 MonoBehaviour:

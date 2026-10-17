@@ -61,6 +61,10 @@ public class PlayerAnimator : MonoBehaviour
         Animator.StringToHash(
             "GetUp"
         );
+    private static readonly int PerfectDodgeHash =
+    Animator.StringToHash("PerfectDodge");
+    private bool isPerfectDodging;
+    public bool IsPerfectDodging => isPerfectDodging;
     private int currentState = -1;
 
     private void Awake()
@@ -109,6 +113,8 @@ public class PlayerAnimator : MonoBehaviour
             PlayState(Hurt);
             return;
         }
+        if (isPerfectDodging)
+            return;
         if (counter != null && counter.CounterSucceeded)
         {
             PlayState(CounterSuccess);
@@ -215,5 +221,21 @@ public class PlayerAnimator : MonoBehaviour
             0,
             0f
         );
+    }
+    public void PlayPerfectDodge()
+    {
+        isPerfectDodging = true;
+
+        currentState = PerfectDodgeHash;
+
+        animator.Play(
+            PerfectDodgeHash,
+            0,
+            0f
+        );
+    }
+    public void OnPerfectDodgeEnd()
+    {
+        isPerfectDodging = false;
     }
 }

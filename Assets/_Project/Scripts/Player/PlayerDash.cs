@@ -26,11 +26,12 @@ public class PlayerDash : MonoBehaviour
     private float dashDirection = 1f;
     private float dashStartTime;
     private bool perfectDodgeTriggered;
-
+    private float facingBeforeDash = 1f;
+    public float FacingBeforeDash => facingBeforeDash; 
     private PlayerPrecisionStack precisionStack;
 
     public bool IsDashing => isDashing;
-
+    
     private PlayerCombat playerCombat;
 
     private PlayerDamageReceiver damageReceiver;
@@ -39,6 +40,7 @@ public class PlayerDash : MonoBehaviour
     private PlayerMovement playerMovement;
     private PlayerCounter playerCounter;
     private PlayerHeal playerHeal;
+    private PlayerAnimator playerAnimator;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -48,6 +50,7 @@ public class PlayerDash : MonoBehaviour
         playerCounter = GetComponent<PlayerCounter>();
         playerHeal = GetComponent<PlayerHeal>();
         precisionStack = GetComponent<PlayerPrecisionStack>();
+        playerAnimator = GetComponent<PlayerAnimator>();
     }
 
     private void Update()
@@ -123,7 +126,11 @@ public class PlayerDash : MonoBehaviour
         {
             return;
         }
-
+        if (playerMovement != null)
+        {
+            facingBeforeDash =
+                playerMovement.FacingDirection;
+        }
         float actionDirection =
             playerMovement != null
             ? playerMovement.GetActionDirection()
@@ -231,7 +238,10 @@ public class PlayerDash : MonoBehaviour
         perfectDodgeTriggered = true;
 
         precisionStack?.GainStack();
-
+        playerMovement?.ForceFacing(
+            facingBeforeDash * -1
+        );
+        playerAnimator?.PlayPerfectDodge();
         Debug.Log(
             $"[Perfect Dodge] " +
             $"Timing={dodgeTiming:F3}"
@@ -276,7 +286,10 @@ public class PlayerDash : MonoBehaviour
         perfectDodgeTriggered = true;
 
         precisionStack?.GainStack();
-
+        playerMovement?.ForceFacing(
+            facingBeforeDash *-1
+        );
+        playerAnimator?.PlayPerfectDodge();
         Debug.Log(
             $"[Perfect Dodge - Distance] " +
             $"Timing={dodgeTiming:F3} | " +
@@ -328,4 +341,5 @@ public class PlayerDash : MonoBehaviour
         yield return new WaitForSeconds(dashCooldown);
         canDash = true;
     }
-    }
+    
+}
