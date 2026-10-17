@@ -99,11 +99,24 @@ public class PlayerDamageReceiver : DamageReceiver
 
         base.TakeDamage(damageInfo);
         CombatLogger.Instance?.RecordPlayerHit();
-        
+        if (damageInfo.CameraShakeStrength > 0f)
+        {
+            CameraShake.Instance?.Shake(
+                damageInfo.CameraShakeDuration,
+                damageInfo.CameraShakeStrength
+            );
+        }
         hitFlash?.Flash();
         hitVfxSpawner?.Play(
             damageInfo.HitDirection
         );
+        if (damageInfo.CameraShakeStrength > 0f)
+    {
+        CameraShake.Instance?.Shake(
+            damageInfo.CameraShakeDuration,
+            damageInfo.CameraShakeStrength
+        );
+    }
         if (health.IsDead)
         {
             HandleDeath();

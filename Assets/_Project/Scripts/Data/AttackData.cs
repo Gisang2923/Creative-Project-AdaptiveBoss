@@ -30,4 +30,7 @@ public class AttackData : ScriptableObject
     public float knockdownY = 3.5f;
 
     public float knockdownDuration = 0.8f;
+    [Header("Camera Shake")]
+    public float cameraShakeDuration = 0f;
+    public float cameraShakeStrength = 0f;
 }

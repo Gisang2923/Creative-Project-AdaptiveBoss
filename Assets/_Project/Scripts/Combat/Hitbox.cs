@@ -170,7 +170,9 @@ public class Hitbox : MonoBehaviour
             attackData.causesKnockdown,
             attackData.knockdownX,
             attackData.knockdownY,
-            attackData.knockdownDuration
+            attackData.knockdownDuration,
+            attackData.cameraShakeDuration,
+            attackData.cameraShakeStrength
         );
     }
     private void OnDrawGizmosSelected()

@@ -11,6 +11,7 @@ public class BossDamageReceiver : DamageReceiver
     [SerializeField] private HitFlash hitFlash;
     [SerializeField] private BossHitReaction hitReaction;
     [SerializeField] private HitVFXSpawner hitVfxSpawner;
+    [SerializeField] private CameraShake cameraShake;
     private bool isDead;
 
     public bool IsDead => isDead;
@@ -64,7 +65,13 @@ public class BossDamageReceiver : DamageReceiver
         base.TakeDamage(
             damageInfo
         );
-
+        if (damageInfo.CameraShakeStrength > 0f)
+        {
+            CameraShake.Instance?.Shake(
+                damageInfo.CameraShakeDuration,
+                damageInfo.CameraShakeStrength
+            );
+        }
         hitFlash?.Flash();
         hitReaction?.Play(
             damageInfo.HitDirection,
