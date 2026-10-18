@@ -15,6 +15,7 @@ public enum TimingAdaptMode
     Early,
     Late
 }
+
 public class BossAdaptiveDecisionSource : MonoBehaviour
 {
     [Header("References")]
@@ -164,6 +165,82 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     private float followUpTimer;
 
     private bool hasFollowUpOpportunity;
+    // =====================================
+    // Adaptive Debug Read-Only Data
+    // =====================================
+
+    // BackDodge
+    public AdaptiveHabitType DebugBackDodgePolicy =>
+        backDodgePolicy;
+
+    public float DebugBackDodgeChaseScore =>
+        behaviorModel != null
+            ? behaviorModel.GetBackDodgeChaseHabitScore()
+            : 0f;
+
+    public float DebugBackDodgeLearnThreshold =>
+        chaseHabitThreshold;
+
+
+    // FrontStep
+    public AdaptiveHabitType DebugFrontStepPolicy =>
+        frontStepPolicy;
+
+    public float DebugFrontStepRetreatScore =>
+        behaviorModel != null
+            ? behaviorModel.GetFrontStepRetreatHabitScore()
+            : 0f;
+
+    public float DebugFrontStepAttackScore =>
+        behaviorModel != null
+            ? behaviorModel.GetFrontStepAttackHabitScore()
+            : 0f;
+
+    public float DebugFrontStepCounterScore =>
+        behaviorModel != null
+            ? behaviorModel.GetFrontStepCounterHabitScore()
+            : 0f;
+
+    public float DebugFrontStepRetreatThreshold =>
+        frontStepRetreatThreshold;
+
+    public float DebugFrontStepAttackThreshold =>
+        frontStepAttackThreshold;
+
+    public float DebugFrontStepCounterThreshold =>
+        frontStepCounterThreshold;
+
+
+    // Heavy
+    public bool DebugHeavyTimingActive =>
+        heavyTimingPolicyActive;
+
+    public TimingAdaptMode DebugHeavyTimingMode =>
+        heavyTimingMode;
+
+    public float DebugHeavyTimingScore =>
+        behaviorModel != null
+            ? behaviorModel.GetHeavyTimingHabitScore()
+            : 0f;
+
+    public float DebugHeavyTimingThreshold =>
+        heavyTimingHabitThreshold;
+
+
+    // Charge
+    public bool DebugChargeTimingActive =>
+        chargeTimingPolicyActive;
+
+    public TimingAdaptMode DebugChargeTimingMode =>
+        chargeTimingMode;
+
+    public float DebugChargeTimingScore =>
+        behaviorModel != null
+            ? behaviorModel.GetChargeTimingHabitScore()
+            : 0f;
+
+    public float DebugChargeTimingThreshold =>
+        chargeTimingHabitThreshold;
     private void Update()
     {
         if (!hasFollowUpOpportunity)
