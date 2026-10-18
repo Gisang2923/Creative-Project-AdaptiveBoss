@@ -12,6 +12,7 @@ public enum PlayerResponseType
     ChargeAttack,
     Heal
 }
+
 public enum ResponseDirection
 {
     None,
@@ -19,6 +20,7 @@ public enum ResponseDirection
     AwayFromBoss,
     Neutral
 }
+
 public enum CombatResultType
 {
     Pending,
@@ -27,6 +29,7 @@ public enum CombatResultType
     ParrySuccess,
     Completed
 }
+
 public enum BossBehaviorType
 {
     Attack,
@@ -34,6 +37,7 @@ public enum BossBehaviorType
     FrontStep,
     Parry
 }
+
 [System.Serializable]
 public class AttackResponseLog
 {
@@ -58,6 +62,11 @@ public class AttackResponseLog
 
     public float chargeCounterDelayFromPass;
     public bool hasChargeCounterTiming;
+
+    // 첫 Response와 별개로, 보스 행동 중 플레이어가 공격 입력을
+    // 한 번이라도 했는지 추적한다.
+    public bool playerAttackObserved;
+
     public AttackResponseLog(
         int sequenceId,
         BossAttackType bossAttack,
@@ -77,7 +86,9 @@ public class AttackResponseLog
         responseDelay = -1f;
         distanceAtResponse = -1f;
         distanceAfter = distanceBefore;
+        playerAttackObserved = false;
     }
+
     public AttackResponseLog(
         int sequenceId,
         BossBehaviorType bossBehavior,
@@ -97,6 +108,31 @@ public class AttackResponseLog
         responseDelay = -1f;
         distanceAtResponse = -1f;
         distanceAfter = distanceBefore;
+        playerAttackObserved = false;
+    }
+}
+
+[System.Serializable]
+public class PostPunishCommitLog
+{
+    public int sequenceId;
+    public BossAttackType sourceAttack;
+    public bool committed;
+    public float attackEndTime;
+    public float commitDelay;
+
+    public PostPunishCommitLog(
+        int sequenceId,
+        BossAttackType sourceAttack,
+        bool committed,
+        float attackEndTime,
+        float commitDelay)
+    {
+        this.sequenceId = sequenceId;
+        this.sourceAttack = sourceAttack;
+        this.committed = committed;
+        this.attackEndTime = attackEndTime;
+        this.commitDelay = commitDelay;
     }
 }
 
@@ -105,17 +141,34 @@ public class CombatLogger : MonoBehaviour
     [Header("References")]
     [SerializeField] private Transform player;
     [SerializeField] private Transform boss;
+
     [SerializeField]
     private PlayerBehaviorModel behaviorModel;
+
+    [Header("Post-Punish Commit")]
+    [SerializeField]
+    private float postPunishGraceTime = 0.2f;
+
+    [SerializeField]
+    private float postPunishCommitWindow = 0.6f;
+
     public static CombatLogger Instance { get; private set; }
 
     private readonly List<AttackResponseLog> logs = new();
+    private readonly List<PostPunishCommitLog> postPunishLogs = new();
 
     private AttackResponseLog currentLog;
     private bool responseRecorded;
     private int nextSequenceId = 0;
+    private int nextPostPunishSequenceId = 0;
+
+    private bool postPunishObservationActive;
+    private float postPunishObservationStartTime;
+    private BossAttackType postPunishSourceAttack;
 
     public IReadOnlyList<AttackResponseLog> Logs => logs;
+    public IReadOnlyList<PostPunishCommitLog> PostPunishLogs =>
+        postPunishLogs;
 
     private void Awake()
     {
@@ -126,6 +179,23 @@ public class CombatLogger : MonoBehaviour
         }
 
         Instance = this;
+    }
+
+    private void Update()
+    {
+        if (!postPunishObservationActive)
+            return;
+
+        float elapsed =
+            Time.time - postPunishObservationStartTime;
+
+        if (elapsed > postPunishCommitWindow)
+        {
+            CompletePostPunishObservation(
+                committed: false,
+                commitDelay: -1f
+            );
+        }
     }
 
     public void BeginBossAttack(
@@ -153,6 +223,7 @@ public class CombatLogger : MonoBehaviour
             $"{attackType} | Distance={distance:F2}"
         );
     }
+
     public void BeginBossBehavior(
         BossBehaviorType behaviorType,
         float distance)
@@ -160,7 +231,6 @@ public class CombatLogger : MonoBehaviour
         if (behaviorType == BossBehaviorType.Attack)
             return;
 
-        // 이전 행동 로그가 남아 있으면 먼저 종료
         if (currentLog != null)
         {
             EndCurrentBehavior(
@@ -175,8 +245,6 @@ public class CombatLogger : MonoBehaviour
             distance
         );
 
-        // 공간 행동 시작 시점의 플레이어 위치와
-        // 플레이어 기준 보스 방향 저장
         if (player != null && boss != null)
         {
             currentLog.playerXAtStart =
@@ -196,13 +264,26 @@ public class CombatLogger : MonoBehaviour
             $"{behaviorType} | Distance={distance:F2}"
         );
     }
+
     public void RecordPlayerResponse(
         PlayerResponseType response)
     {
-        // 현재 보스 공격이 없으면 기록하지 않음
+        // Post-Punish 관찰은 현재 Boss 로그가 없어도
+        // 플레이어 공격 입력을 받아야 한다.
+        TryRecordPostPunishCommit(response);
+
         if (currentLog == null)
             return;
+
+        // 첫 Response가 이미 기록되어 있어도
+        // 공격 입력 자체는 별도로 남긴다.
+        if (IsAttackResponse(response))
+        {
+            currentLog.playerAttackObserved = true;
+        }
+
         RecordChargeCounterTiming(response);
+
         // 공격 하나당 최초의 의미 있는 대응 하나만 기록
         if (responseRecorded)
             return;
@@ -232,6 +313,19 @@ public class CombatLogger : MonoBehaviour
             $"Delay={currentLog.responseDelay:F2}"
         );
     }
+
+    private bool IsAttackResponse(
+        PlayerResponseType response)
+    {
+        return
+            response ==
+                PlayerResponseType.NormalAttack ||
+            response ==
+                PlayerResponseType.ChargeAttack ||
+            response ==
+                PlayerResponseType.DashAttack;
+    }
+
     private float GetCurrentDistance()
     {
         if (player == null || boss == null)
@@ -241,6 +335,7 @@ public class CombatLogger : MonoBehaviour
             player.position.x - boss.position.x
         );
     }
+
     private ResponseDirection GetResponseDirection()
     {
         if (player == null || boss == null)
@@ -272,6 +367,7 @@ public class CombatLogger : MonoBehaviour
 
         return ResponseDirection.AwayFromBoss;
     }
+
     private void UpdateSpatialResponseFromMovement()
     {
         if (currentLog == null)
@@ -284,14 +380,13 @@ public class CombatLogger : MonoBehaviour
             player.position.x -
             currentLog.playerXAtStart;
 
-        // 거의 움직이지 않았다면 Neutral
         if (Mathf.Abs(playerDeltaX) < 0.1f)
         {
             currentLog.responseDirection =
                 ResponseDirection.Neutral;
 
             currentLog.distanceAtResponse =
-                currentLog.distanceBefore;
+                GetCurrentDistance();
 
             return;
         }
@@ -311,11 +406,12 @@ public class CombatLogger : MonoBehaviour
                 ResponseDirection.AwayFromBoss;
         }
 
-        // 별도의 액션 Response가 없었기 때문에
-        // 공간 분석 기준값으로 시작 거리를 사용
+        // Spatial 행동은 순간 속도보다 행동 전체의 순이동을
+        // 최종 방향 데이터로 사용한다.
         currentLog.distanceAtResponse =
-            currentLog.distanceBefore;
+            GetCurrentDistance();
     }
+
     public void RecordPlayerHit()
     {
         if (currentLog == null)
@@ -331,7 +427,10 @@ public class CombatLogger : MonoBehaviour
 
         currentLog.result = CombatResultType.ParrySuccess;
     }
-    public void EndBossAttack(float distanceAfter)
+
+    public void EndBossAttack(
+        float distanceAfter,
+        bool allowPostPunishObservation = true)
     {
         if (currentLog == null)
             return;
@@ -342,8 +441,23 @@ public class CombatLogger : MonoBehaviour
             return;
         }
 
+        bool shouldObservePostPunish =
+            allowPostPunishObservation &&
+            currentLog.playerAttackObserved;
+
+        BossAttackType sourceAttack =
+            currentLog.bossAttack;
+
         EndCurrentBehavior(distanceAfter);
+
+        if (shouldObservePostPunish)
+        {
+            BeginPostPunishObservation(
+                sourceAttack
+            );
+        }
     }
+
     public void EndBossBehavior(float distanceAfter)
     {
         if (currentLog == null)
@@ -357,31 +471,34 @@ public class CombatLogger : MonoBehaviour
 
         EndCurrentBehavior(distanceAfter);
     }
+
     private void EndCurrentBehavior(float distanceAfter)
     {
         if (currentLog == null)
             return;
 
         currentLog.distanceAfter = distanceAfter;
-        // FrontStep / BackDodge 같은 공간 행동에서
-// 별도 액션 입력이 없었던 경우에도 실제 위치 변화로 방향을 보정
-        if (currentLog.bossBehavior != BossBehaviorType.Attack &&
-            currentLog.playerResponse == PlayerResponseType.None)
+
+        // FrontStep / BackDodge는 액션 입력 유무와 상관없이
+        // 행동 전체의 실제 위치 변화로 방향을 확정한다.
+        if (currentLog.bossBehavior ==
+                BossBehaviorType.FrontStep ||
+            currentLog.bossBehavior ==
+                BossBehaviorType.BackDodge)
         {
             UpdateSpatialResponseFromMovement();
         }
+
         if (currentLog.result == CombatResultType.Pending)
         {
             if (currentLog.bossBehavior ==
                 BossBehaviorType.Attack)
             {
-                // 공격인데 맞지도, 패링되지도 않았다면 회피
                 currentLog.result =
                     CombatResultType.Avoided;
             }
             else
             {
-                // 이동/방어 행동은 단순 정상 종료
                 currentLog.result =
                     CombatResultType.Completed;
             }
@@ -425,6 +542,91 @@ public class CombatLogger : MonoBehaviour
         currentLog = null;
         responseRecorded = false;
     }
+
+    private void BeginPostPunishObservation(
+        BossAttackType sourceAttack)
+    {
+        if (postPunishObservationActive)
+        {
+            CompletePostPunishObservation(
+                committed: false,
+                commitDelay: -1f
+            );
+        }
+
+        postPunishObservationActive = true;
+        postPunishObservationStartTime =
+            Time.time;
+        postPunishSourceAttack = sourceAttack;
+
+        Debug.Log(
+            $"[Post-Punish Observe] START | " +
+            $"Source={sourceAttack}"
+        );
+    }
+
+    private void TryRecordPostPunishCommit(
+        PlayerResponseType response)
+    {
+        if (!postPunishObservationActive)
+            return;
+
+        if (!IsAttackResponse(response))
+            return;
+
+        float elapsed =
+            Time.time -
+            postPunishObservationStartTime;
+
+        // 기존 공격의 입력 버퍼나 자연스러운 연속 입력은
+        // Commit으로 보지 않는다.
+        if (elapsed < postPunishGraceTime)
+            return;
+
+        if (elapsed > postPunishCommitWindow)
+        {
+            CompletePostPunishObservation(
+                committed: false,
+                commitDelay: -1f
+            );
+            return;
+        }
+
+        CompletePostPunishObservation(
+            committed: true,
+            commitDelay: elapsed
+        );
+    }
+
+    private void CompletePostPunishObservation(
+        bool committed,
+        float commitDelay)
+    {
+        if (!postPunishObservationActive)
+            return;
+
+        PostPunishCommitLog log =
+            new PostPunishCommitLog(
+                nextPostPunishSequenceId++,
+                postPunishSourceAttack,
+                committed,
+                postPunishObservationStartTime,
+                commitDelay
+            );
+
+        postPunishLogs.Add(log);
+
+        Debug.Log(
+            $"[Post-Punish #{log.sequenceId}] " +
+            $"Source={log.sourceAttack} | " +
+            $"Commit={log.committed} | " +
+            $"Delay={log.commitDelay:F2}"
+        );
+
+        postPunishObservationActive = false;
+        postPunishObservationStartTime = 0f;
+    }
+
     private void RecordChargeCounterTiming(
         PlayerResponseType response)
     {
@@ -445,13 +647,9 @@ public class CombatLogger : MonoBehaviour
             return;
         }
 
-        // Counter를 여러 번 시도할 수도 있으므로
-        // 가장 최근 입력 시점을 유지
         currentLog.chargeCounterInputTime =
             Time.time;
 
-        // 이미 Dash를 통과한 뒤라면
-        // 즉시 Dash 종료 기준 Delay 계산
         if (currentLog.chargePassEndTime >= 0f)
         {
             currentLog.chargeCounterDelayFromPass =
@@ -467,6 +665,7 @@ public class CombatLogger : MonoBehaviour
             );
         }
     }
+
     public void MarkChargePassEnd()
     {
         if (currentLog == null)
@@ -483,8 +682,6 @@ public class CombatLogger : MonoBehaviour
         currentLog.chargePassEndTime =
             Time.time;
 
-        // Dash가 끝나기 전에 Counter를 눌렀다면
-        // 음수 Delay도 정상적인 데이터
         if (currentLog.chargeCounterInputTime >= 0f)
         {
             currentLog.chargeCounterDelayFromPass =

@@ -3,7 +3,8 @@ using UnityEngine;
 
 public class BossAttackSelector : MonoBehaviour
 {
-    [SerializeField] private BossAttack[] attacks;
+    [SerializeField]
+    private BossAttack[] attacks;
 
     [Header("Adaptive")]
     [SerializeField]
@@ -20,11 +21,14 @@ public class BossAttackSelector : MonoBehaviour
             return;
 
         List<BossAttack> keys =
-            new List<BossAttack>(cooldowns.Keys);
+            new List<BossAttack>(
+                cooldowns.Keys
+            );
 
         foreach (BossAttack attack in keys)
         {
-            cooldowns[attack] -= Time.deltaTime;
+            cooldowns[attack] -=
+                Time.deltaTime;
 
             if (cooldowns[attack] <= 0f)
             {
@@ -33,18 +37,69 @@ public class BossAttackSelector : MonoBehaviour
         }
     }
 
-    public bool HasValidAttack(float distance)
+    public bool HasValidAttack(
+        float distance)
     {
-        foreach (BossAttack attack in attacks)
+        foreach (BossAttack attack
+                 in attacks)
         {
-            if (CanUseAttack(attack, distance))
+            if (CanUseAttack(
+                    attack,
+                    distance))
+            {
                 return true;
+            }
         }
 
         return false;
     }
 
-    public BossAttack SelectAttack(float distance)
+    public bool CanUseAttackType(
+        BossAttackType attackType,
+        float distance)
+    {
+        foreach (BossAttack attack
+                 in attacks)
+        {
+            if (attack.attackType !=
+                attackType)
+            {
+                continue;
+            }
+
+            if (CanUseAttack(
+                    attack,
+                    distance))
+            {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    public BossAttack SelectAttack(
+        float distance)
+    {
+        return SelectAttackInternal(
+            distance,
+            null
+        );
+    }
+
+    public BossAttack SelectAttackType(
+        BossAttackType attackType,
+        float distance)
+    {
+        return SelectAttackInternal(
+            distance,
+            attackType
+        );
+    }
+
+    private BossAttack SelectAttackInternal(
+        float distance,
+        BossAttackType? requiredType)
     {
         List<BossAttack> candidates =
             new List<BossAttack>();
@@ -54,10 +109,22 @@ public class BossAttackSelector : MonoBehaviour
 
         float totalWeight = 0f;
 
-        foreach (BossAttack attack in attacks)
+        foreach (BossAttack attack
+                 in attacks)
         {
-            if (!CanUseAttack(attack, distance))
+            if (requiredType.HasValue &&
+                attack.attackType !=
+                    requiredType.Value)
+            {
                 continue;
+            }
+
+            if (!CanUseAttack(
+                    attack,
+                    distance))
+            {
+                continue;
+            }
 
             float weight =
                 CalculateAttackWeight(
@@ -78,13 +145,19 @@ public class BossAttackSelector : MonoBehaviour
             return null;
 
         float random =
-            Random.Range(0f, totalWeight);
+            Random.Range(
+                0f,
+                totalWeight
+            );
 
         float accumulated = 0f;
 
-        for (int i = 0; i < candidates.Count; i++)
+        for (int i = 0;
+             i < candidates.Count;
+             i++)
         {
-            accumulated += weights[i];
+            accumulated +=
+                weights[i];
 
             if (random <= accumulated)
             {
@@ -98,7 +171,9 @@ public class BossAttackSelector : MonoBehaviour
         }
 
         BossAttack fallback =
-            candidates[candidates.Count - 1];
+            candidates[
+                candidates.Count - 1
+            ];
 
         RegisterAttack(fallback);
 
@@ -119,13 +194,18 @@ public class BossAttackSelector : MonoBehaviour
             attack.retreatWeight;
 
         float total =
-            hold + approach + retreat;
+            hold +
+            approach +
+            retreat;
 
         if (total <= 0f)
             return BossPostAction.Hold;
 
         float random =
-            Random.Range(0f, total);
+            Random.Range(
+                0f,
+                total
+            );
 
         if (random < hold)
             return BossPostAction.Hold;
@@ -145,35 +225,45 @@ public class BossAttackSelector : MonoBehaviour
         float weight =
             attack.baseWeight;
 
-        // 같은 공격 연속 사용 억제
-        if (attack == lastAttack)
+        if (attack ==
+            lastAttack)
         {
             weight *=
                 attack.repeatWeightMultiplier;
         }
 
-        // Adaptive는 지금 1.0
         if (adaptiveSource != null)
         {
             weight *=
-                adaptiveSource.GetAttackWeightMultiplier(
-                    attack,
-                    distance
-                );
+                adaptiveSource
+                    .GetAttackWeightMultiplier(
+                        attack,
+                        distance
+                    );
         }
 
-        return Mathf.Max(0f, weight);
+        return Mathf.Max(
+            0f,
+            weight
+        );
     }
 
     private bool CanUseAttack(
         BossAttack attack,
         float distance)
     {
-        if (!IsInRange(attack, distance))
+        if (!IsInRange(
+                attack,
+                distance))
+        {
             return false;
+        }
 
-        if (cooldowns.ContainsKey(attack))
+        if (cooldowns.ContainsKey(
+                attack))
+        {
             return false;
+        }
 
         return true;
     }
@@ -190,7 +280,8 @@ public class BossAttackSelector : MonoBehaviour
         }
 
         Debug.Log(
-            $"Boss Attack → {attack.attackType}"
+            $"Boss Attack → " +
+            $"{attack.attackType}"
         );
     }
 
@@ -198,7 +289,10 @@ public class BossAttackSelector : MonoBehaviour
         BossAttack attack,
         float distance)
     {
-        return distance >= attack.minRange &&
-               distance <= attack.maxRange;
+        return
+            distance >=
+                attack.minRange &&
+            distance <=
+                attack.maxRange;
     }
 }

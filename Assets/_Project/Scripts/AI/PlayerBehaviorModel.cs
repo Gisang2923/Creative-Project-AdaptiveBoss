@@ -43,29 +43,11 @@ public class PlayerBehaviorModel : MonoBehaviour
                 response
             );
 
-        if (attackCount < minAttackSamples)
+        if (attackCount < minAttackSamples ||
+            responseCount < minResponseSamples)
+        {
             return 0f;
-
-        if (responseCount < minResponseSamples)
-            return 0f;
-
-        float usage =
-            GetUsageRate(
-                bossAttack,
-                response
-            );
-
-        float success =
-            GetSuccessRate(
-                bossAttack,
-                response
-            );
-
-        float recency =
-            GetRecencyScore(
-                bossAttack,
-                response
-            );
+        }
 
         float totalWeight =
             usageWeight +
@@ -77,11 +59,19 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         float score =
             (
-                usage * usageWeight +
-                success * successWeight +
-                recency * recencyWeight
-            )
-            / totalWeight;
+                GetUsageRate(
+                    bossAttack,
+                    response
+                ) * usageWeight +
+                GetSuccessRate(
+                    bossAttack,
+                    response
+                ) * successWeight +
+                GetRecencyScore(
+                    bossAttack,
+                    response
+                ) * recencyWeight
+            ) / totalWeight;
 
         return Mathf.Clamp01(score);
     }
@@ -109,29 +99,11 @@ public class PlayerBehaviorModel : MonoBehaviour
                 response
             );
 
-        if (behaviorCount < minAttackSamples)
+        if (behaviorCount < minAttackSamples ||
+            responseCount < minResponseSamples)
+        {
             return 0f;
-
-        if (responseCount < minResponseSamples)
-            return 0f;
-
-        float usage =
-            GetBehaviorUsageRate(
-                bossBehavior,
-                response
-            );
-
-        float success =
-            GetBehaviorSuccessRate(
-                bossBehavior,
-                response
-            );
-
-        float recency =
-            GetBehaviorRecencyScore(
-                bossBehavior,
-                response
-            );
+        }
 
         float totalWeight =
             usageWeight +
@@ -143,14 +115,23 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         float score =
             (
-                usage * usageWeight +
-                success * successWeight +
-                recency * recencyWeight
-            )
-            / totalWeight;
+                GetBehaviorUsageRate(
+                    bossBehavior,
+                    response
+                ) * usageWeight +
+                GetBehaviorSuccessRate(
+                    bossBehavior,
+                    response
+                ) * successWeight +
+                GetBehaviorRecencyScore(
+                    bossBehavior,
+                    response
+                ) * recencyWeight
+            ) / totalWeight;
 
         return Mathf.Clamp01(score);
     }
+
     public float GetBehaviorUsageRate(
         BossBehaviorType bossBehavior,
         PlayerResponseType response)
@@ -180,6 +161,7 @@ public class PlayerBehaviorModel : MonoBehaviour
         return (float)responseCount /
             behaviorCount;
     }
+
     public float GetBehaviorSuccessRate(
         BossBehaviorType bossBehavior,
         PlayerResponseType response)
@@ -195,11 +177,11 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         foreach (AttackResponseLog log in logs)
         {
-            if (log.bossBehavior != bossBehavior)
+            if (log.bossBehavior != bossBehavior ||
+                log.playerResponse != response)
+            {
                 continue;
-
-            if (log.playerResponse != response)
-                continue;
+            }
 
             responseCount++;
 
@@ -216,6 +198,7 @@ public class PlayerBehaviorModel : MonoBehaviour
         return (float)successCount /
             responseCount;
     }
+
     public float GetUsageRate(
         BossAttackType bossAttack,
         PlayerResponseType response)
@@ -227,7 +210,10 @@ public class PlayerBehaviorModel : MonoBehaviour
             return 0f;
 
         int attackCount =
-            GetAttackCount(logs, bossAttack);
+            GetAttackCount(
+                logs,
+                bossAttack
+            );
 
         if (attackCount == 0)
             return 0f;
@@ -240,7 +226,7 @@ public class PlayerBehaviorModel : MonoBehaviour
             );
 
         return (float)responseCount /
-               attackCount;
+            attackCount;
     }
 
     public float GetSuccessRate(
@@ -259,15 +245,14 @@ public class PlayerBehaviorModel : MonoBehaviour
         foreach (AttackResponseLog log in logs)
         {
             if (log.bossBehavior !=
-                BossBehaviorType.Attack)
+                    BossBehaviorType.Attack ||
+                log.bossAttack !=
+                    bossAttack ||
+                log.playerResponse !=
+                    response)
             {
                 continue;
             }
-            if (log.bossAttack != bossAttack)
-                continue;
-
-            if (log.playerResponse != response)
-                continue;
 
             responseCount++;
 
@@ -279,7 +264,7 @@ public class PlayerBehaviorModel : MonoBehaviour
             return 0f;
 
         return (float)successCount /
-               responseCount;
+            responseCount;
     }
 
     public float GetRecencyScore(
@@ -300,17 +285,63 @@ public class PlayerBehaviorModel : MonoBehaviour
              recent.Count < recencyWindow;
              i--)
         {
-            if (logs[i].bossBehavior ==
+            AttackResponseLog log = logs[i];
+
+            if (log.bossBehavior ==
                     BossBehaviorType.Attack &&
-                logs[i].bossAttack ==
+                log.bossAttack ==
                     bossAttack)
+            {
+                recent.Add(log);
+            }
+        }
+
+        return GetWeightedResponseRecency(
+            recent,
+            response
+        );
+    }
+
+    public float GetBehaviorRecencyScore(
+        BossBehaviorType bossBehavior,
+        PlayerResponseType response)
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null || logs.Count == 0)
+            return 0f;
+
+        List<AttackResponseLog> recent =
+            new List<AttackResponseLog>();
+
+        for (int i = logs.Count - 1;
+             i >= 0 &&
+             recent.Count < recencyWindow;
+             i--)
+        {
+            if (logs[i].bossBehavior ==
+                bossBehavior)
             {
                 recent.Add(logs[i]);
             }
         }
 
-        if (recent.Count == 0)
+        return GetWeightedResponseRecency(
+            recent,
+            response
+        );
+    }
+
+    private float GetWeightedResponseRecency(
+        List<AttackResponseLog> recent,
+        PlayerResponseType response)
+    {
+        if (recent == null ||
+            recent.Count == 0)
+        {
             return 0f;
+        }
 
         float matchedWeight = 0f;
         float totalWeight = 0f;
@@ -335,62 +366,9 @@ public class PlayerBehaviorModel : MonoBehaviour
             return 0f;
 
         return matchedWeight /
-               totalWeight;
-    }
-
-    public float GetBehaviorRecencyScore(
-        BossBehaviorType bossBehavior,
-        PlayerResponseType response)
-    {
-        IReadOnlyList<AttackResponseLog> logs =
-            CombatLogger.Instance?.Logs;
-
-        if (logs == null || logs.Count == 0)
-            return 0f;
-
-        List<AttackResponseLog> recent =
-            new List<AttackResponseLog>();
-
-        for (int i = logs.Count - 1;
-            i >= 0 &&
-            recent.Count < recencyWindow;
-            i--)
-        {
-            if (logs[i].bossBehavior ==
-                bossBehavior)
-            {
-                recent.Add(logs[i]);
-            }
-        }
-
-        if (recent.Count == 0)
-            return 0f;
-
-        float matchedWeight = 0f;
-        float totalWeight = 0f;
-
-        for (int i = 0;
-            i < recent.Count;
-            i++)
-        {
-            float weight =
-                recent.Count - i;
-
-            totalWeight += weight;
-
-            if (recent[i].playerResponse ==
-                response)
-            {
-                matchedWeight += weight;
-            }
-        }
-
-        if (totalWeight <= 0f)
-            return 0f;
-
-        return matchedWeight /
             totalWeight;
     }
+
     public PlayerResponseType GetDominantResponse(
         BossAttackType bossAttack)
     {
@@ -405,7 +383,9 @@ public class PlayerBehaviorModel : MonoBehaviour
         {
             if (response ==
                 PlayerResponseType.None)
+            {
                 continue;
+            }
 
             float score =
                 GetHabitScore(
@@ -422,6 +402,7 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         return best;
     }
+
     public PlayerResponseType GetDominantBehaviorResponse(
         BossBehaviorType bossBehavior)
     {
@@ -431,8 +412,8 @@ public class PlayerBehaviorModel : MonoBehaviour
         float bestScore = 0f;
 
         foreach (PlayerResponseType response
-                in System.Enum.GetValues(
-                    typeof(PlayerResponseType)))
+                 in System.Enum.GetValues(
+                     typeof(PlayerResponseType)))
         {
             if (response ==
                 PlayerResponseType.None)
@@ -455,6 +436,7 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         return best;
     }
+
     public float GetRetreatHabitScore()
     {
         IReadOnlyList<AttackResponseLog> logs =
@@ -466,20 +448,24 @@ public class PlayerBehaviorModel : MonoBehaviour
         int checkedCount = 0;
         int retreatCount = 0;
 
-        // 최근 로그부터 확인
         for (int i = logs.Count - 1;
-            i >= 0 && checkedCount < spatialWindow;
-            i--)
+             i >= 0 &&
+             checkedCount < spatialWindow;
+             i--)
         {
             AttackResponseLog log = logs[i];
+
             if (log.bossBehavior !=
-                    BossBehaviorType.Attack)
-                {
-                    continue;
-                }
-            // 아무 대응도 없었던 경우는 공간 습관 분석에서 제외
-            if (log.playerResponse == PlayerResponseType.None)
+                BossBehaviorType.Attack)
+            {
                 continue;
+            }
+
+            if (log.playerResponse ==
+                PlayerResponseType.None)
+            {
+                continue;
+            }
 
             checkedCount++;
 
@@ -498,12 +484,16 @@ public class PlayerBehaviorModel : MonoBehaviour
             }
         }
 
-        if (checkedCount < minSpatialSamples)
+        if (checkedCount <
+            minSpatialSamples)
+        {
             return 0f;
+        }
 
         return (float)retreatCount /
             checkedCount;
     }
+
     public float GetFrontStepRetreatHabitScore()
     {
         IReadOnlyList<AttackResponseLog> logs =
@@ -515,10 +505,10 @@ public class PlayerBehaviorModel : MonoBehaviour
         int checkedCount = 0;
         int retreatCount = 0;
 
-        // 최근 FrontStep 로그부터 확인
         for (int i = logs.Count - 1;
-            i >= 0 && checkedCount < spatialWindow;
-            i--)
+             i >= 0 &&
+             checkedCount < spatialWindow;
+             i--)
         {
             AttackResponseLog log = logs[i];
 
@@ -528,26 +518,25 @@ public class PlayerBehaviorModel : MonoBehaviour
                 continue;
             }
 
-            // FrontStep이 발생했다면 하나의 관찰 샘플로 계산
             checkedCount++;
 
-            bool movedAway =
-                log.responseDirection ==
-                ResponseDirection.AwayFromBoss;
-
-            if (movedAway)
+            if (log.responseDirection ==
+                ResponseDirection.AwayFromBoss)
             {
                 retreatCount++;
             }
-           
         }
 
-        if (checkedCount < minSpatialSamples)
+        if (checkedCount <
+            minSpatialSamples)
+        {
             return 0f;
+        }
 
         return (float)retreatCount /
             checkedCount;
     }
+
     public float GetBackDodgeChaseHabitScore()
     {
         IReadOnlyList<AttackResponseLog> logs =
@@ -560,8 +549,9 @@ public class PlayerBehaviorModel : MonoBehaviour
         int chaseCount = 0;
 
         for (int i = logs.Count - 1;
-            i >= 0 && checkedCount < spatialWindow;
-            i--)
+             i >= 0 &&
+             checkedCount < spatialWindow;
+             i--)
         {
             AttackResponseLog log = logs[i];
 
@@ -573,22 +563,78 @@ public class PlayerBehaviorModel : MonoBehaviour
 
             checkedCount++;
 
-            bool movedToward =
-                log.responseDirection ==
-                ResponseDirection.TowardBoss;
-
-            if (movedToward)
+            if (log.responseDirection ==
+                ResponseDirection.TowardBoss)
             {
                 chaseCount++;
             }
         }
 
-        if (checkedCount < minSpatialSamples)
+        if (checkedCount <
+            minSpatialSamples)
+        {
             return 0f;
+        }
 
         return (float)chaseCount /
             checkedCount;
     }
+
+    public float GetBackDodgeChaseCommitHabitScore()
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null || logs.Count == 0)
+            return 0f;
+
+        int checkedBackDodgeCount = 0;
+        int chaseCount = 0;
+        int commitCount = 0;
+
+        // 최근 BackDodge 6회 안에서
+        // Chase가 발생한 경우만 Commit의 분모로 사용한다.
+        for (int i = logs.Count - 1;
+             i >= 0 &&
+             checkedBackDodgeCount < spatialWindow;
+             i--)
+        {
+            AttackResponseLog log = logs[i];
+
+            if (log.bossBehavior !=
+                BossBehaviorType.BackDodge)
+            {
+                continue;
+            }
+
+            checkedBackDodgeCount++;
+
+            if (log.responseDirection !=
+                ResponseDirection.TowardBoss)
+            {
+                continue;
+            }
+
+            chaseCount++;
+
+            if (log.playerAttackObserved ||
+                IsAttackResponse(
+                    log.playerResponse))
+            {
+                commitCount++;
+            }
+        }
+
+        if (chaseCount <
+            minSpatialSamples)
+        {
+            return 0f;
+        }
+
+        return (float)commitCount /
+            chaseCount;
+    }
+
     public float GetFrontStepAttackHabitScore()
     {
         IReadOnlyList<AttackResponseLog> logs =
@@ -601,8 +647,9 @@ public class PlayerBehaviorModel : MonoBehaviour
         int attackCount = 0;
 
         for (int i = logs.Count - 1;
-            i >= 0 && checkedCount < spatialWindow;
-            i--)
+             i >= 0 &&
+             checkedCount < spatialWindow;
+             i--)
         {
             AttackResponseLog log = logs[i];
 
@@ -614,24 +661,24 @@ public class PlayerBehaviorModel : MonoBehaviour
 
             checkedCount++;
 
-            bool attacked =
-                log.playerResponse ==
-                    PlayerResponseType.NormalAttack ||
-                log.playerResponse ==
-                    PlayerResponseType.ChargeAttack ||
-                log.playerResponse ==
-                    PlayerResponseType.DashAttack;
-
-            if (attacked)
+            if (log.playerAttackObserved ||
+                IsAttackResponse(
+                    log.playerResponse))
+            {
                 attackCount++;
+            }
         }
 
-        if (checkedCount < minSpatialSamples)
+        if (checkedCount <
+            minSpatialSamples)
+        {
             return 0f;
+        }
 
         return (float)attackCount /
             checkedCount;
     }
+
     public float GetFrontStepCounterHabitScore()
     {
         IReadOnlyList<AttackResponseLog> logs =
@@ -644,8 +691,9 @@ public class PlayerBehaviorModel : MonoBehaviour
         int counterCount = 0;
 
         for (int i = logs.Count - 1;
-            i >= 0 && checkedCount < spatialWindow;
-            i--)
+             i >= 0 &&
+             checkedCount < spatialWindow;
+             i--)
         {
             AttackResponseLog log = logs[i];
 
@@ -664,12 +712,50 @@ public class PlayerBehaviorModel : MonoBehaviour
             }
         }
 
-        if (checkedCount < minSpatialSamples)
+        if (checkedCount <
+            minSpatialSamples)
+        {
             return 0f;
+        }
 
         return (float)counterCount /
             checkedCount;
     }
+
+    public float GetPostPunishCommitHabitScore()
+    {
+        IReadOnlyList<PostPunishCommitLog> logs =
+            CombatLogger.Instance?.PostPunishLogs;
+
+        if (logs == null || logs.Count == 0)
+            return 0f;
+
+        int checkedCount = 0;
+        int commitCount = 0;
+
+        for (int i = logs.Count - 1;
+             i >= 0 &&
+             checkedCount < spatialWindow;
+             i--)
+        {
+            checkedCount++;
+
+            if (logs[i].committed)
+            {
+                commitCount++;
+            }
+        }
+
+        if (checkedCount <
+            minSpatialSamples)
+        {
+            return 0f;
+        }
+
+        return (float)commitCount /
+            checkedCount;
+    }
+
     public float GetHeavyTimingHabitScore()
     {
         IReadOnlyList<AttackResponseLog> logs =
@@ -682,8 +768,9 @@ public class PlayerBehaviorModel : MonoBehaviour
         int successCount = 0;
 
         for (int i = logs.Count - 1;
-            i >= 0 && checkedCount < 5;
-            i--)
+             i >= 0 &&
+             checkedCount < 5;
+             i--)
         {
             AttackResponseLog log = logs[i];
 
@@ -712,6 +799,7 @@ public class PlayerBehaviorModel : MonoBehaviour
         return (float)successCount /
             checkedCount;
     }
+
     public bool TryGetHeavyCounterDelay(
         out float medianDelay)
     {
@@ -729,8 +817,9 @@ public class PlayerBehaviorModel : MonoBehaviour
         int checkedCount = 0;
 
         for (int i = logs.Count - 1;
-            i >= 0 && checkedCount < 5;
-            i--)
+             i >= 0 &&
+             checkedCount < 5;
+             i--)
         {
             AttackResponseLog log = logs[i];
 
@@ -758,30 +847,139 @@ public class PlayerBehaviorModel : MonoBehaviour
             );
         }
 
-        if (delays.Count < 2)
+        return TryGetMedian(
+            delays,
+            out medianDelay
+        );
+    }
+
+    public float GetChargeTimingHabitScore()
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null || logs.Count == 0)
+            return 0f;
+
+        int checkedCount = 0;
+        int successCount = 0;
+
+        for (int i = logs.Count - 1;
+             i >= 0 &&
+             checkedCount < 5;
+             i--)
+        {
+            AttackResponseLog log = logs[i];
+
+            if (log.bossBehavior !=
+                    BossBehaviorType.Attack ||
+                log.bossAttack !=
+                    BossAttackType.ChargeSlash)
+            {
+                continue;
+            }
+
+            checkedCount++;
+
+            if (log.result ==
+                CombatResultType.ParrySuccess)
+            {
+                successCount++;
+            }
+        }
+
+        if (checkedCount < 3)
+            return 0f;
+
+        return (float)successCount /
+            checkedCount;
+    }
+
+    public bool TryGetChargeCounterDelayFromPass(
+        out float medianDelay)
+    {
+        medianDelay = 0f;
+
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null || logs.Count == 0)
             return false;
 
-        delays.Sort();
+        List<float> delays =
+            new List<float>();
+
+        int checkedCount = 0;
+
+        for (int i = logs.Count - 1;
+             i >= 0 &&
+             checkedCount < 5;
+             i--)
+        {
+            AttackResponseLog log = logs[i];
+
+            if (log.bossBehavior !=
+                    BossBehaviorType.Attack ||
+                log.bossAttack !=
+                    BossAttackType.ChargeSlash)
+            {
+                continue;
+            }
+
+            checkedCount++;
+
+            if (log.result !=
+                    CombatResultType.ParrySuccess ||
+                !log.hasChargeCounterTiming)
+            {
+                continue;
+            }
+
+            delays.Add(
+                log.chargeCounterDelayFromPass
+            );
+        }
+
+        return TryGetMedian(
+            delays,
+            out medianDelay
+        );
+    }
+
+    private bool TryGetMedian(
+        List<float> values,
+        out float median)
+    {
+        median = 0f;
+
+        if (values == null ||
+            values.Count < 2)
+        {
+            return false;
+        }
+
+        values.Sort();
 
         int middle =
-            delays.Count / 2;
+            values.Count / 2;
 
-        if (delays.Count % 2 == 1)
+        if (values.Count % 2 == 1)
         {
-            medianDelay =
-                delays[middle];
+            median =
+                values[middle];
         }
         else
         {
-            medianDelay =
+            median =
                 (
-                    delays[middle - 1] +
-                    delays[middle]
+                    values[middle - 1] +
+                    values[middle]
                 ) * 0.5f;
         }
 
         return true;
     }
+
     public void PrintSummary(
         BossAttackType bossAttack)
     {
@@ -795,7 +993,9 @@ public class PlayerBehaviorModel : MonoBehaviour
         {
             if (response ==
                 PlayerResponseType.None)
+            {
                 continue;
+            }
 
             float habit =
                 GetHabitScore(
@@ -820,6 +1020,7 @@ public class PlayerBehaviorModel : MonoBehaviour
             $"{GetDominantResponse(bossAttack)}"
         );
     }
+
     public void PrintBehaviorSummary(
         BossBehaviorType bossBehavior)
     {
@@ -828,8 +1029,8 @@ public class PlayerBehaviorModel : MonoBehaviour
         );
 
         foreach (PlayerResponseType response
-                in System.Enum.GetValues(
-                    typeof(PlayerResponseType)))
+                 in System.Enum.GetValues(
+                     typeof(PlayerResponseType)))
         {
             if (response ==
                 PlayerResponseType.None)
@@ -859,131 +1060,53 @@ public class PlayerBehaviorModel : MonoBehaviour
             $"Dominant → " +
             $"{GetDominantBehaviorResponse(bossBehavior)}"
         );
-        if (bossBehavior == BossBehaviorType.FrontStep)
+
+        if (bossBehavior ==
+            BossBehaviorType.FrontStep)
         {
             Debug.Log(
                 $"FrontStep Retreat Habit = " +
                 $"{GetFrontStepRetreatHabitScore():F2}"
             );
+
+            Debug.Log(
+                $"FrontStep Attack Habit = " +
+                $"{GetFrontStepAttackHabitScore():F2}"
+            );
+
+            Debug.Log(
+                $"FrontStep Counter Habit = " +
+                $"{GetFrontStepCounterHabitScore():F2}"
+            );
         }
-        if (bossBehavior == BossBehaviorType.BackDodge)
+
+        if (bossBehavior ==
+            BossBehaviorType.BackDodge)
         {
             Debug.Log(
                 $"BackDodge Chase Habit = " +
                 $"{GetBackDodgeChaseHabitScore():F2}"
             );
-        }
-    }
 
-    public float GetChargeTimingHabitScore()
-    {
-        IReadOnlyList<AttackResponseLog> logs =
-            CombatLogger.Instance?.Logs;
-
-        if (logs == null || logs.Count == 0)
-            return 0f;
-
-        int checkedCount = 0;
-        int successCount = 0;
-
-        for (int i = logs.Count - 1;
-            i >= 0 && checkedCount < 5;
-            i--)
-        {
-            AttackResponseLog log = logs[i];
-
-            if (log.bossBehavior !=
-                    BossBehaviorType.Attack ||
-                log.bossAttack !=
-                    BossAttackType.ChargeSlash)
-            {
-                continue;
-            }
-
-            checkedCount++;
-
-            // 적응 여부는 오직 성공 여부
-            if (log.result ==
-                CombatResultType.ParrySuccess)
-            {
-                successCount++;
-            }
-        }
-
-        if (checkedCount < 3)
-            return 0f;
-
-        return (float)successCount /
-            checkedCount;
-    }
-    public bool TryGetChargeCounterDelayFromPass(
-        out float medianDelay)
-    {
-        medianDelay = 0f;
-
-        IReadOnlyList<AttackResponseLog> logs =
-            CombatLogger.Instance?.Logs;
-
-        if (logs == null || logs.Count == 0)
-            return false;
-
-        List<float> delays =
-            new List<float>();
-
-        int checkedCount = 0;
-
-        for (int i = logs.Count - 1;
-            i >= 0 && checkedCount < 5;
-            i--)
-        {
-            AttackResponseLog log = logs[i];
-
-            if (log.bossBehavior !=
-                    BossBehaviorType.Attack ||
-                log.bossAttack !=
-                    BossAttackType.ChargeSlash)
-            {
-                continue;
-            }
-
-            checkedCount++;
-
-            if (log.result !=
-                    CombatResultType.ParrySuccess ||
-                !log.hasChargeCounterTiming)
-            {
-                continue;
-            }
-
-            delays.Add(
-                log.chargeCounterDelayFromPass
+            Debug.Log(
+                $"BackDodge Chase Commit Habit = " +
+                $"{GetBackDodgeChaseCommitHabitScore():F2}"
             );
         }
-
-        if (delays.Count < 2)
-            return false;
-
-        delays.Sort();
-
-        int middle =
-            delays.Count / 2;
-
-        if (delays.Count % 2 == 1)
-        {
-            medianDelay =
-                delays[middle];
-        }
-        else
-        {
-            medianDelay =
-                (
-                    delays[middle - 1] +
-                    delays[middle]
-                ) * 0.5f;
-        }
-
-        return true;
     }
+
+    private bool IsAttackResponse(
+        PlayerResponseType response)
+    {
+        return
+            response ==
+                PlayerResponseType.NormalAttack ||
+            response ==
+                PlayerResponseType.ChargeAttack ||
+            response ==
+                PlayerResponseType.DashAttack;
+    }
+
     private int GetAttackCount(
         IReadOnlyList<AttackResponseLog> logs,
         BossAttackType bossAttack)
@@ -1026,6 +1149,7 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         return count;
     }
+
     private int GetBehaviorCount(
         IReadOnlyList<AttackResponseLog> logs,
         BossBehaviorType bossBehavior)
@@ -1043,6 +1167,7 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         return count;
     }
+
     private int GetBehaviorResponseCount(
         IReadOnlyList<AttackResponseLog> logs,
         BossBehaviorType bossBehavior,
@@ -1063,17 +1188,18 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         return count;
     }
-        private bool WasSuccessful(
+
+    private bool WasSuccessful(
         AttackResponseLog log)
     {
         if (log.playerResponse ==
             PlayerResponseType.Counter)
         {
             return log.result ==
-                   CombatResultType.ParrySuccess;
+                CombatResultType.ParrySuccess;
         }
 
         return log.result ==
-               CombatResultType.Avoided;
+            CombatResultType.Avoided;
     }
 }

@@ -15,7 +15,19 @@ public class AdaptiveDebugUI : MonoBehaviour
     [SerializeField]
     private float refreshInterval = 0.1f;
 
+    [SerializeField]
+    private float currentResponseDisplayDuration = 2f;
+
     private float refreshTimer;
+
+    private int lastObservedResponseSerial = -1;
+    private float currentResponseTimer;
+
+    private AdaptiveHabitType currentResponseHabit =
+        AdaptiveHabitType.None;
+
+    private AdaptiveResponseAction currentResponseAction =
+        AdaptiveResponseAction.None;
 
     private void Update()
     {
@@ -25,20 +37,68 @@ public class AdaptiveDebugUI : MonoBehaviour
             return;
         }
 
-        refreshTimer -= Time.unscaledDeltaTime;
+        // =====================================
+        // CURRENT RESPONSE EVENT 감지
+        // =====================================
+
+        int responseSerial =
+            adaptiveSource.DebugAdaptiveResponseSerial;
+
+        if (responseSerial !=
+            lastObservedResponseSerial)
+        {
+            lastObservedResponseSerial =
+                responseSerial;
+
+            // 0은 아직 실제 Adaptive Response가
+            // 한 번도 발생하지 않은 초기 상태.
+            if (responseSerial > 0)
+            {
+                currentResponseHabit =
+                    adaptiveSource
+                        .DebugLastAdaptiveResponseHabit;
+
+                currentResponseAction =
+                    adaptiveSource
+                        .DebugLastAdaptiveResponse;
+
+                currentResponseTimer =
+                    currentResponseDisplayDuration;
+            }
+        }
+
+        if (currentResponseTimer > 0f)
+        {
+            currentResponseTimer -=
+                Time.unscaledDeltaTime;
+        }
+
+        // =====================================
+        // UI Refresh
+        // =====================================
+
+        refreshTimer -=
+            Time.unscaledDeltaTime;
 
         if (refreshTimer > 0f)
             return;
 
-        refreshTimer = refreshInterval;
+        refreshTimer =
+            refreshInterval;
 
         Refresh();
     }
 
     private void Refresh()
     {
-        StringBuilder sb = new StringBuilder();
+        StringBuilder sb =
+            new StringBuilder();
 
+        sb.AppendLine(
+            "<b>ADAPTIVE AI</b>"
+        );
+
+        sb.AppendLine();
 
         // =====================================
         // BACK DODGE
@@ -48,26 +108,28 @@ public class AdaptiveDebugUI : MonoBehaviour
             adaptiveSource
                 .DebugBackDodgeChaseScore;
 
+        float chaseCommit =
+            adaptiveSource
+                .DebugBackDodgeChaseCommitScore;
+
         sb.AppendLine(
             "<b>BACK DODGE</b>"
         );
 
         sb.AppendLine(
-            $"Chase   {MakeBar(chase)}  {chase:F2}"
+            $"Chase        {MakeBar(chase)}  {chase:F2}"
         );
 
         sb.AppendLine(
-            $"Learn Threshold  " +
-            $"{adaptiveSource.DebugBackDodgeLearnThreshold:F2}"
+            $"Chase Commit {MakeBar(chaseCommit)}  {chaseCommit:F2}"
         );
 
         sb.AppendLine(
-            $"Policy  " +
+            $"Policy       " +
             $"{FormatPolicy(adaptiveSource.DebugBackDodgePolicy)}"
         );
 
         sb.AppendLine();
-
 
         // =====================================
         // FRONT STEP
@@ -108,30 +170,44 @@ public class AdaptiveDebugUI : MonoBehaviour
 
         sb.AppendLine();
 
-
         // =====================================
-        // HEAVY
+        // POST-PUNISH
         // =====================================
 
-        float heavy =
+        float postPunish =
             adaptiveSource
-                .DebugHeavyTimingScore;
+                .DebugPostPunishCommitScore;
+
+        bool postPunishActive =
+            adaptiveSource.DebugPostPunishPolicy !=
+            AdaptiveHabitType.None;
+
+        sb.AppendLine(
+            "<b>POST-PUNISH</b>"
+        );
+
+        sb.AppendLine(
+            $"Commit {MakeBar(postPunish)}  {postPunish:F2}"
+        );
+
+        sb.AppendLine(
+            $"Policy {FormatActive(postPunishActive)}"
+        );
+
+        sb.AppendLine();
+
+        // =====================================
+        // HEAVY / CHARGE TIMING
+        // Habit Score나 Threshold는 제거.
+        // 실제 Timing Adapt 상태만 표시한다.
+        // =====================================
 
         sb.AppendLine(
             "<b>HEAVY TIMING</b>"
         );
 
         sb.AppendLine(
-            $"Counter {MakeBar(heavy)}  {heavy:F2}"
-        );
-
-        sb.AppendLine(
-            $"Learn Threshold  " +
-            $"{adaptiveSource.DebugHeavyTimingThreshold:F2}"
-        );
-
-        sb.AppendLine(
-            "Timing  " +
+            "Boss Timing  " +
             FormatTiming(
                 adaptiveSource.DebugHeavyTimingActive,
                 adaptiveSource.DebugHeavyTimingMode
@@ -140,44 +216,52 @@ public class AdaptiveDebugUI : MonoBehaviour
 
         sb.AppendLine();
 
-
-        // =====================================
-        // CHARGE
-        // =====================================
-
-        float charge =
-            adaptiveSource
-                .DebugChargeTimingScore;
-
         sb.AppendLine(
             "<b>CHARGE TIMING</b>"
         );
 
         sb.AppendLine(
-            $"Counter {MakeBar(charge)}  {charge:F2}"
-        );
-
-        sb.AppendLine(
-            $"Learn Threshold  " +
-            $"{adaptiveSource.DebugChargeTimingThreshold:F2}"
-        );
-
-        sb.AppendLine(
-            "Timing  " +
+            "Boss Timing  " +
             FormatTiming(
                 adaptiveSource.DebugChargeTimingActive,
                 adaptiveSource.DebugChargeTimingMode
             )
         );
 
+        // =====================================
+        // CURRENT RESPONSE
+        // 실제 Adaptive Response가 선택된 직후에만
+        // 잠깐 표시한다.
+        // =====================================
+
+        if (currentResponseTimer > 0f &&
+            currentResponseHabit !=
+                AdaptiveHabitType.None &&
+            currentResponseAction !=
+                AdaptiveResponseAction.None)
+        {
+            sb.AppendLine();
+
+            sb.AppendLine(
+                "<b>CURRENT RESPONSE</b>"
+            );
+
+            sb.AppendLine(
+                $"{FormatResponseSource(currentResponseHabit)}" +
+                "  →  " +
+                $"{FormatResponse(currentResponseAction)}"
+            );
+        }
 
         debugText.text =
             sb.ToString();
     }
 
-    private string MakeBar(float value)
+    private string MakeBar(
+        float value)
     {
-        value = Mathf.Clamp01(value);
+        value =
+            Mathf.Clamp01(value);
 
         const int length = 10;
 
@@ -191,7 +275,9 @@ public class AdaptiveDebugUI : MonoBehaviour
 
         bar.Append("[");
 
-        for (int i = 0; i < length; i++)
+        for (int i = 0;
+             i < length;
+             i++)
         {
             bar.Append(
                 i < filled
@@ -215,10 +301,26 @@ public class AdaptiveDebugUI : MonoBehaviour
                 "<color=#909090>NONE</color>";
         }
 
+        string label =
+            GetHabitLabel(policy);
+
         return
             $"<color=#63FF91><b>" +
-            $"{policy.ToString().ToUpper()}" +
+            $"{label}" +
             $"</b></color>";
+    }
+
+    private string FormatActive(
+        bool active)
+    {
+        if (!active)
+        {
+            return
+                "<color=#909090>NONE</color>";
+        }
+
+        return
+            "<color=#63FF91><b>ACTIVE</b></color>";
     }
 
     private string FormatTiming(
@@ -226,14 +328,16 @@ public class AdaptiveDebugUI : MonoBehaviour
         TimingAdaptMode mode)
     {
         if (!active ||
-            mode == TimingAdaptMode.None)
+            mode ==
+                TimingAdaptMode.None)
         {
             return
                 "<color=#909090>NONE</color>";
         }
 
         string label =
-            mode == TimingAdaptMode.Early
+            mode ==
+                TimingAdaptMode.Early
                 ? "EARLIER"
                 : "DELAYED";
 
@@ -241,5 +345,91 @@ public class AdaptiveDebugUI : MonoBehaviour
             $"<color=#FFD166><b>" +
             $"{label}" +
             $"</b></color>";
+    }
+
+    private string FormatResponseSource(
+        AdaptiveHabitType habit)
+    {
+        string label;
+
+        switch (habit)
+        {
+            case AdaptiveHabitType.Attack:
+                label = "AGGRESSION";
+                break;
+
+            case AdaptiveHabitType.Counter:
+                label = "COUNTER BAIT";
+                break;
+
+            case AdaptiveHabitType.PostPunishCommit:
+                label = "POST-PUNISH";
+                break;
+
+            default:
+                label =
+                    GetHabitLabel(habit);
+                break;
+        }
+
+        return
+            $"<color=#FFD166><b>" +
+            $"{label}" +
+            $"</b></color>";
+    }
+
+    private string FormatResponse(
+        AdaptiveResponseAction response)
+    {
+        string label =
+            response.ToString()
+                .Replace(
+                    "ChargeSlash",
+                    "CHARGE"
+                )
+                .Replace(
+                    "HeavySlash",
+                    "HEAVY"
+                )
+                .Replace(
+                    "BasicSlash",
+                    "BASIC"
+                )
+                .Replace(
+                    "BackDodge",
+                    "BACK DODGE"
+                )
+                .Replace(
+                    "FrontStep",
+                    "FRONT STEP"
+                )
+                .Replace(
+                    "NormalDecision",
+                    "NORMAL"
+                )
+                .ToUpper();
+
+        return
+            $"<color=#63D7FF><b>" +
+            $"{label}" +
+            $"</b></color>";
+    }
+
+    private string GetHabitLabel(
+        AdaptiveHabitType habit)
+    {
+        switch (habit)
+        {
+            case AdaptiveHabitType.ChaseCommit:
+                return "CHASE COMMIT";
+
+            case AdaptiveHabitType.PostPunishCommit:
+                return "POST-PUNISH COMMIT";
+
+            default:
+                return
+                    habit.ToString()
+                        .ToUpper();
+        }
     }
 }

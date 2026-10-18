@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using UnityEngine;
 
 public enum AdaptiveHabitType
@@ -7,8 +8,11 @@ public enum AdaptiveHabitType
     Retreat,
     Neutral,
     Attack,
-    Counter
+    Counter,
+    ChaseCommit,
+    PostPunishCommit
 }
+
 public enum TimingAdaptMode
 {
     None,
@@ -16,11 +20,42 @@ public enum TimingAdaptMode
     Late
 }
 
+public enum AdaptiveResponseAction
+{
+    None,
+    NormalDecision,
+    Parry,
+    BackDodge,
+    FrontStep,
+    ChargeSlash,
+    HeavySlash,
+    BasicSlash,
+    Approach,
+    Neutral
+}
+
 public class BossAdaptiveDecisionSource : MonoBehaviour
 {
+    private struct WeightedResponse
+    {
+        public AdaptiveResponseAction action;
+        public float weight;
+
+        public WeightedResponse(
+            AdaptiveResponseAction action,
+            float weight)
+        {
+            this.action = action;
+            this.weight = weight;
+        }
+    }
+
     [Header("References")]
     [SerializeField]
     private PlayerBehaviorModel behaviorModel;
+
+    [SerializeField]
+    private PlayerCounter playerCounter;
 
     [Header("Safety")]
     [SerializeField]
@@ -30,7 +65,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     private float maxMultiplier = 1.5f;
 
     [Header("Contextual Follow-up")]
-
     [SerializeField, Range(0f, 1f)]
     private float frontStepRetreatThreshold = 0.6f;
 
@@ -39,8 +73,12 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     [SerializeField]
     private float maxRetreatChargeMultiplier = 1.5f;
+
     [SerializeField, Range(0f, 1f)]
     private float chaseHabitThreshold = 0.6f;
+
+    [SerializeField, Range(0f, 1f)]
+    private float chaseCommitHabitThreshold = 0.6f;
 
     [SerializeField]
     private float followUpOpportunityDuration = 1.2f;
@@ -50,18 +88,14 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     [SerializeField]
     private float maxChaseChargeMultiplier = 1.5f;
+
     [SerializeField, Range(0f, 1f)]
     private float frontStepAttackThreshold = 0.6f;
 
     [SerializeField, Range(0f, 1f)]
     private float maxAttackParryChance = 0.4f;
-    private BossBehaviorType followUpContext;
-
-    private AdaptiveHabitType followUpHabit =
-        AdaptiveHabitType.None;
 
     [Header("Counter Bait")]
-
     [SerializeField, Range(0f, 1f)]
     private float frontStepCounterThreshold = 0.6f;
 
@@ -74,18 +108,37 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     [SerializeField]
     private float counterBaitHoldDuration = 0.35f;
 
-    private bool counterBaitHoldEvaluated;   
-
     [Header("Persistent Adaptive Policy")]
-
     [SerializeField, Range(0f, 1f)]
     private float chaseHabitReleaseThreshold = 0.4f;
 
     [SerializeField, Range(0f, 1f)]
     private float frontStepHabitReleaseThreshold = 0.4f;
 
-    [Header("Heavy Timing Adaptation")]
+    [SerializeField, Range(0f, 1f)]
+    private float policySwitchMargin = 0.15f;
 
+    [Header("Post-Punish Commit")]
+    [SerializeField, Range(0f, 1f)]
+    private float postPunishCommitThreshold = 0.6f;
+
+    [SerializeField, Range(0f, 1f)]
+    private float postPunishCommitReleaseThreshold = 0.4f;
+
+    [Header("Adaptive Response Pool")]
+    [SerializeField, Min(0f)]
+    private float normalDecisionWeight = 1f;
+
+    [SerializeField, Min(0f)]
+    private float secondaryAttackResponseWeight = 0.35f;
+
+    [SerializeField, Min(0f)]
+    private float approachPressureWeight = 0.75f;
+
+    [SerializeField]
+    private bool preventSameAdaptiveResponse = true;
+
+    [Header("Heavy Timing Adaptation")]
     [SerializeField, Range(0f, 1f)]
     private float heavyTimingHabitThreshold = 0.6f;
 
@@ -107,26 +160,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     [SerializeField]
     private float heavyTimingJitter = 0.04f;
 
-    
-
-    [SerializeField]
-    private PlayerCounter playerCounter;
-
-    private bool heavyTimingPolicyActive;
-    private TimingAdaptMode heavyTimingMode =
-        TimingAdaptMode.None;
-    
-    // 현재 학습되어 유지 중인 Policy
-    private AdaptiveHabitType backDodgePolicy =
-        AdaptiveHabitType.None;
-
-    private AdaptiveHabitType frontStepPolicy =
-        AdaptiveHabitType.None;
-
-
-        
     [Header("Charge Timing Adaptation")]
-
     [SerializeField, Range(0f, 1f)]
     private float chargeTimingHabitThreshold = 0.6f;
 
@@ -147,29 +181,60 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     [SerializeField]
     private float chargeTimingJitter = 0.04f;
+
     [SerializeField]
     private bool chargeTimingPolicyActive;
-    private TimingAdaptMode chargeTimingMode =
-        TimingAdaptMode.None;
 
     [Header("Timing Mode Reevaluation")]
-
     [SerializeField]
     private int timingModeReevaluationInterval = 3;
 
-    private int heavyAdaptiveUsesSinceMode = 0;
-    private int chargeAdaptiveUsesSinceMode = 0;    
-    private float backDodgePolicyScore;
-    private float frontStepPolicyScore;
+    private BossBehaviorType followUpContext;
+
+    private AdaptiveHabitType followUpHabit =
+        AdaptiveHabitType.None;
+
     private float followUpHabitScore;
     private float followUpTimer;
-
     private bool hasFollowUpOpportunity;
+
+    private AdaptiveHabitType backDodgePolicy =
+        AdaptiveHabitType.None;
+
+    private AdaptiveHabitType frontStepPolicy =
+        AdaptiveHabitType.None;
+
+    private float backDodgePolicyScore;
+    private float frontStepPolicyScore;
+
+    private bool postPunishPolicyActive;
+    private float postPunishPolicyScore;
+
+    private AdaptiveResponseAction lastAdaptiveResponse =
+        AdaptiveResponseAction.None;
+
+    // Debug UI에서 "어떤 Habit 때문에 어떤 대응이 선택됐는지"
+    // 짧게 표시하기 위한 읽기 전용 기록.
+    // 실제 AI 의사결정에는 사용하지 않는다.
+    private AdaptiveHabitType lastAdaptiveResponseHabit =
+        AdaptiveHabitType.None;
+
+    private int adaptiveResponseSerial = 0;
+
+    private bool heavyTimingPolicyActive;
+    private TimingAdaptMode heavyTimingMode =
+        TimingAdaptMode.None;
+
+    private TimingAdaptMode chargeTimingMode =
+        TimingAdaptMode.None;
+
+    private int heavyAdaptiveUsesSinceMode = 0;
+    private int chargeAdaptiveUsesSinceMode = 0;
+
     // =====================================
     // Adaptive Debug Read-Only Data
     // =====================================
 
-    // BackDodge
     public AdaptiveHabitType DebugBackDodgePolicy =>
         backDodgePolicy;
 
@@ -178,11 +243,17 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             ? behaviorModel.GetBackDodgeChaseHabitScore()
             : 0f;
 
+    public float DebugBackDodgeChaseCommitScore =>
+        behaviorModel != null
+            ? behaviorModel.GetBackDodgeChaseCommitHabitScore()
+            : 0f;
+
     public float DebugBackDodgeLearnThreshold =>
         chaseHabitThreshold;
 
+    public float DebugBackDodgeCommitThreshold =>
+        chaseCommitHabitThreshold;
 
-    // FrontStep
     public AdaptiveHabitType DebugFrontStepPolicy =>
         frontStepPolicy;
 
@@ -210,8 +281,19 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     public float DebugFrontStepCounterThreshold =>
         frontStepCounterThreshold;
 
+    public AdaptiveHabitType DebugPostPunishPolicy =>
+        postPunishPolicyActive
+            ? AdaptiveHabitType.PostPunishCommit
+            : AdaptiveHabitType.None;
 
-    // Heavy
+    public float DebugPostPunishCommitScore =>
+        behaviorModel != null
+            ? behaviorModel.GetPostPunishCommitHabitScore()
+            : 0f;
+
+    public float DebugPostPunishThreshold =>
+        postPunishCommitThreshold;
+
     public bool DebugHeavyTimingActive =>
         heavyTimingPolicyActive;
 
@@ -226,8 +308,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     public float DebugHeavyTimingThreshold =>
         heavyTimingHabitThreshold;
 
-
-    // Charge
     public bool DebugChargeTimingActive =>
         chargeTimingPolicyActive;
 
@@ -241,6 +321,18 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     public float DebugChargeTimingThreshold =>
         chargeTimingHabitThreshold;
+
+    public AdaptiveResponseAction DebugLastAdaptiveResponse =>
+        lastAdaptiveResponse;
+
+    public AdaptiveHabitType DebugLastAdaptiveResponseHabit =>
+        lastAdaptiveResponseHabit;
+
+    // 같은 Response가 나중에 다시 선택되어도 UI가 새 이벤트로 인식하도록
+    // 실제 Adaptive Response가 선택될 때마다 증가한다.
+    public int DebugAdaptiveResponseSerial =>
+        adaptiveResponseSerial;
+
     private void Update()
     {
         if (!hasFollowUpOpportunity)
@@ -253,6 +345,14 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             ClearFollowUpOpportunity();
         }
     }
+
+    // =====================================
+    // Existing weight/chance hooks
+    // Normal decision에서 기존 수치를 그대로 보존한다.
+    // 새 Response Pool이 Normal을 선택하면 Opportunity가
+    // 먼저 소비되므로 이 보정이 중복 적용되지는 않는다.
+    // =====================================
+
     public float GetAttackWeightMultiplier(
         BossAttack attack,
         float distance)
@@ -262,9 +362,17 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
         float multiplier = 1f;
 
-        if (IsActiveFollowUp(
+        bool chaseContext =
+            IsActiveFollowUp(
                 BossBehaviorType.BackDodge,
-                AdaptiveHabitType.Chase) &&
+                AdaptiveHabitType.Chase
+            ) ||
+            IsActiveFollowUp(
+                BossBehaviorType.BackDodge,
+                AdaptiveHabitType.ChaseCommit
+            );
+
+        if (chaseContext &&
             attack.attackType ==
                 BossAttackType.ChargeSlash)
         {
@@ -283,13 +391,8 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 );
 
             multiplier *= chargeMultiplier;
-
-            Debug.Log(
-                $"[Chase Punish] " +
-                $"ChargeSlash Weight " +
-                $"x{chargeMultiplier:F2}"
-            );
         }
+
         if (IsActiveFollowUp(
                 BossBehaviorType.FrontStep,
                 AdaptiveHabitType.Retreat) &&
@@ -310,29 +413,30 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                     influence
                 );
 
-            multiplier *=
-                chargeMultiplier;
-
-            Debug.Log(
-                $"[Retreat Pressure] " +
-                $"ChargeSlash Weight " +
-                $"x{chargeMultiplier:F2}"
-            );
+            multiplier *= chargeMultiplier;
         }
+
         return Mathf.Clamp(
             multiplier,
             minMultiplier,
             maxMultiplier
         );
     }
-    
+
     public float GetParryChance(
         float baseChance)
     {
-        // BackDodge + Chase
-        if (IsActiveFollowUp(
+        bool chaseContext =
+            IsActiveFollowUp(
                 BossBehaviorType.BackDodge,
-                AdaptiveHabitType.Chase))
+                AdaptiveHabitType.Chase
+            ) ||
+            IsActiveFollowUp(
+                BossBehaviorType.BackDodge,
+                AdaptiveHabitType.ChaseCommit
+            );
+
+        if (chaseContext)
         {
             float influence =
                 Mathf.InverseLerp(
@@ -341,24 +445,13 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                     followUpHabitScore
                 );
 
-            float adaptedChance =
-                Mathf.Lerp(
-                    baseChance,
-                    maxChaseParryChance,
-                    influence
-                );
-
-            Debug.Log(
-                $"[Chase Punish] " +
-                $"Parry Chance " +
-                $"{baseChance:F2} → " +
-                $"{adaptedChance:F2}"
+            return Mathf.Lerp(
+                baseChance,
+                maxChaseParryChance,
+                influence
             );
-
-            return adaptedChance;
         }
 
-        // FrontStep + Attack
         if (IsActiveFollowUp(
                 BossBehaviorType.FrontStep,
                 AdaptiveHabitType.Attack))
@@ -370,27 +463,16 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                     followUpHabitScore
                 );
 
-            float adaptedChance =
-                Mathf.Lerp(
-                    baseChance,
-                    maxAttackParryChance,
-                    influence
-                );
-
-            Debug.Log(
-                $"[Aggression Punish] " +
-                $"FrontStep Attack Habit=" +
-                $"{followUpHabitScore:F2} | " +
-                $"Parry Chance " +
-                $"{baseChance:F2} → " +
-                $"{adaptedChance:F2}"
+            return Mathf.Lerp(
+                baseChance,
+                maxAttackParryChance,
+                influence
             );
-
-            return adaptedChance;
         }
 
         return baseChance;
     }
+
     public float GetBackDodgeChance(
         float baseChance)
     {
@@ -414,35 +496,27 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 maxCounterBackDodgeChance
             );
 
-        float adaptedChance =
-            Mathf.Lerp(
-                baseChance,
-                targetChance,
-                influence
-            );
-
-        Debug.Log(
-            $"[Counter Bait] " +
-            $"BackDodge Chance " +
-            $"{baseChance:F2} → " +
-            $"{adaptedChance:F2}"
+        return Mathf.Lerp(
+            baseChance,
+            targetChance,
+            influence
         );
-
-        return adaptedChance;
     }
+
+    // =====================================
+    // Follow-up Opportunity
+    // =====================================
+
     public void OpenFollowUpOpportunity(
         BossBehaviorType context)
     {
         if (behaviorModel == null)
             return;
 
-        // 먼저 현재 Habit을 보고
-        // Persistent Policy를 갱신
         UpdatePersistentPolicy(context);
-        counterBaitHoldEvaluated = false;
 
-        // BackDodge
-        if (context == BossBehaviorType.BackDodge)
+        if (context ==
+            BossBehaviorType.BackDodge)
         {
             if (backDodgePolicy ==
                 AdaptiveHabitType.None)
@@ -451,33 +525,17 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 return;
             }
 
-            followUpContext =
-                BossBehaviorType.BackDodge;
-
-            followUpHabit =
-                backDodgePolicy;
-
-            followUpHabitScore =
-                backDodgePolicyScore;
-
-            followUpTimer =
-                followUpOpportunityDuration;
-
-            hasFollowUpOpportunity = true;
-
-            Debug.Log(
-                $"[Adaptive Opportunity] " +
-                $"Context=BackDodge | " +
-                $"Policy={backDodgePolicy} | " +
-                $"Score={backDodgePolicyScore:F2}"
+            SetFollowUpOpportunity(
+                BossBehaviorType.BackDodge,
+                backDodgePolicy,
+                backDodgePolicyScore
             );
 
             return;
         }
 
-
-        // FrontStep
-        if (context == BossBehaviorType.FrontStep)
+        if (context ==
+            BossBehaviorType.FrontStep)
         {
             if (frontStepPolicy ==
                 AdaptiveHabitType.None)
@@ -486,28 +544,51 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 return;
             }
 
-            followUpContext =
-                BossBehaviorType.FrontStep;
-
-            followUpHabit =
-                frontStepPolicy;
-
-            followUpHabitScore =
-                frontStepPolicyScore;
-
-            followUpTimer =
-                followUpOpportunityDuration;
-
-            hasFollowUpOpportunity = true;
-
-            Debug.Log(
-                $"[Adaptive Opportunity] " +
-                $"Context=FrontStep | " +
-                $"Policy={frontStepPolicy} | " +
-                $"Score={frontStepPolicyScore:F2}"
+            SetFollowUpOpportunity(
+                BossBehaviorType.FrontStep,
+                frontStepPolicy,
+                frontStepPolicyScore
             );
         }
     }
+
+    public void OpenPostPunishOpportunity()
+    {
+        if (behaviorModel == null)
+            return;
+
+        UpdatePostPunishPolicy();
+
+        if (!postPunishPolicyActive)
+            return;
+
+        SetFollowUpOpportunity(
+            BossBehaviorType.Attack,
+            AdaptiveHabitType.PostPunishCommit,
+            postPunishPolicyScore
+        );
+    }
+
+    private void SetFollowUpOpportunity(
+        BossBehaviorType context,
+        AdaptiveHabitType habit,
+        float score)
+    {
+        followUpContext = context;
+        followUpHabit = habit;
+        followUpHabitScore = score;
+        followUpTimer =
+            followUpOpportunityDuration;
+        hasFollowUpOpportunity = true;
+
+        Debug.Log(
+            $"[Adaptive Opportunity] " +
+            $"Context={context} | " +
+            $"Policy={habit} | " +
+            $"Score={score:F2}"
+        );
+    }
+
     private void UpdatePersistentPolicy(
         BossBehaviorType context)
     {
@@ -524,6 +605,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             UpdateFrontStepPolicy();
         }
     }
+
     private bool IsActiveFollowUp(
         BossBehaviorType context,
         AdaptiveHabitType habit)
@@ -533,96 +615,293 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             followUpContext == context &&
             followUpHabit == habit;
     }
-    public bool ShouldUseRetreatPressureFrontStep()
-    {
-        if (!IsActiveFollowUp(
-                BossBehaviorType.FrontStep,
-                AdaptiveHabitType.Retreat))
-        {
-            return false;
-        }
 
-        float influence =
-            Mathf.InverseLerp(
-                frontStepHabitReleaseThreshold,
-                1f,
-                followUpHabitScore
+    // =====================================
+    // Explicit Adaptive Response Pool
+    // =====================================
+
+    public bool TrySelectFollowUpResponse(
+        bool canParry,
+        bool canBackDodge,
+        bool canFrontStep,
+        bool canCharge,
+        bool canHeavy,
+        bool canBasic,
+        float baseParryChance,
+        float baseBackDodgeChance,
+        out AdaptiveResponseAction selected)
+    {
+        selected =
+            AdaptiveResponseAction.None;
+
+        if (!hasFollowUpOpportunity)
+            return false;
+
+        List<WeightedResponse> candidates =
+            new List<WeightedResponse>();
+
+        // Normal Decision은 항상 탈출구로 남긴다.
+        AddCandidate(
+            candidates,
+            AdaptiveResponseAction.NormalDecision,
+            normalDecisionWeight,
+            true
+        );
+
+        if (followUpContext ==
+                BossBehaviorType.BackDodge &&
+            followUpHabit ==
+                AdaptiveHabitType.Chase)
+        {
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.ChargeSlash,
+                maxChaseChargeMultiplier,
+                canCharge
             );
 
-        float chance =
-            Mathf.Lerp(
-                0.20f,
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.HeavySlash,
+                secondaryAttackResponseWeight,
+                canHeavy
+            );
+        }
+        else if (
+            followUpContext ==
+                BossBehaviorType.BackDodge &&
+            followUpHabit ==
+                AdaptiveHabitType.ChaseCommit)
+        {
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.Parry,
+                maxChaseParryChance,
+                canParry
+            );
+
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.HeavySlash,
+                secondaryAttackResponseWeight,
+                canHeavy
+            );
+
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.ChargeSlash,
+                maxChaseChargeMultiplier,
+                canCharge
+            );
+        }
+        else if (
+            followUpContext ==
+                BossBehaviorType.FrontStep &&
+            followUpHabit ==
+                AdaptiveHabitType.Retreat)
+        {
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.ChargeSlash,
+                maxRetreatChargeMultiplier,
+                canCharge
+            );
+
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.FrontStep,
                 maxRetreatFrontStepChance,
-                influence
+                canFrontStep
             );
 
-        bool selected =
-            Random.value <= chance;
-
-        if (selected)
-        {
-            Debug.Log(
-                $"[Retreat Pressure] " +
-                $"Adaptive FrontStep Selected | " +
-                $"Chance={chance:F2} | " +
-                $"Habit={followUpHabitScore:F2}"
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.Approach,
+                approachPressureWeight,
+                true
             );
         }
-
-        return selected;
-    }
-    public bool ShouldUseCounterBaitHold()
-    {
-        if (!IsActiveFollowUp(
-                BossBehaviorType.FrontStep,
-                AdaptiveHabitType.Counter))
+        else if (
+            followUpContext ==
+                BossBehaviorType.FrontStep &&
+            followUpHabit ==
+                AdaptiveHabitType.Attack)
         {
-            return false;
-        }
-
-        // 하나의 Opportunity에서
-        // Hold 추첨은 딱 한 번만
-        if (counterBaitHoldEvaluated)
-            return false;
-
-        counterBaitHoldEvaluated = true;
-
-        float influence =
-            Mathf.InverseLerp(
-                frontStepHabitReleaseThreshold,
-                1f,
-                followUpHabitScore
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.Parry,
+                maxAttackParryChance,
+                canParry
             );
 
-        float chance =
-            Mathf.Lerp(
-                0.15f,
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.BackDodge,
+                baseBackDodgeChance,
+                canBackDodge
+            );
+
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.HeavySlash,
+                secondaryAttackResponseWeight,
+                canHeavy
+            );
+        }
+        else if (
+            followUpContext ==
+                BossBehaviorType.FrontStep &&
+            followUpHabit ==
+                AdaptiveHabitType.Counter)
+        {
+            // 기존 Hold 확률/시간은 버리지 않고
+            // "공격하지 않는 Neutral"의 강도/길이로 재사용한다.
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.Neutral,
                 maxCounterHoldChance,
-                influence
+                true
             );
 
-        bool selected =
-            Random.value <= chance;
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.BackDodge,
+                maxCounterBackDodgeChance,
+                canBackDodge
+            );
 
-        if (selected)
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.Parry,
+                baseParryChance,
+                canParry
+            );
+
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.BasicSlash,
+                secondaryAttackResponseWeight,
+                canBasic
+            );
+        }
+        else if (
+            followUpContext ==
+                BossBehaviorType.Attack &&
+            followUpHabit ==
+                AdaptiveHabitType.PostPunishCommit)
         {
-            Debug.Log(
-                $"[Counter Bait] " +
-                $"Hold Selected | " +
-                $"Chance={chance:F2} | " +
-                $"Habit={followUpHabitScore:F2}"
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.Parry,
+                maxChaseParryChance,
+                canParry
+            );
+
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.BackDodge,
+                maxCounterBackDodgeChance,
+                canBackDodge
+            );
+
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.Neutral,
+                maxCounterHoldChance,
+                true
             );
         }
 
-        return selected;
+        if (candidates.Count == 0)
+            return false;
+
+        float totalWeight = 0f;
+
+        foreach (WeightedResponse candidate
+                 in candidates)
+        {
+            totalWeight +=
+                Mathf.Max(
+                    0f,
+                    candidate.weight
+                );
+        }
+
+        if (totalWeight <= 0f)
+            return false;
+
+        float random =
+            Random.Range(
+                0f,
+                totalWeight
+            );
+
+        float accumulated = 0f;
+
+        foreach (WeightedResponse candidate
+                 in candidates)
+        {
+            accumulated +=
+                Mathf.Max(
+                    0f,
+                    candidate.weight
+                );
+
+            if (random <= accumulated)
+            {
+                selected =
+                    candidate.action;
+
+                return true;
+            }
+        }
+
+        selected =
+            candidates[
+                candidates.Count - 1
+            ].action;
+
+        return true;
     }
 
-    public float GetCounterBaitHoldDuration()
+    private void AddCandidate(
+        List<WeightedResponse> candidates,
+        AdaptiveResponseAction action,
+        float weight,
+        bool available)
+    {
+        if (!available ||
+            weight <= 0f)
+        {
+            return;
+        }
+
+        if (preventSameAdaptiveResponse &&
+            action !=
+                AdaptiveResponseAction.NormalDecision &&
+            action ==
+                lastAdaptiveResponse)
+        {
+            return;
+        }
+
+        candidates.Add(
+            new WeightedResponse(
+                action,
+                weight
+            )
+        );
+    }
+
+    public float GetAdaptiveNeutralDuration()
     {
         return counterBaitHoldDuration;
     }
+
     public void ConsumeFollowUpOpportunity(
-        string selectedAction)
+        string selectedAction,
+        AdaptiveResponseAction responseAction =
+            AdaptiveResponseAction.None)
     {
         if (!hasFollowUpOpportunity)
             return;
@@ -634,76 +913,189 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             $"SelectedAction={selectedAction}"
         );
 
+        if (responseAction ==
+            AdaptiveResponseAction.NormalDecision)
+        {
+            // Normal Decision이 한 번 끼면
+            // "같은 Adaptive Response 연속"이 아니므로 리셋한다.
+            lastAdaptiveResponse =
+                AdaptiveResponseAction.None;
+
+            lastAdaptiveResponseHabit =
+                AdaptiveHabitType.None;
+        }
+        else if (responseAction !=
+                 AdaptiveResponseAction.None)
+        {
+            lastAdaptiveResponse =
+                responseAction;
+
+            // ClearFollowUpOpportunity() 전에 Source Habit을 저장한다.
+            lastAdaptiveResponseHabit =
+                followUpHabit;
+
+            adaptiveResponseSerial++;
+        }
+
         ClearFollowUpOpportunity();
     }
 
     private void ClearFollowUpOpportunity()
     {
         hasFollowUpOpportunity = false;
-
         followUpHabit =
             AdaptiveHabitType.None;
-
         followUpHabitScore = 0f;
         followUpTimer = 0f;
-        counterBaitHoldEvaluated = false;
     }
+
+    // =====================================
+    // Persistent Policy
+    // =====================================
+
     private void UpdateBackDodgePolicy()
     {
         float chaseHabit =
             behaviorModel
                 .GetBackDodgeChaseHabitScore();
 
-        // 아직 아무 Policy도 학습하지 않은 상태
+        float commitHabit =
+            behaviorModel
+                .GetBackDodgeChaseCommitHabitScore();
+
+        bool chaseValid =
+            chaseHabit >=
+            chaseHabitThreshold;
+
+        bool commitValid =
+            chaseValid &&
+            commitHabit >=
+                chaseCommitHabitThreshold;
+
         if (backDodgePolicy ==
             AdaptiveHabitType.None)
         {
-            if (chaseHabit >=
-                chaseHabitThreshold)
+            if (commitValid)
             {
-                backDodgePolicy =
-                    AdaptiveHabitType.Chase;
-
-                backDodgePolicyScore =
-                    chaseHabit;
-
-                Debug.Log(
-                    $"[Adaptive Policy Learned] " +
-                    $"Context=BackDodge | " +
-                    $"Policy=Chase | " +
-                    $"Score={chaseHabit:F2}"
+                SetBackDodgePolicy(
+                    AdaptiveHabitType.ChaseCommit,
+                    commitHabit,
+                    "Learned"
+                );
+            }
+            else if (chaseValid)
+            {
+                SetBackDodgePolicy(
+                    AdaptiveHabitType.Chase,
+                    chaseHabit,
+                    "Learned"
                 );
             }
 
             return;
         }
 
-
-        // 이미 Chase Policy가 활성화된 상태
         if (backDodgePolicy ==
             AdaptiveHabitType.Chase)
         {
             backDodgePolicyScore =
                 chaseHabit;
 
-            // 충분히 습관이 사라졌을 때만 해제
+            if (commitValid &&
+                commitHabit >=
+                    chaseHabit +
+                    policySwitchMargin)
+            {
+                SetBackDodgePolicy(
+                    AdaptiveHabitType.ChaseCommit,
+                    commitHabit,
+                    "Switched"
+                );
+
+                return;
+            }
+
             if (chaseHabit <
                 chaseHabitReleaseThreshold)
             {
-                Debug.Log(
-                    $"[Adaptive Policy Released] " +
-                    $"Context=BackDodge | " +
-                    $"Policy=Chase | " +
-                    $"Score={chaseHabit:F2}"
+                ReleaseBackDodgePolicy();
+            }
+
+            return;
+        }
+
+        if (backDodgePolicy ==
+            AdaptiveHabitType.ChaseCommit)
+        {
+            backDodgePolicyScore =
+                commitHabit;
+
+            if (chaseValid &&
+                chaseHabit >=
+                    commitHabit +
+                    policySwitchMargin)
+            {
+                SetBackDodgePolicy(
+                    AdaptiveHabitType.Chase,
+                    chaseHabit,
+                    "Switched"
                 );
 
-                backDodgePolicy =
-                    AdaptiveHabitType.None;
+                return;
+            }
 
-                backDodgePolicyScore = 0f;
+            if (commitHabit <
+                chaseHabitReleaseThreshold)
+            {
+                if (chaseValid)
+                {
+                    SetBackDodgePolicy(
+                        AdaptiveHabitType.Chase,
+                        chaseHabit,
+                        "Switched"
+                    );
+                }
+                else
+                {
+                    ReleaseBackDodgePolicy();
+                }
             }
         }
     }
+
+    private void SetBackDodgePolicy(
+        AdaptiveHabitType policy,
+        float score,
+        string reason)
+    {
+        AdaptiveHabitType previous =
+            backDodgePolicy;
+
+        backDodgePolicy = policy;
+        backDodgePolicyScore = score;
+
+        Debug.Log(
+            $"[Adaptive Policy {reason}] " +
+            $"Context=BackDodge | " +
+            $"{previous} → {policy} | " +
+            $"Score={score:F2}"
+        );
+    }
+
+    private void ReleaseBackDodgePolicy()
+    {
+        Debug.Log(
+            $"[Adaptive Policy Released] " +
+            $"Context=BackDodge | " +
+            $"Policy={backDodgePolicy} | " +
+            $"Score={backDodgePolicyScore:F2}"
+        );
+
+        backDodgePolicy =
+            AdaptiveHabitType.None;
+        backDodgePolicyScore = 0f;
+    }
+
     private void UpdateFrontStepPolicy()
     {
         float retreatHabit =
@@ -713,152 +1105,233 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         float attackHabit =
             behaviorModel
                 .GetFrontStepAttackHabitScore();
+
         float counterHabit =
             behaviorModel
                 .GetFrontStepCounterHabitScore();
 
-        // 아직 학습된 Policy 없음
+        AdaptiveHabitType bestPolicy =
+            ChooseBestFrontStepPolicy(
+                retreatHabit,
+                attackHabit,
+                counterHabit,
+                out float bestScore
+            );
+
         if (frontStepPolicy ==
             AdaptiveHabitType.None)
         {
-            bool retreatValid =
-                retreatHabit >=
-                frontStepRetreatThreshold;
-
-            bool attackValid =
-                attackHabit >=
-                frontStepAttackThreshold;
-            bool counterValid =
-                counterHabit >=
-                frontStepCounterThreshold;
-
-            if (!retreatValid &&
-                !attackValid &&
-                !counterValid)
+            if (bestPolicy !=
+                AdaptiveHabitType.None)
             {
-                return;
+                SetFrontStepPolicy(
+                    bestPolicy,
+                    bestScore,
+                    "Learned"
+                );
             }
 
+            return;
+        }
 
-            if (counterValid &&
-                (!attackValid ||
-                    counterHabit > attackHabit) &&
-                (!retreatValid ||
-                    counterHabit > retreatHabit))
-            {
-                frontStepPolicy =
-                    AdaptiveHabitType.Counter;
+        float currentScore =
+            GetFrontStepScore(
+                frontStepPolicy,
+                retreatHabit,
+                attackHabit,
+                counterHabit
+            );
 
-                frontStepPolicyScore =
-                    counterHabit;
-            }
-            else if (attackValid &&
-                    (!retreatValid ||
-                    attackHabit > retreatHabit))
-            {
-                frontStepPolicy =
-                    AdaptiveHabitType.Attack;
+        frontStepPolicyScore =
+            currentScore;
 
-                frontStepPolicyScore =
-                    attackHabit;
-            }
-            else
-            {
-                frontStepPolicy =
-                    AdaptiveHabitType.Retreat;
-
-                frontStepPolicyScore =
-                    retreatHabit;
-            }
-
-
-            Debug.Log(
-                $"[Adaptive Policy Learned] " +
-                $"Context=FrontStep | " +
-                $"Policy={frontStepPolicy} | " +
-                $"Score={frontStepPolicyScore:F2}"
+        if (bestPolicy !=
+                AdaptiveHabitType.None &&
+            bestPolicy !=
+                frontStepPolicy &&
+            bestScore >=
+                currentScore +
+                policySwitchMargin)
+        {
+            SetFrontStepPolicy(
+                bestPolicy,
+                bestScore,
+                "Switched"
             );
 
             return;
         }
 
-
-        // Retreat Policy 유지 중
-        if (frontStepPolicy ==
-            AdaptiveHabitType.Retreat)
+        if (currentScore <
+            frontStepHabitReleaseThreshold)
         {
-            frontStepPolicyScore =
-                retreatHabit;
-
-            if (retreatHabit <
-                frontStepHabitReleaseThreshold)
+            if (bestPolicy !=
+                    AdaptiveHabitType.None &&
+                bestPolicy !=
+                    frontStepPolicy)
             {
-                Debug.Log(
-                    $"[Adaptive Policy Released] " +
-                    $"Context=FrontStep | " +
-                    $"Policy=Retreat | " +
-                    $"Score={retreatHabit:F2}"
+                SetFrontStepPolicy(
+                    bestPolicy,
+                    bestScore,
+                    "Switched"
                 );
-
-                frontStepPolicy =
-                    AdaptiveHabitType.None;
-
-                frontStepPolicyScore = 0f;
             }
-
-            return;
-        }
-
-
-        // Attack Policy 유지 중
-        if (frontStepPolicy ==
-            AdaptiveHabitType.Attack)
-        {
-            frontStepPolicyScore =
-                attackHabit;
-
-            if (attackHabit <
-                frontStepHabitReleaseThreshold)
+            else
             {
-                Debug.Log(
-                    $"[Adaptive Policy Released] " +
-                    $"Context=FrontStep | " +
-                    $"Policy=Attack | " +
-                    $"Score={attackHabit:F2}"
-                );
-
-                frontStepPolicy =
-                    AdaptiveHabitType.None;
-
-                frontStepPolicyScore = 0f;
-            }
-
-            return;
-        }
-
-        if (frontStepPolicy ==
-            AdaptiveHabitType.Counter)
-        {
-            frontStepPolicyScore =
-                counterHabit;
-
-            if (counterHabit <
-                frontStepHabitReleaseThreshold)
-            {
-                Debug.Log(
-                    $"[Adaptive Policy Released] " +
-                    $"Context=FrontStep | " +
-                    $"Policy=Counter | " +
-                    $"Score={counterHabit:F2}"
-                );
-
-                frontStepPolicy =
-                    AdaptiveHabitType.None;
-
-                frontStepPolicyScore = 0f;
+                ReleaseFrontStepPolicy();
             }
         }
     }
+
+    private AdaptiveHabitType
+        ChooseBestFrontStepPolicy(
+            float retreatHabit,
+            float attackHabit,
+            float counterHabit,
+            out float bestScore)
+    {
+        AdaptiveHabitType best =
+            AdaptiveHabitType.None;
+
+        bestScore = 0f;
+
+        if (retreatHabit >=
+                frontStepRetreatThreshold &&
+            retreatHabit > bestScore)
+        {
+            best =
+                AdaptiveHabitType.Retreat;
+            bestScore =
+                retreatHabit;
+        }
+
+        if (attackHabit >=
+                frontStepAttackThreshold &&
+            attackHabit > bestScore)
+        {
+            best =
+                AdaptiveHabitType.Attack;
+            bestScore =
+                attackHabit;
+        }
+
+        if (counterHabit >=
+                frontStepCounterThreshold &&
+            counterHabit > bestScore)
+        {
+            best =
+                AdaptiveHabitType.Counter;
+            bestScore =
+                counterHabit;
+        }
+
+        return best;
+    }
+
+    private float GetFrontStepScore(
+        AdaptiveHabitType policy,
+        float retreatHabit,
+        float attackHabit,
+        float counterHabit)
+    {
+        switch (policy)
+        {
+            case AdaptiveHabitType.Retreat:
+                return retreatHabit;
+
+            case AdaptiveHabitType.Attack:
+                return attackHabit;
+
+            case AdaptiveHabitType.Counter:
+                return counterHabit;
+
+            default:
+                return 0f;
+        }
+    }
+
+    private void SetFrontStepPolicy(
+        AdaptiveHabitType policy,
+        float score,
+        string reason)
+    {
+        AdaptiveHabitType previous =
+            frontStepPolicy;
+
+        frontStepPolicy = policy;
+        frontStepPolicyScore = score;
+
+        Debug.Log(
+            $"[Adaptive Policy {reason}] " +
+            $"Context=FrontStep | " +
+            $"{previous} → {policy} | " +
+            $"Score={score:F2}"
+        );
+    }
+
+    private void ReleaseFrontStepPolicy()
+    {
+        Debug.Log(
+            $"[Adaptive Policy Released] " +
+            $"Context=FrontStep | " +
+            $"Policy={frontStepPolicy} | " +
+            $"Score={frontStepPolicyScore:F2}"
+        );
+
+        frontStepPolicy =
+            AdaptiveHabitType.None;
+        frontStepPolicyScore = 0f;
+    }
+
+    private void UpdatePostPunishPolicy()
+    {
+        float score =
+            behaviorModel
+                .GetPostPunishCommitHabitScore();
+
+        if (!postPunishPolicyActive)
+        {
+            if (score <
+                postPunishCommitThreshold)
+            {
+                return;
+            }
+
+            postPunishPolicyActive = true;
+            postPunishPolicyScore = score;
+
+            Debug.Log(
+                $"[Adaptive Policy Learned] " +
+                $"Context=PostPunish | " +
+                $"Policy=PostPunishCommit | " +
+                $"Score={score:F2}"
+            );
+
+            return;
+        }
+
+        postPunishPolicyScore = score;
+
+        if (score <
+            postPunishCommitReleaseThreshold)
+        {
+            postPunishPolicyActive = false;
+            postPunishPolicyScore = 0f;
+
+            Debug.Log(
+                $"[Adaptive Policy Released] " +
+                $"Context=PostPunish | " +
+                $"Policy=PostPunishCommit | " +
+                $"Score={score:F2}"
+            );
+        }
+    }
+
+    // =====================================
+    // Heavy Timing Adaptation
+    // 기존 구조 / 수치 그대로 유지
+    // =====================================
+
     public float GetHeavyHoldTime(
         float baseHoldTime,
         float prepareCueTime,
@@ -872,11 +1345,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
         float habitScore =
             behaviorModel.GetHeavyTimingHabitScore();
-
-
-        // =============================
-        // Policy 학습 / 해제
-        // =============================
 
         if (!heavyTimingPolicyActive)
         {
@@ -894,13 +1362,14 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             );
         }
         else if (habitScore <
-                heavyTimingReleaseThreshold)
+                 heavyTimingReleaseThreshold)
         {
             heavyTimingPolicyActive = false;
             heavyTimingMode =
                 TimingAdaptMode.None;
 
             heavyAdaptiveUsesSinceMode = 0;
+
             Debug.Log(
                 $"[Heavy Timing Policy Released] " +
                 $"SuccessScore={habitScore:F2}"
@@ -909,8 +1378,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             return baseHoldTime;
         }
 
-
-        // 성공했던 Counter Timing
         if (!behaviorModel
                 .TryGetHeavyCounterDelay(
                     out float responseDelay))
@@ -918,8 +1385,8 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             return baseHoldTime;
         }
 
-
-        float counterWindowStart = responseDelay;
+        float counterWindowStart =
+            responseDelay;
 
         float counterWindowEnd =
             counterWindowStart +
@@ -931,17 +1398,10 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 counterWindowEnd
             ) * 0.5f;
 
-
-        // 기본 Heavy 실제 Hit
         float baseHitTime =
             prepareCueTime +
             baseHoldTime +
             heavyStartupTime;
-
-
-        // =============================
-        // 처음 Timing Mode 학습
-        // =============================
 
         if (heavyTimingMode ==
             TimingAdaptMode.None)
@@ -965,13 +1425,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 $"학습 → {heavyTimingMode}"
             );
         }
-
-
-        // =============================
-        // 적응된 Heavy에도 계속 성공하면
-        // Timing Mode 재평가
-        // =============================
-
         else if (
             heavyAdaptiveUsesSinceMode >=
                 timingModeReevaluationInterval &&
@@ -992,8 +1445,8 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                     TimingAdaptMode.Early;
             }
 
-
-            if (newMode != heavyTimingMode)
+            if (newMode !=
+                heavyTimingMode)
             {
                 Debug.Log(
                     $"[Heavy Timing Mode] 재적응 | " +
@@ -1001,7 +1454,8 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                     $"이유: 적응된 Heavy에도 계속 Counter 성공"
                 );
 
-                heavyTimingMode = newMode;
+                heavyTimingMode =
+                    newMode;
             }
             else
             {
@@ -1013,12 +1467,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
             heavyAdaptiveUsesSinceMode = 0;
         }
-
-
-        // =============================
-        // 대부분 적응 타이밍,
-        // 가끔 Normal
-        // =============================
 
         float influence =
             Mathf.InverseLerp(
@@ -1045,7 +1493,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             return baseHoldTime;
         }
 
-
         float targetHitTime;
 
         if (heavyTimingMode ==
@@ -1062,19 +1509,16 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 heavyTimingMargin;
         }
 
-
         float targetHoldTime =
             targetHitTime -
             prepareCueTime -
             heavyStartupTime;
-
 
         targetHoldTime +=
             Random.Range(
                 -heavyTimingJitter,
                 heavyTimingJitter
             );
-
 
         targetHoldTime =
             Mathf.Clamp(
@@ -1097,7 +1541,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             );
         }
         else if (targetHoldTime <
-                baseHoldTime)
+                 baseHoldTime)
         {
             Debug.Log(
                 $"[Heavy Timing] 빠른 공격 | " +
@@ -1108,9 +1552,14 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             );
         }
 
-
         return targetHoldTime;
     }
+
+    // =====================================
+    // Charge Timing Adaptation
+    // 구조는 유지하고 AdaptChance 역전만 수정
+    // =====================================
+
     public float GetChargePostPassDelay(
         float basePostPassDelay,
         float dashAttackStartupTime)
@@ -1124,11 +1573,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         float habitScore =
             behaviorModel
                 .GetChargeTimingHabitScore();
-
-
-        // =============================
-        // Policy 학습 / 해제
-        // =============================
 
         if (!chargeTimingPolicyActive)
         {
@@ -1146,12 +1590,12 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             );
         }
         else if (habitScore <
-                chargeTimingReleaseThreshold)
+                 chargeTimingReleaseThreshold)
         {
             chargeTimingPolicyActive = false;
             chargeTimingMode =
                 TimingAdaptMode.None;
-                
+
             chargeAdaptiveUsesSinceMode = 0;
 
             Debug.Log(
@@ -1162,8 +1606,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             return basePostPassDelay;
         }
 
-
-        // Dash 종료 이후 Counter Timing
         if (!behaviorModel
                 .TryGetChargeCounterDelayFromPass(
                     out float responseDelay))
@@ -1171,8 +1613,8 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             return basePostPassDelay;
         }
 
-
-        float counterWindowStart = responseDelay;
+        float counterWindowStart =
+            responseDelay;
 
         float counterWindowEnd =
             counterWindowStart +
@@ -1184,19 +1626,9 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 counterWindowEnd
             ) * 0.5f;
 
-
         float baseHitTime =
             basePostPassDelay +
             dashAttackStartupTime;
-
-
-        // =============================
-        // 처음 한 번만 Early/Late 결정
-        // =============================
-
-        // =============================
-        // 처음 Timing Mode 학습
-        // =============================
 
         if (chargeTimingMode ==
             TimingAdaptMode.None)
@@ -1234,13 +1666,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 $"학습 → {chargeTimingMode}"
             );
         }
-
-
-        // =============================
-        // 적응된 Charge에도 계속 성공하면
-        // Timing Mode 재평가
-        // =============================
-
         else if (
             chargeAdaptiveUsesSinceMode >=
                 timingModeReevaluationInterval &&
@@ -1264,8 +1689,8 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                     TimingAdaptMode.Early;
             }
 
-
-            if (newMode != chargeTimingMode)
+            if (newMode !=
+                chargeTimingMode)
             {
                 Debug.Log(
                     $"[Charge Timing Mode] 재적응 | " +
@@ -1273,7 +1698,8 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                     $"이유: 적응된 Charge에도 계속 Counter 성공"
                 );
 
-                chargeTimingMode = newMode;
+                chargeTimingMode =
+                    newMode;
             }
             else
             {
@@ -1286,11 +1712,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             chargeAdaptiveUsesSinceMode = 0;
         }
 
-        // =============================
-        // 대부분 Policy 적용
-        // 가끔 Normal
-        // =============================
-
         float influence =
             Mathf.InverseLerp(
                 chargeTimingReleaseThreshold,
@@ -1298,9 +1719,19 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 habitScore
             );
 
+        // 기존 코드:
+        // 0.75 → maxChargeTimingAdaptChance(현재 Scene 0.70)
+        // 로 보간되어 Habit이 강해질수록 확률이 낮아졌다.
+        // 기존 threshold / max 값은 유지하고 방향만 정상화한다.
+        float minimumAdaptChance =
+            Mathf.Min(
+                chargeTimingHabitThreshold,
+                maxChargeTimingAdaptChance
+            );
+
         float adaptChance =
             Mathf.Lerp(
-                0.75f,
+                minimumAdaptChance,
                 maxChargeTimingAdaptChance,
                 influence
             );
@@ -1315,7 +1746,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
             return basePostPassDelay;
         }
-
 
         float targetHitTime;
 
@@ -1333,18 +1763,15 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 chargeTimingMargin;
         }
 
-
         float targetPostPassDelay =
             targetHitTime -
             dashAttackStartupTime;
-
 
         targetPostPassDelay +=
             Random.Range(
                 -chargeTimingJitter,
                 chargeTimingJitter
             );
-
 
         targetPostPassDelay =
             Mathf.Clamp(
@@ -1354,6 +1781,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             );
 
         chargeAdaptiveUsesSinceMode++;
+
         if (targetPostPassDelay >
             basePostPassDelay)
         {
@@ -1366,7 +1794,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             );
         }
         else if (targetPostPassDelay <
-                basePostPassDelay)
+                 basePostPassDelay)
         {
             Debug.Log(
                 $"[Charge Timing] 빠른 공격 | " +
@@ -1376,7 +1804,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 $"{targetPostPassDelay:F2}"
             );
         }
-
 
         return targetPostPassDelay;
     }

@@ -14,77 +14,117 @@ public class BossController : MonoBehaviour
         Stunned,
         Dead
     }
+
     public enum PrecisionStunPhase
     {
         None,
         Stunned,
         Recovering
     }
+
     [Header("References")]
-    [SerializeField] private BossMovement movement;
-    [SerializeField] private BossAction bossAction;
-    [SerializeField] private BossAttackSelector attackSelector;
-    [SerializeField] private BossAdaptiveDecisionSource adaptiveSource;
+    [SerializeField]
+    private BossMovement movement;
+
+    [SerializeField]
+    private BossAction bossAction;
+
+    [SerializeField]
+    private BossAttackSelector attackSelector;
+
+    [SerializeField]
+    private BossAdaptiveDecisionSource adaptiveSource;
+
     [Header("Combat")]
-    
-    [SerializeField] private BossDamageReceiver damageReceiver;
+    [SerializeField]
+    private BossDamageReceiver damageReceiver;
 
     [Header("Reposition")]
-    [SerializeField] private float repositionDuration = 0.4f;
+    [SerializeField]
+    private float repositionDuration = 0.4f;
 
     private BossPostAction currentPostAction;
     private BossAttack lastExecutedAttack;
     private float repositionTimer;
-    private BossState currentState = BossState.Idle;
+
+    private BossState currentState =
+        BossState.Idle;
 
     private bool wasAttacking;
 
     [Header("Back Dodge")]
-    [SerializeField] private float backDodgeTriggerDistance = 1.5f;
-    [SerializeField] private float backDodgeCooldown = 3f;
+    [SerializeField]
+    private float backDodgeTriggerDistance = 1.5f;
+
+    [SerializeField]
+    private float backDodgeCooldown = 3f;
+
     private bool wasDodging;
     private bool backDodgeLogPending;
-    [SerializeField] private float backDodgeResponseWindow = 0.6f;
+
+    [SerializeField]
+    private float backDodgeResponseWindow = 0.6f;
 
     private float backDodgeResponseTimer;
-    [SerializeField] private float backDodgeRecoveryTime = 0.5f;
+
+    [SerializeField]
+    private float backDodgeRecoveryTime = 0.5f;
 
     [SerializeField, Range(0f, 1f)]
     private float backDodgeChance = 0.35f;
 
     private float backDodgeCooldownTimer;
-
     private float stunTimer;
 
     [Header("Front Step")]
-    [SerializeField] private float frontStepTriggerDistance = 4f;
+    [SerializeField]
+    private float frontStepTriggerDistance = 4f;
 
     [SerializeField, Range(0f, 1f)]
     private float frontStepChance = 0.25f;
 
-    [SerializeField] private float frontStepCooldown = 3f;
+    [SerializeField]
+    private float frontStepCooldown = 3f;
 
     private float frontStepCooldownTimer;
-    [SerializeField] private float frontStepRecoveryTime = 0.3f;
+
+    [SerializeField]
+    private float frontStepRecoveryTime = 0.3f;
 
     private bool wasFrontStepping;
     private bool frontStepLogPending;
-    [SerializeField] private float frontStepResponseWindow = 0.3f;
+
+    [SerializeField]
+    private float frontStepResponseWindow = 0.3f;
 
     private float frontStepResponseTimer;
+
+    // Adaptive Retreat Response의 Re-FrontStep은
+    // 다시 FrontStep Opportunity를 생성하지 않는다.
     private bool currentFrontStepIsAdaptiveFollowUp;
+
     [Header("Parry")]
-    [SerializeField] private BossParry bossParry;
+    [SerializeField]
+    private BossParry bossParry;
+
     [SerializeField, Range(0f, 1f)]
     private float parryChance = 0.15f;
 
-    [SerializeField] private float parryCooldown = 4f;
-    
-    [Header("Precision Stun")]
-    [SerializeField] private BossAnimator bossAnimator;
+    [SerializeField]
+    private float parryCooldown = 4f;
 
-    [SerializeField] private float precisionStunDuration = 2.5f;
-    [SerializeField] private int precisionStunHitLimit = 3;
+    private float parryCooldownTimer;
+    private bool wasParrying;
+
+    [Header("Precision Stun")]
+    [SerializeField]
+    private BossAnimator bossAnimator;
+
+    [SerializeField]
+    private float precisionStunDuration = 2.5f;
+
+    [SerializeField]
+    private int precisionStunHitLimit = 3;
 
     private PrecisionStunPhase precisionStunPhase =
         PrecisionStunPhase.None;
@@ -99,18 +139,20 @@ public class BossController : MonoBehaviour
     public bool IsInPrecisionStun =>
         precisionStunPhase !=
         PrecisionStunPhase.None;
-    private float parryCooldownTimer;
-    private bool wasParrying;
 
-    public BossState CurrentState => currentState;
+    public BossState CurrentState =>
+        currentState;
 
     private bool battleStarted = false;
 
-    public bool BattleStarted => battleStarted;
+    public bool BattleStarted =>
+        battleStarted;
+
     private void Update()
     {
         if (!battleStarted)
             return;
+
         // =====================================
         // Precision Stun
         // =====================================
@@ -130,49 +172,59 @@ public class BossController : MonoBehaviour
                 }
             }
 
-            // Stun / StunOut 동안
-            // Boss AI 전체 정지
             return;
-        }    
+        }
+
         if (stunTimer > 0f)
         {
-            stunTimer -= Time.deltaTime;
+            stunTimer -=
+                Time.deltaTime;
         }
+
         if (backDodgeCooldownTimer > 0f)
-            backDodgeCooldownTimer -= Time.deltaTime;
+        {
+            backDodgeCooldownTimer -=
+                Time.deltaTime;
+        }
+
         if (frontStepCooldownTimer > 0f)
         {
-            frontStepCooldownTimer -= Time.deltaTime;
+            frontStepCooldownTimer -=
+                Time.deltaTime;
         }
-        if (repositionTimer > 0f)
-            repositionTimer -= Time.deltaTime;
 
-        // FrontStep 반응 관찰 시간
+        if (repositionTimer > 0f)
+        {
+            repositionTimer -=
+                Time.deltaTime;
+        }
+
         if (frontStepLogPending &&
             frontStepResponseTimer > 0f)
         {
-            frontStepResponseTimer -= Time.deltaTime;
+            frontStepResponseTimer -=
+                Time.deltaTime;
         }
 
-        // BackDodge 반응 관찰 시간
         if (backDodgeLogPending &&
             backDodgeResponseTimer > 0f)
         {
-            backDodgeResponseTimer -= Time.deltaTime;
+            backDodgeResponseTimer -=
+                Time.deltaTime;
         }
+
         if (frontStepLogPending &&
             !bossAction.IsFrontStepping &&
             repositionTimer <= 0f &&
             frontStepResponseTimer <= 0f)
         {
-            CombatLogger.Instance?.EndBossBehavior(
-                movement.DistanceToTarget
-            );
+            CombatLogger.Instance?
+                .EndBossBehavior(
+                    movement.DistanceToTarget
+                );
 
             frontStepLogPending = false;
 
-            // 일반 FrontStep에서만
-            // Retreat 적응 기회를 새로 생성
             if (!currentFrontStepIsAdaptiveFollowUp)
             {
                 adaptiveSource?
@@ -181,60 +233,95 @@ public class BossController : MonoBehaviour
                     );
             }
 
-            currentFrontStepIsAdaptiveFollowUp = false;
+            currentFrontStepIsAdaptiveFollowUp =
+                false;
         }
+
         if (backDodgeLogPending &&
             !bossAction.IsDodging &&
             repositionTimer <= 0f &&
             backDodgeResponseTimer <= 0f)
         {
-            CombatLogger.Instance?.EndBossBehavior(
-                movement.DistanceToTarget
-            );
+            CombatLogger.Instance?
+                .EndBossBehavior(
+                    movement.DistanceToTarget
+                );
 
             backDodgeLogPending = false;
 
-            adaptiveSource?.OpenFollowUpOpportunity(
-                BossBehaviorType.BackDodge
-            );
+            adaptiveSource?
+                .OpenFollowUpOpportunity(
+                    BossBehaviorType.BackDodge
+                );
         }
+
         if (parryCooldownTimer > 0f)
         {
-            parryCooldownTimer -= Time.deltaTime;
+            parryCooldownTimer -=
+                Time.deltaTime;
         }
+
         if (wasAttacking &&
             !bossAction.IsAttacking &&
             stunTimer <= 0f)
         {
-            CombatLogger.Instance?.EndBossAttack(
-                movement.DistanceToTarget
-            );
+            // BossAction의 isAttacking은 기존 Recovery가
+            // 끝난 뒤 false가 되므로, 여기부터가
+            // Post-Punish Commit 관찰의 기준점이다.
+            CombatLogger.Instance?
+                .EndBossAttack(
+                    movement.DistanceToTarget
+                );
+
+            // 현재 입력을 읽고 대응하는 것이 아니라,
+            // 이전 Post-Punish 로그로 이미 학습된 Policy만
+            // 다음 판단에 사용한다.
+            adaptiveSource?
+                .OpenPostPunishOpportunity();
 
             StartPostAction();
         }
+
         if (wasParrying &&
-            (bossParry == null || !bossParry.IsParrying) &&
+            (bossParry == null ||
+             !bossParry.IsParrying) &&
             stunTimer <= 0f)
         {
-            CombatLogger.Instance?.EndBossBehavior(
-                movement.DistanceToTarget
-            );
+            CombatLogger.Instance?
+                .EndBossBehavior(
+                    movement.DistanceToTarget
+                );
 
-            ChangeState(BossState.Idle);
+            ChangeState(
+                BossState.Idle
+            );
         }
-        if (wasDodging && !bossAction.IsDodging)
+
+        if (wasDodging &&
+            !bossAction.IsDodging)
         {
             StartBackDodgeRecovery();
         }
+
         if (wasFrontStepping &&
             !bossAction.IsFrontStepping)
         {
             StartFrontStepRecovery();
         }
-        wasAttacking = bossAction.IsAttacking;
-        wasDodging = bossAction.IsDodging;
-        wasFrontStepping = bossAction.IsFrontStepping;
-        wasParrying = bossParry != null && bossParry.IsParrying;
+
+        wasAttacking =
+            bossAction.IsAttacking;
+
+        wasDodging =
+            bossAction.IsDodging;
+
+        wasFrontStepping =
+            bossAction.IsFrontStepping;
+
+        wasParrying =
+            bossParry != null &&
+            bossParry.IsParrying;
+
         UpdateState();
     }
 
@@ -248,30 +335,48 @@ public class BossController : MonoBehaviour
 
     private void UpdateState()
     {
-        float distance = movement.DistanceToTarget;
+        float distance =
+            movement.DistanceToTarget;
+
         if (stunTimer > 0f)
         {
-            ChangeState(BossState.Stunned);
+            ChangeState(
+                BossState.Stunned
+            );
+
             return;
         }
-        if (bossParry != null && bossParry.IsParrying)
+
+        if (bossParry != null &&
+            bossParry.IsParrying)
         {
-            ChangeState(BossState.Parry);
+            ChangeState(
+                BossState.Parry
+            );
+
             return;
         }
+
         if (bossAction.IsBusy)
         {
             if (bossAction.IsDodging)
             {
-                ChangeState(BossState.BackDodge);
+                ChangeState(
+                    BossState.BackDodge
+                );
             }
-            else if (bossAction.IsFrontStepping)
+            else if (
+                bossAction.IsFrontStepping)
             {
-                ChangeState(BossState.FrontStep);
+                ChangeState(
+                    BossState.FrontStep
+                );
             }
             else
             {
-                ChangeState(BossState.Attack);
+                ChangeState(
+                    BossState.Attack
+                );
             }
 
             return;
@@ -279,36 +384,64 @@ public class BossController : MonoBehaviour
 
         if (repositionTimer > 0f)
         {
-            if (currentPostAction == BossPostAction.Hold)
-                ChangeState(BossState.Idle);
+            if (currentPostAction ==
+                BossPostAction.Hold)
+            {
+                ChangeState(
+                    BossState.Idle
+                );
+            }
             else
-                ChangeState(BossState.Reposition);
+            {
+                ChangeState(
+                    BossState.Reposition
+                );
+            }
 
             return;
         }
 
-        if (TryCounterBaitHold())
-            return;
+        // =====================================
+        // Adaptive Response Pool
+        // 기존 "확률 조금 증가"보다 먼저,
+        // 학습된 Context의 명시적 Response를 판단한다.
+        // =====================================
 
-        if (TryAdaptiveFrontStep(distance))
+        if (TryAdaptiveFollowUp(
+                distance))
+        {
             return;
+        }
 
-        if (TryBackDodge(distance))
+        if (TryBackDodge(
+                distance))
+        {
             return;
+        }
 
         if (TryParry())
             return;
 
-        if (TryFrontStep(distance))
-            return;
-
-        if (attackSelector.HasValidAttack(distance))
+        if (TryFrontStep(
+                distance))
         {
-            StartAttack(distance);
             return;
         }
-        
-        ChangeState(BossState.Approach);
+
+        if (attackSelector
+            .HasValidAttack(
+                distance))
+        {
+            StartAttack(
+                distance
+            );
+
+            return;
+        }
+
+        ChangeState(
+            BossState.Approach
+        );
     }
 
     private void ExecuteMovement()
@@ -320,7 +453,6 @@ public class BossController : MonoBehaviour
                 break;
 
             case BossState.Reposition:
-
                 switch (currentPostAction)
                 {
                     case BossPostAction.Approach:
@@ -341,59 +473,402 @@ public class BossController : MonoBehaviour
             case BossState.Idle:
                 movement.Stop();
                 break;
+
             case BossState.Parry:
                 movement.Stop();
                 break;
+
             case BossState.Attack:
-                // 공격 중 이동은 BossAction 담당
                 break;
+
             case BossState.BackDodge:
-                // 이동은 BossAction이 직접 제어
                 break;
+
             case BossState.FrontStep:
-                // 이동은 BossAction의 FrontStepRoutine이 담당
-                break;    
+                break;
+
             case BossState.Stunned:
                 break;
+
             case BossState.Dead:
                 movement.Stop();
-                break;    
+                break;
         }
     }
 
-    private void StartAttack(float distance)
+    // =====================================
+    // Adaptive Response 실행
+    // =====================================
+
+    private bool TryAdaptiveFollowUp(
+        float distance)
+    {
+        if (adaptiveSource == null ||
+            attackSelector == null)
+        {
+            return false;
+        }
+
+        bool canParry =
+            bossParry != null &&
+            !bossParry.IsParrying &&
+            parryCooldownTimer <= 0f;
+
+        bool canBackDodge =
+            distance <=
+                backDodgeTriggerDistance &&
+            backDodgeCooldownTimer <= 0f;
+
+        // 기존 Adaptive Re-FrontStep과 동일하게
+        // 일반 FrontStep cooldown은 무시한다.
+        // 단, 거리 조건은 유지한다.
+        bool canFrontStep =
+            distance > 1.5f &&
+            distance <=
+                frontStepTriggerDistance;
+
+        bool canCharge =
+            attackSelector
+                .CanUseAttackType(
+                    BossAttackType.ChargeSlash,
+                    distance
+                );
+
+        bool canHeavy =
+            attackSelector
+                .CanUseAttackType(
+                    BossAttackType.HeavySlash,
+                    distance
+                );
+
+        bool canBasic =
+            attackSelector
+                .CanUseAttackType(
+                    BossAttackType.BasicSlash,
+                    distance
+                );
+
+        if (!adaptiveSource
+                .TrySelectFollowUpResponse(
+                    canParry,
+                    canBackDodge,
+                    canFrontStep,
+                    canCharge,
+                    canHeavy,
+                    canBasic,
+                    parryChance,
+                    backDodgeChance,
+                    out AdaptiveResponseAction response))
+        {
+            return false;
+        }
+
+        // Normal을 뽑은 경우에도 이번 Adaptive Opportunity의
+        // 판단은 끝난 것이므로 소비한 뒤 기존 AI로 돌아간다.
+        if (response ==
+            AdaptiveResponseAction.NormalDecision)
+        {
+            adaptiveSource
+                .ConsumeFollowUpOpportunity(
+                    "NormalDecision",
+                    response
+                );
+
+            return false;
+        }
+
+        switch (response)
+        {
+            case AdaptiveResponseAction.Parry:
+                StartParry();
+
+                adaptiveSource
+                    .ConsumeFollowUpOpportunity(
+                        "Parry",
+                        response
+                    );
+
+                return true;
+
+            case AdaptiveResponseAction.BackDodge:
+                ExecuteAdaptiveBackDodge(
+                    distance
+                );
+
+                adaptiveSource
+                    .ConsumeFollowUpOpportunity(
+                        "BackDodge",
+                        response
+                    );
+
+                return true;
+
+            case AdaptiveResponseAction.FrontStep:
+                ExecuteAdaptiveFrontStep(
+                    distance
+                );
+
+                adaptiveSource
+                    .ConsumeFollowUpOpportunity(
+                        "FrontStep",
+                        response
+                    );
+
+                return true;
+
+            case AdaptiveResponseAction.ChargeSlash:
+                if (StartSpecificAttack(
+                        distance,
+                        BossAttackType.ChargeSlash))
+                {
+                    adaptiveSource
+                        .ConsumeFollowUpOpportunity(
+                            "ChargeSlash",
+                            response
+                        );
+
+                    return true;
+                }
+
+                break;
+
+            case AdaptiveResponseAction.HeavySlash:
+                if (StartSpecificAttack(
+                        distance,
+                        BossAttackType.HeavySlash))
+                {
+                    adaptiveSource
+                        .ConsumeFollowUpOpportunity(
+                            "HeavySlash",
+                            response
+                        );
+
+                    return true;
+                }
+
+                break;
+
+            case AdaptiveResponseAction.BasicSlash:
+                if (StartSpecificAttack(
+                        distance,
+                        BossAttackType.BasicSlash))
+                {
+                    adaptiveSource
+                        .ConsumeFollowUpOpportunity(
+                            "BasicSlash",
+                            response
+                        );
+
+                    return true;
+                }
+
+                break;
+
+            case AdaptiveResponseAction.Approach:
+                movement.Stop();
+                movement.FaceTarget();
+
+                currentPostAction =
+                    BossPostAction.Approach;
+
+                repositionTimer =
+                    repositionDuration;
+
+                ChangeState(
+                    BossState.Reposition
+                );
+
+                adaptiveSource
+                    .ConsumeFollowUpOpportunity(
+                        "ApproachPressure",
+                        response
+                    );
+
+                Debug.Log(
+                    "[Adaptive Response] " +
+                    "Approach Pressure"
+                );
+
+                return true;
+
+            case AdaptiveResponseAction.Neutral:
+                movement.Stop();
+                movement.FaceTarget();
+
+                currentPostAction =
+                    BossPostAction.Hold;
+
+                repositionTimer =
+                    adaptiveSource
+                        .GetAdaptiveNeutralDuration();
+
+                ChangeState(
+                    BossState.Idle
+                );
+
+                adaptiveSource
+                    .ConsumeFollowUpOpportunity(
+                        "Neutral",
+                        response
+                    );
+
+                Debug.Log(
+                    "[Adaptive Response] " +
+                    "Intentional Neutral"
+                );
+
+                return true;
+        }
+
+        return false;
+    }
+
+    private void ExecuteAdaptiveBackDodge(
+        float distance)
     {
         movement.Stop();
         movement.FaceTarget();
 
-        BossAttack selectedAttack =
-            attackSelector.SelectAttack(distance);
+        backDodgeResponseTimer =
+            backDodgeResponseWindow;
 
+        CombatLogger.Instance?
+            .BeginBossBehavior(
+                BossBehaviorType.BackDodge,
+                distance
+            );
+
+        backDodgeLogPending = true;
+
+        bossAction.ExecuteBackDodge();
+
+        backDodgeCooldownTimer =
+            backDodgeCooldown;
+
+        ChangeState(
+            BossState.BackDodge
+        );
+
+        Debug.Log(
+            "[Adaptive Response] " +
+            "BackDodge"
+        );
+    }
+
+    private void ExecuteAdaptiveFrontStep(
+        float distance)
+    {
+        movement.Stop();
+        movement.FaceTarget();
+
+        currentFrontStepIsAdaptiveFollowUp =
+            true;
+
+        frontStepResponseTimer =
+            frontStepResponseWindow;
+
+        CombatLogger.Instance?
+            .BeginBossBehavior(
+                BossBehaviorType.FrontStep,
+                distance
+            );
+
+        frontStepLogPending = true;
+
+        bossAction.ExecuteFrontStep();
+
+        frontStepCooldownTimer =
+            frontStepCooldown;
+
+        ChangeState(
+            BossState.FrontStep
+        );
+
+        Debug.Log(
+            "[Adaptive Response] " +
+            "Re-FrontStep"
+        );
+    }
+
+    // =====================================
+    // Attack
+    // =====================================
+
+    private void StartAttack(
+        float distance)
+    {
+        BossAttack selectedAttack =
+            attackSelector
+                .SelectAttack(
+                    distance
+                );
+
+        ExecuteSelectedAttack(
+            selectedAttack,
+            distance
+        );
+    }
+
+    private bool StartSpecificAttack(
+        float distance,
+        BossAttackType attackType)
+    {
+        BossAttack selectedAttack =
+            attackSelector
+                .SelectAttackType(
+                    attackType,
+                    distance
+                );
+
+        if (selectedAttack == null)
+            return false;
+
+        ExecuteSelectedAttack(
+            selectedAttack,
+            distance
+        );
+
+        return true;
+    }
+
+    private void ExecuteSelectedAttack(
+        BossAttack selectedAttack,
+        float distance)
+    {
         if (selectedAttack == null)
             return;
 
-        lastExecutedAttack = selectedAttack;
+        movement.Stop();
+        movement.FaceTarget();
 
+        lastExecutedAttack =
+            selectedAttack;
 
-        // HeavySlash Timing Adaptation
+        // Heavy Timing은 기존 구조 그대로 유지
         if (selectedAttack.attackType ==
                 BossAttackType.HeavySlash &&
             adaptiveSource != null)
         {
             float adaptedHoldTime =
-                adaptiveSource.GetHeavyHoldTime(
-                    bossAction.HeavyBaseHoldTime,
-                    bossAction.HeavyPrepareCueTime,
-                    selectedAttack.attackData.startupTime
-                );
+                adaptiveSource
+                    .GetHeavyHoldTime(
+                        bossAction
+                            .HeavyBaseHoldTime,
+                        bossAction
+                            .HeavyPrepareCueTime,
+                        selectedAttack
+                            .attackData
+                            .startupTime
+                    );
 
-            bossAction.SetNextHeavyHoldTime(
-                adaptedHoldTime
-            );
+            bossAction
+                .SetNextHeavyHoldTime(
+                    adaptedHoldTime
+                );
         }
 
-
-        // ChargeSlash Timing Adaptation
+        // Charge Timing은 기존 구조를 유지하고
+        // DecisionSource 내부의 역전된 확률만 수정
         if (selectedAttack.attackType ==
                 BossAttackType.ChargeSlash &&
             adaptiveSource != null)
@@ -401,41 +876,47 @@ public class BossController : MonoBehaviour
             float adaptedPostPassDelay =
                 adaptiveSource
                     .GetChargePostPassDelay(
-                        bossAction.ChargePostPassDelay,
-                        selectedAttack.attackData.startupTime
+                        bossAction
+                            .ChargePostPassDelay,
+                        selectedAttack
+                            .attackData
+                            .startupTime
                     );
 
-            bossAction.SetNextChargePostPassDelay(
-                adaptedPostPassDelay
-            );
+            bossAction
+                .SetNextChargePostPassDelay(
+                    adaptedPostPassDelay
+                );
         }
 
-
-        CombatLogger.Instance?.BeginBossAttack(
-            selectedAttack.attackType,
-            distance
-        );
+        CombatLogger.Instance?
+            .BeginBossAttack(
+                selectedAttack.attackType,
+                distance
+            );
 
         bossAction.ExecuteAttack(
             selectedAttack
         );
 
-        adaptiveSource?
-            .ConsumeFollowUpOpportunity(
-                selectedAttack.attackType.ToString()
-            );
-
-        ChangeState(BossState.Attack);
+        ChangeState(
+            BossState.Attack
+        );
     }
 
-    private void ChangeState(BossState newState)
+    private void ChangeState(
+        BossState newState)
     {
-        if (currentState == newState)
+        if (currentState ==
+            newState)
+        {
             return;
+        }
 
-        currentState = newState;
-
+        currentState =
+            newState;
     }
+
     private void StartPostAction()
     {
         if (lastExecutedAttack == null)
@@ -453,19 +934,28 @@ public class BossController : MonoBehaviour
             movement.DistanceToTarget;
 
         currentPostAction =
-            attackSelector.SelectPostAction(
-                lastExecutedAttack,
-                distance
-            );
+            attackSelector
+                .SelectPostAction(
+                    lastExecutedAttack,
+                    distance
+                );
 
         repositionTimer =
             repositionDuration;
-
     }
-    private bool TryBackDodge(float distance)
+
+    // =====================================
+    // Normal BackDodge
+    // =====================================
+
+    private bool TryBackDodge(
+        float distance)
     {
-        if (distance > backDodgeTriggerDistance)
+        if (distance >
+            backDodgeTriggerDistance)
+        {
             return false;
+        }
 
         if (backDodgeCooldownTimer > 0f)
             return false;
@@ -473,40 +963,50 @@ public class BossController : MonoBehaviour
         float currentChance =
             backDodgeChance;
 
+        // 기존 hook은 유지.
+        // 새 Response Pool이 Normal을 선택했을 때는
+        // Opportunity가 이미 소비되어 baseChance 그대로다.
         if (adaptiveSource != null)
         {
             currentChance =
-                adaptiveSource.GetBackDodgeChance(
-                    backDodgeChance
-                );
+                adaptiveSource
+                    .GetBackDodgeChance(
+                        backDodgeChance
+                    );
         }
 
-        if (Random.value > currentChance)
+        if (Random.value >
+            currentChance)
+        {
             return false;
+        }
 
         movement.Stop();
         movement.FaceTarget();
-        
+
         backDodgeResponseTimer =
             backDodgeResponseWindow;
 
-        // BackDodge 시작과 동시에 로그 시작
-        CombatLogger.Instance?.BeginBossBehavior(
-            BossBehaviorType.BackDodge,
-            distance
-        );
+        CombatLogger.Instance?
+            .BeginBossBehavior(
+                BossBehaviorType.BackDodge,
+                distance
+            );
 
         backDodgeLogPending = true;
 
         bossAction.ExecuteBackDodge();
-        adaptiveSource?
-            .ConsumeFollowUpOpportunity("BackDodge");
-        backDodgeCooldownTimer = backDodgeCooldown;
 
-        ChangeState(BossState.BackDodge);
+        backDodgeCooldownTimer =
+            backDodgeCooldown;
+
+        ChangeState(
+            BossState.BackDodge
+        );
 
         return true;
     }
+
     private void StartBackDodgeRecovery()
     {
         repositionTimer =
@@ -514,8 +1014,8 @@ public class BossController : MonoBehaviour
 
         currentPostAction =
             BossPostAction.Hold;
-
     }
+
     private void StartFrontStepRecovery()
     {
         repositionTimer =
@@ -523,65 +1023,78 @@ public class BossController : MonoBehaviour
 
         currentPostAction =
             BossPostAction.Hold;
-
     }
+
     public void TriggerHitBackDodge()
     {
         if (!battleStarted)
             return;
 
-        if (currentState == BossState.Dead)
+        if (currentState ==
+            BossState.Dead)
+        {
             return;
+        }
 
-        bossAction.ForceCancelAttack();
+        bossAction
+            .ForceCancelAttack();
 
         movement.Stop();
         movement.FaceTarget();
 
         bossAction.ExecuteBackDodge();
 
-        backDodgeCooldownTimer = backDodgeCooldown;
+        backDodgeCooldownTimer =
+            backDodgeCooldown;
 
-        ChangeState(BossState.BackDodge);
+        ChangeState(
+            BossState.BackDodge
+        );
     }
-    private bool TryFrontStep(float distance)
+
+    // =====================================
+    // Normal FrontStep
+    // =====================================
+
+    private bool TryFrontStep(
+        float distance)
     {
         if (frontStepCooldownTimer > 0f)
             return false;
 
-        // 가까운데 굳이 접근하지 않음
         if (distance <= 1.5f)
             return false;
 
-        // 너무 멀면 기존 Approach 사용
-        if (distance > frontStepTriggerDistance)
+        if (distance >
+            frontStepTriggerDistance)
+        {
             return false;
+        }
 
-        float currentChance = frontStepChance;
-
-        if (Random.value > currentChance)
+        if (Random.value >
+            frontStepChance)
+        {
             return false;
+        }
 
         movement.Stop();
         movement.FaceTarget();
 
-        currentFrontStepIsAdaptiveFollowUp = false;
+        currentFrontStepIsAdaptiveFollowUp =
+            false;
 
         frontStepResponseTimer =
             frontStepResponseWindow;
 
-        // FrontStep 시작과 동시에 로그 시작
-        CombatLogger.Instance?.BeginBossBehavior(
-            BossBehaviorType.FrontStep,
-            distance
-        );
+        CombatLogger.Instance?
+            .BeginBossBehavior(
+                BossBehaviorType.FrontStep,
+                distance
+            );
 
         frontStepLogPending = true;
 
         bossAction.ExecuteFrontStep();
-        
-        adaptiveSource?
-            .ConsumeFollowUpOpportunity("FrontStep");
 
         frontStepCooldownTimer =
             frontStepCooldown;
@@ -592,104 +1105,31 @@ public class BossController : MonoBehaviour
 
         return true;
     }
-    private bool TryAdaptiveFrontStep(
-        float distance)
+
+    // =====================================
+    // Stun / Parry
+    // =====================================
+
+    public void EnterCounterStun(
+        float duration)
     {
-        if (adaptiveSource == null)
-            return false;
+        bossParry?
+            .ForceCancelParry();
 
-        // 너무 가까우면 추가 접근하지 않음
-        if (distance <= 1.5f)
-            return false;
+        // 강제 중단된 공격은 정상 Recovery 종료가 아니므로
+        // Post-Punish sample을 열지 않는다.
+        CombatLogger.Instance?
+            .EndBossAttack(
+                movement.DistanceToTarget,
+                false
+            );
 
-        // FrontStep이 의미 있는 거리에서만
-        if (distance > frontStepTriggerDistance)
-            return false;
-
-        if (!adaptiveSource
-                .ShouldUseRetreatPressureFrontStep())
-        {
-            return false;
-        }
-
-        movement.Stop();
-        movement.FaceTarget();
-
-        currentFrontStepIsAdaptiveFollowUp = true;
-
-        frontStepResponseTimer =
-            frontStepResponseWindow;
-
-        CombatLogger.Instance?.BeginBossBehavior(
-            BossBehaviorType.FrontStep,
-            distance
-        );
-
-        frontStepLogPending = true;
-
-        bossAction.ExecuteFrontStep();
-
-        // 일반 FrontStep 쿨다운도 다시 갱신
-        frontStepCooldownTimer =
-            frontStepCooldown;
-
-        adaptiveSource
-            .ConsumeFollowUpOpportunity("FrontStep");
+        stunTimer =
+            duration;
 
         ChangeState(
-            BossState.FrontStep
+            BossState.Stunned
         );
-
-        Debug.Log(
-            "[Retreat Pressure] " +
-            "Execute Adaptive FrontStep"
-        );
-
-        return true;
-    }
-    private bool TryCounterBaitHold()
-    {
-        if (adaptiveSource == null)
-            return false;
-
-        if (!adaptiveSource
-                .ShouldUseCounterBaitHold())
-        {
-            return false;
-        }
-
-        movement.Stop();
-        movement.FaceTarget();
-
-        currentPostAction =
-            BossPostAction.Hold;
-
-        repositionTimer =
-            adaptiveSource
-                .GetCounterBaitHoldDuration();
-
-        ChangeState(BossState.Idle);
-
-        Debug.Log(
-            "[Counter Bait] " +
-            "Intentional Hold"
-        );
-
-        return true;
-    }
-    public void EnterCounterStun(float duration)
-    {
-        bossParry?.ForceCancelParry();
-
-        // Counter로 공격이 강제 종료된 경우
-        // 현재 Attack 로그도 즉시 확정
-        CombatLogger.Instance?.EndBossAttack(
-            movement.DistanceToTarget
-        );
-
-        stunTimer = duration;
-
-        ChangeState(BossState.Stunned);
     }
 
     private bool TryParry()
@@ -709,40 +1149,55 @@ public class BossController : MonoBehaviour
         if (adaptiveSource != null)
         {
             currentChance =
-                adaptiveSource.GetParryChance(
-                    parryChance
-                );
+                adaptiveSource
+                    .GetParryChance(
+                        parryChance
+                    );
         }
 
-        if (Random.value > currentChance)
+        if (Random.value >
+            currentChance)
+        {
             return false;
+        }
 
         StartParry();
 
-        adaptiveSource?
-            .ConsumeFollowUpOpportunity("Parry");
-
         return true;
     }
+
     private void StartParry()
     {
         movement.Stop();
         movement.FaceTarget();
 
-        CombatLogger.Instance?.BeginBossBehavior(
-            BossBehaviorType.Parry,
-            movement.DistanceToTarget
-        );
-        ChangeState(BossState.Parry);
+        CombatLogger.Instance?
+            .BeginBossBehavior(
+                BossBehaviorType.Parry,
+                movement.DistanceToTarget
+            );
 
-        parryCooldownTimer = parryCooldown;
+        ChangeState(
+            BossState.Parry
+        );
+
+        parryCooldownTimer =
+            parryCooldown;
 
         bossParry.StartParry();
     }
+
+    // =====================================
+    // Precision Stun
+    // =====================================
+
     public void EnterPrecisionStun()
     {
-        if (currentState == BossState.Dead)
+        if (currentState ==
+            BossState.Dead)
+        {
             return;
+        }
 
         if (precisionStunPhase !=
             PrecisionStunPhase.None)
@@ -750,24 +1205,29 @@ public class BossController : MonoBehaviour
             return;
         }
 
-
-        // 공격 중이었다면 현재 공격 종료
         if (bossAction != null &&
             bossAction.IsAttacking)
         {
             CombatLogger.Instance?
                 .EndBossAttack(
-                    movement.DistanceToTarget
+                    movement.DistanceToTarget,
+                    false
                 );
         }
 
+        bossAction?
+            .ForceCancelAttack();
 
-        bossAction?.ForceCancelAttack();
-        bossParry?.ForceCancelParry();
+        // Precision Stun Update는 early return하므로
+        // 이전 공격 상태가 복구 후까지 남지 않게 직접 정리한다.
+        wasAttacking = false;
 
-        movement?.Stop();
+        bossParry?
+            .ForceCancelParry();
 
-        // 기존 Counter Stun과 겹치지 않게
+        movement?
+            .Stop();
+
         stunTimer = 0f;
 
         precisionStunTimer =
@@ -784,7 +1244,6 @@ public class BossController : MonoBehaviour
 
         bossAnimator?
             .PlayPrecisionStunIn();
-
 
         Debug.Log(
             "[Boss Precision Stun] Start | 0/" +
@@ -807,7 +1266,6 @@ public class BossController : MonoBehaviour
             $"{precisionStunHitCount}/" +
             $"{precisionStunHitLimit}"
         );
-
 
         if (precisionStunHitCount >=
             precisionStunHitLimit)
@@ -859,19 +1317,27 @@ public class BossController : MonoBehaviour
             "[Boss Precision Stun] End"
         );
     }
+
     public void SetDead()
     {
-        bossParry?.ForceCancelParry();
+        bossParry?
+            .ForceCancelParry();
 
-        ChangeState(BossState.Dead);
+        ChangeState(
+            BossState.Dead
+        );
 
         movement.Stop();
-        precisionStunPhase = PrecisionStunPhase.None;
+
+        precisionStunPhase =
+            PrecisionStunPhase.None;
 
         precisionStunTimer = 0f;
         precisionStunHitCount = 0;
+
         enabled = false;
     }
+
     public void StartBattle()
     {
         if (battleStarted)
@@ -879,6 +1345,8 @@ public class BossController : MonoBehaviour
 
         battleStarted = true;
 
-        ChangeState(BossState.Idle);
+        ChangeState(
+            BossState.Idle
+        );
     }
 }
