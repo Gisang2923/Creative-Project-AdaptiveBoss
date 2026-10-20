@@ -16,6 +16,7 @@ public struct DamageInfo
     public float KnockdownDuration;
     public float CameraShakeDuration;
     public float CameraShakeStrength;
+    public float HitStopDuration;
     public DamageInfo(
         int damage,
         Vector2 hitDirection,
@@ -29,7 +30,8 @@ public struct DamageInfo
         float knockdownY = 0f,
         float knockdownDuration = 0f,
         float cameraShakeDuration = 0f,
-        float cameraShakeStrength = 0f)
+        float cameraShakeStrength = 0f,
+        float hitStopDuration = 0f)
     {
         Damage = damage;
         HitDirection = hitDirection;
@@ -57,5 +59,7 @@ public struct DamageInfo
 
         CameraShakeStrength =
             cameraShakeStrength;
+        HitStopDuration =
+            hitStopDuration;
     }
 }

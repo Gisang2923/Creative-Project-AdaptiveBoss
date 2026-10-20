@@ -26,3 +26,4 @@ MonoBehaviour:
   knockdownDuration: 0.8
   cameraShakeDuration: 0.25
   cameraShakeStrength: 0.25
+  hitStopDuration: 0.08

@@ -10,5 +10,9 @@ public class DamageReceiver : MonoBehaviour, IDamageable
             return;
 
         health.TakeDamage(damageInfo);
+        HitStopManager.Instance?
+        .Play(
+            damageInfo.HitStopDuration
+        );
     }
 }

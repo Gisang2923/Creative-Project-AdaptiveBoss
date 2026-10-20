@@ -33,4 +33,8 @@ public class AttackData : ScriptableObject
     [Header("Camera Shake")]
     public float cameraShakeDuration = 0f;
     public float cameraShakeStrength = 0f;
+
+    [Header("Hit Stop")]
+    [Min(0f)]
+    public float hitStopDuration = 0.025f;
 }
