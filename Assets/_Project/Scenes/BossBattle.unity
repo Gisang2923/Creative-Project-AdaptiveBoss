@@ -731,7 +731,7 @@ Transform:
   m_GameObject: {fileID: 402595753}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 2, y: 0.5, z: 0}
+  m_LocalPosition: {x: 2, y: 0.2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -760,6 +760,14 @@ MonoBehaviour:
   basicAttack3Duration: 1.4
   basicForwardSpeed: 3
   basicForwardStopDistance: 0.7
+  basicForwardMaxDistance: 0.4
+  basicThirdForwardMultiplier: 1.25
+  basicRecoilDistance: 0.2
+  basicThirdRecoilMultiplier: 1.35
+  basicRecoilDuration: 0.05
+  basicComboGap: 0.18
+  basicComboContinueDistance: 3
+  basicFinalRecoveryTime: 0.2
   heavyPrepareCueTime: 0.35
   heavyBaseHoldTime: 0.45
   heavyPreHoldTime: 0.3
@@ -834,7 +842,7 @@ MonoBehaviour:
   attackSelector: {fileID: 402595761}
   adaptiveSource: {fileID: 402595768}
   damageReceiver: {fileID: 402595764}
-  repositionDuration: 0.4
+  repositionDuration: 0.2
   backDodgeTriggerDistance: 3
   backDodgeCooldown: 3
   backDodgeResponseWindow: 0.6
@@ -1759,7 +1767,7 @@ Transform:
   m_GameObject: {fileID: 685367513}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: -2, y: 0.5, z: 0}
+  m_LocalPosition: {x: -2, y: 0.2, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -3639,7 +3647,7 @@ Transform:
   m_GameObject: {fileID: 1581103560}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: -0.5, z: 0}
+  m_LocalPosition: {x: 0, y: -0.8, z: 0}
   m_LocalScale: {x: 30, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []

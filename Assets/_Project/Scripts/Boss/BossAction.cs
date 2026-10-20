@@ -8,13 +8,35 @@ public class BossAction : MonoBehaviour
     [Header("Basic Slash")]
     [SerializeField] private float basicPreHoldTime = 0.06f;
     [SerializeField] private float basicPrepareHoldTime = 0.18f;
+
+    // Animation Event가 누락됐을 때 무한 대기를 막는 Safety Timeout
     [SerializeField] private float basicAttack1Duration = 1.10f;
     [SerializeField] private float basicAttack2Duration = 1.05f;
     [SerializeField] private float basicAttack3Duration = 1.40f;
+
+    // 타격 직전 플레이어 쪽으로 살짝 파고드는 움직임
     [SerializeField] private float basicForwardSpeed = 1.5f;
     [SerializeField] private float basicForwardStopDistance = 0.7f;
+    [SerializeField] private float basicForwardMaxDistance = 0.40f;
+    [SerializeField] private float basicThirdForwardMultiplier = 1.25f;
+
+    // 타격 직후 공격 방향의 반대로 짧게 회수
+    [SerializeField] private float basicRecoilDistance = 0.20f;
+    [SerializeField] private float basicThirdRecoilMultiplier = 1.35f;
+    [SerializeField] private float basicRecoilDuration = 0.10f;
+
+    // 연타 사이 판단 텀
+    [SerializeField] private float basicComboGap = 0.08f;
+
+    // 플레이어가 이 거리 밖으로 빠지면 남은 연타를 중단
+    [SerializeField] private float basicComboContinueDistance = 2.0f;
+
+    // 3타 이후 최소 회수 시간
+    [SerializeField] private float basicFinalRecoveryTime = 0.20f;
+
     private AttackData currentBasicAttackData;
     private bool basicHitTriggered;
+    private bool basicHitTimedOut;
 
     [Header("Heavy Slash")]
     // 빤짝 Prepare를 보여주는 고정 시간
@@ -40,7 +62,7 @@ public class BossAction : MonoBehaviour
         nextHeavyHoldTime =
             Mathf.Max(0f, holdTime);
     }
-    
+
     [Header("Charge Slash")]
     [SerializeField] private float chargePostPassDelay = 0.15f;
     [SerializeField] private float dashSpeed = 12f;
@@ -55,6 +77,7 @@ public class BossAction : MonoBehaviour
         nextChargePostPassDelay =
             Mathf.Max(0f, delay);
     }
+
     // 공격을 결정한 순간 플레이어 위치 기준,
     // 플레이어 뒤로 얼마나 넘어갈지
     [SerializeField] private float dashBehindDistance = 1.5f;
@@ -66,9 +89,7 @@ public class BossAction : MonoBehaviour
     [SerializeField] private Collider2D bodyCollider;
 
     [SerializeField] private float jumpSlamVanishTime = 0.35f;
-
     [SerializeField] private float jumpSlamHoverTime = 0.4f;
-
     [SerializeField] private float jumpSlamSpawnHeight = 8f;
 
     [SerializeField]
@@ -79,17 +100,19 @@ public class BossAction : MonoBehaviour
 
     [SerializeField] private float jumpSlamGroundY = 0f;
     [SerializeField] private float jumpLandingOffset = 0.6f;
+
     [Header("Jump Slam Ground Check")]
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private float groundCheckDistance = 10f;
     [SerializeField] private float groundOffset = 0.7f;
     [SerializeField] private float jumpSlamAttackLeadTime = 0.12f;
+
     [Header("Back Dodge")]
     [SerializeField] private float backDodgeDistance = 5f;
     [SerializeField] private float backDodgeDuration = 0.6f;
     [SerializeField] private BossAnimator bossAnimator;
-    private bool isDodging;
 
+    private bool isDodging;
     public bool IsDodging => isDodging;
 
     [Header("Front Step")]
@@ -98,19 +121,22 @@ public class BossAction : MonoBehaviour
     [SerializeField] private float frontStepStopDistance = 0.8f;
 
     private bool isFrontStepping;
-
     public bool IsFrontStepping => isFrontStepping;
-    
+
     public bool IsBusy =>
         isAttacking ||
         isDodging ||
         isFrontStepping;
+
     private bool isAttacking;
     private Hitbox currentHitbox;
 
     public bool IsAttacking => isAttacking;
+
     [SerializeField] private BossMovement movement;
+
     private float defaultGravityScale;
+
     private void Awake()
     {
         if (rb == null)
@@ -119,6 +145,7 @@ public class BossAction : MonoBehaviour
         if (rb != null)
             defaultGravityScale = rb.gravityScale;
     }
+
     public void ExecuteAttack(BossAttack attack)
     {
         if (isAttacking || attack == null)
@@ -129,6 +156,7 @@ public class BossAction : MonoBehaviour
             case BossAttackType.BasicSlash:
                 StartCoroutine(SlashRoutine(attack));
                 break;
+
             case BossAttackType.HeavySlash:
                 StartCoroutine(HeavySlashRoutine(attack));
                 break;
@@ -142,6 +170,7 @@ public class BossAction : MonoBehaviour
                 break;
         }
     }
+
     private IEnumerator SlashRoutine(BossAttack attack)
     {
         isAttacking = true;
@@ -152,239 +181,227 @@ public class BossAction : MonoBehaviour
         currentHitbox = hitbox;
         currentBasicAttackData = data;
 
-
         // =====================================
         // 1타
         // =====================================
-
-        basicHitTriggered = false;
-
-        // 1타 시작 전에만 플레이어 방향으로 Facing
-        movement?.FaceTarget();
-
-        float firstDeltaX =
-            player.position.x -
-            transform.position.x;
-
-        float firstDistance =
-            Mathf.Abs(firstDeltaX);
-
-        float firstDirection =
-            Mathf.Sign(firstDeltaX);
-
-        float firstForwardSpeed =
-            firstDistance > basicForwardStopDistance
-                ? basicForwardSpeed
-                : 0f;
-
-
-        float firstStartTime = Time.time;
-
-        bossAnimator?.PlayLightAttack1();
-
-
-        // 공격 모션과 함께 살짝 전진
-        rb.linearVelocity =
-            new Vector2(
-                firstDirection * firstForwardSpeed,
-                rb.linearVelocity.y
-            );
-
-
-        // 준비 자세까지 애니메이션 진행
-        yield return new WaitForSeconds(
-            basicPreHoldTime
-        );
-
-
-        // =====================================
-        // 준비 자세 Hold
-        // 이때는 미끄러지지 않도록 이동도 정지
-        // =====================================
-
-        rb.linearVelocity =
-            new Vector2(
-                0f,
-                rb.linearVelocity.y
-            );
-
-        bossAnimator?.SetPlaybackSpeed(0f);
-
-        yield return new WaitForSeconds(
-            basicPrepareHoldTime
-        );
-
-        bossAnimator?.SetPlaybackSpeed(1f);
-
-
-        // Hold 종료 후 다시 같은 방향으로 전진
-        rb.linearVelocity =
-            new Vector2(
-                firstDirection * firstForwardSpeed,
-                rb.linearVelocity.y
-            );
-
-
-        // 실제 검 타격 프레임의 Animation Event 대기
-        yield return new WaitUntil(
-            () => basicHitTriggered
-        );
-
-
-        // Hitbox 유지 시간
-        yield return new WaitForSeconds(
-            data.activeTime
-        );
-
-        hitbox.Deactivate();
-
-
-        // LightAtk1의 나머지 모션까지 전부 재생
-        float firstTotalDuration =
-            basicAttack1Duration +
-            basicPrepareHoldTime;
-
-        float firstElapsed =
-            Time.time - firstStartTime;
-
-        yield return new WaitForSeconds(
-            Mathf.Max(
-                0f,
-                firstTotalDuration -
-                firstElapsed
+        yield return StartCoroutine(
+            ExecuteBasicStrike(
+                1,
+                data,
+                hitbox
             )
         );
 
+        if (basicHitTimedOut)
+        {
+            FinishBasicCombo();
+            yield break;
+        }
 
-        // 1타 이동 종료
-        rb.linearVelocity =
-            new Vector2(
-                0f,
-                rb.linearVelocity.y
+        if (!CanContinueBasicCombo())
+        {
+            rb.linearVelocity =
+                new Vector2(
+                    0f,
+                    rb.linearVelocity.y
+                );
+
+            yield return new WaitForSeconds(
+                basicPrepareHoldTime
             );
 
+            FinishBasicCombo();
+            yield break;
+        }
+
+        yield return StartCoroutine(
+            BasicComboGapRoutine()
+        );
+
+        if (!CanContinueBasicCombo())
+        {
+            FinishBasicCombo();
+            yield break;
+        }
 
         // =====================================
         // 2타
         // =====================================
-
-        basicHitTriggered = false;
-
-
-        // 1 → 2타 사이에서만 다시 Facing
-        movement?.FaceTarget();
-
-
-        float secondDeltaX =
-            player.position.x -
-            transform.position.x;
-
-        float secondDistance =
-            Mathf.Abs(secondDeltaX);
-
-        float secondDirection =
-            Mathf.Sign(secondDeltaX);
-
-        float secondForwardSpeed =
-            secondDistance > basicForwardStopDistance
-                ? basicForwardSpeed
-                : 0f;
-
-
-        float secondStartTime = Time.time;
-
-        bossAnimator?.PlayLightAttack2();
-
-
-        // 2타를 휘두르는 동안 살짝 전진
-        rb.linearVelocity =
-            new Vector2(
-                secondDirection *
-                secondForwardSpeed,
-                rb.linearVelocity.y
-            );
-
-
-        // 실제 타격 프레임 대기
-        yield return new WaitUntil(
-            () => basicHitTriggered
-        );
-
-
-        yield return new WaitForSeconds(
-            data.activeTime
-        );
-
-        hitbox.Deactivate();
-
-
-        // LightAtk2 전체 길이까지 재생
-        float secondElapsed =
-            Time.time - secondStartTime;
-
-        yield return new WaitForSeconds(
-            Mathf.Max(
-                0f,
-                basicAttack2Duration -
-                secondElapsed
+        yield return StartCoroutine(
+            ExecuteBasicStrike(
+                2,
+                data,
+                hitbox
             )
         );
 
+        if (basicHitTimedOut)
+        {
+            FinishBasicCombo();
+            yield break;
+        }
 
-        // 2타 이동 종료
-        rb.linearVelocity =
-            new Vector2(
-                0f,
-                rb.linearVelocity.y
+        if (!CanContinueBasicCombo())
+        {
+            rb.linearVelocity =
+                new Vector2(
+                    0f,
+                    rb.linearVelocity.y
+                );
+
+            yield return new WaitForSeconds(
+                basicPrepareHoldTime
             );
 
+            FinishBasicCombo();
+            yield break;
+        }
+
+        yield return StartCoroutine(
+            BasicComboGapRoutine()
+        );
+
+        if (!CanContinueBasicCombo())
+        {
+            FinishBasicCombo();
+            yield break;
+        }
 
         // =====================================
         // 3타
         // =====================================
+        yield return StartCoroutine(
+            ExecuteBasicStrike(
+                3,
+                data,
+                hitbox
+            )
+        );
 
-        basicHitTriggered = false;
+        if (basicHitTimedOut)
+        {
+            FinishBasicCombo();
+            yield break;
+        }
 
-
-        // 2 → 3타 사이에서만 다시 Facing
-        movement?.FaceTarget();
-
-
-        float thirdDeltaX =
-            player.position.x -
-            transform.position.x;
-
-        float thirdDistance =
-            Mathf.Abs(thirdDeltaX);
-
-        float thirdDirection =
-            Mathf.Sign(thirdDeltaX);
-
-        float thirdForwardSpeed =
-            thirdDistance > basicForwardStopDistance
-                ? basicForwardSpeed
-                : 0f;
-
-
-        float thirdStartTime = Time.time;
-
-        bossAnimator?.PlayLightAttack3();
-
-
-        // 3타를 휘두르는 동안 살짝 전진
         rb.linearVelocity =
             new Vector2(
-                thirdDirection *
-                thirdForwardSpeed,
+                0f,
                 rb.linearVelocity.y
             );
 
-
-        // 실제 타격 프레임 대기
-        yield return new WaitUntil(
-            () => basicHitTriggered
+        yield return new WaitForSeconds(
+            basicFinalRecoveryTime
         );
 
+        FinishBasicCombo();
+    }
+
+    private IEnumerator ExecuteBasicStrike(
+        int strikeIndex,
+        AttackData data,
+        Hitbox hitbox)
+    {
+        basicHitTriggered = false;
+        basicHitTimedOut = false;
+
+        movement?.FaceTarget();
+
+        float deltaX =
+            player.position.x -
+            transform.position.x;
+
+        float direction =
+            Mathf.Sign(deltaX);
+
+        if (direction == 0f)
+            direction = 1f;
+
+        float forwardMaxDistance =
+            basicForwardMaxDistance;
+
+        float recoilDistance =
+            basicRecoilDistance;
+
+        float eventTimeout =
+            basicAttack1Duration;
+
+        switch (strikeIndex)
+        {
+            case 1:
+                bossAnimator?
+                    .PlayLightAttack1();
+
+                eventTimeout =
+                    basicAttack1Duration;
+
+                // 첫 타의 기존 예고 Hold는 유지
+                yield return new WaitForSeconds(
+                    basicPreHoldTime
+                );
+
+                rb.linearVelocity =
+                    new Vector2(
+                        0f,
+                        rb.linearVelocity.y
+                    );
+
+                bossAnimator?
+                    .SetPlaybackSpeed(0f);
+
+                yield return new WaitForSeconds(
+                    basicPrepareHoldTime
+                );
+
+                bossAnimator?
+                    .SetPlaybackSpeed(1f);
+                break;
+
+            case 2:
+                bossAnimator?
+                    .PlayLightAttack2();
+
+                eventTimeout =
+                    basicAttack2Duration;
+                break;
+
+            case 3:
+                bossAnimator?
+                    .PlayLightAttack3();
+
+                eventTimeout =
+                    basicAttack3Duration;
+
+                forwardMaxDistance *=
+                    basicThirdForwardMultiplier;
+
+                recoilDistance *=
+                    basicThirdRecoilMultiplier;
+                break;
+        }
+
+        // 실제 BasicHit Animation Event가 발생할 때까지
+        // 플레이어 쪽으로 짧게 파고든다.
+        yield return StartCoroutine(
+            WaitForBasicHitWithLunge(
+                direction,
+                forwardMaxDistance,
+                eventTimeout
+            )
+        );
+
+        if (basicHitTimedOut)
+        {
+            hitbox?.Deactivate();
+            yield break;
+        }
+
+        // 타격 순간부터는 앞으로 미는 이동을 끊는다.
+        rb.linearVelocity =
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
 
         yield return new WaitForSeconds(
             data.activeTime
@@ -392,38 +409,208 @@ public class BossAction : MonoBehaviour
 
         hitbox.Deactivate();
 
-
-        // LightAtk3 전체 길이까지 재생
-        float thirdElapsed =
-            Time.time - thirdStartTime;
-
-        yield return new WaitForSeconds(
-            Mathf.Max(
-                0f,
-                basicAttack3Duration -
-                thirdElapsed
+        // 타격 후 검을 회수하는 느낌으로
+        // 공격 방향 반대로 짧게 이동한다.
+        yield return StartCoroutine(
+            BasicRecoilRoutine(
+                -direction,
+                recoilDistance,
+                basicRecoilDuration
             )
         );
+    }
 
+    private IEnumerator WaitForBasicHitWithLunge(
+        float direction,
+        float maxDistance,
+        float timeout)
+    {
+        float startX =
+            transform.position.x;
 
-        // 3타 이동 종료
+        float elapsed = 0f;
+
+        while (!basicHitTriggered &&
+               elapsed < timeout)
+        {
+            float movedDistance =
+                Mathf.Abs(
+                    transform.position.x -
+                    startX
+                );
+
+            float distanceToPlayer =
+                player != null
+                    ? Mathf.Abs(
+                        player.position.x -
+                        transform.position.x
+                    )
+                    : Mathf.Infinity;
+
+            bool canMoveForward =
+                movedDistance <
+                    maxDistance &&
+                distanceToPlayer >
+                    basicForwardStopDistance;
+
+            rb.linearVelocity =
+                new Vector2(
+                    canMoveForward
+                        ? direction *
+                          basicForwardSpeed
+                        : 0f,
+                    rb.linearVelocity.y
+                );
+
+            elapsed +=
+                Time.deltaTime;
+
+            yield return null;
+        }
+
         rb.linearVelocity =
             new Vector2(
                 0f,
                 rb.linearVelocity.y
             );
 
+        if (!basicHitTriggered)
+        {
+            basicHitTimedOut = true;
 
-        // =====================================
-        // 종료
-        // =====================================
+            Debug.LogWarning(
+                "[Boss Basic] " +
+                "BasicHit Animation Event timeout."
+            );
+        }
+    }
+
+    private IEnumerator BasicRecoilRoutine(
+        float direction,
+        float distance,
+        float duration)
+    {
+        if (distance <= 0f ||
+            duration <= 0f)
+        {
+            yield break;
+        }
+
+        float speed =
+            distance / duration;
+
+        float movedDistance = 0f;
+
+        while (movedDistance < distance)
+        {
+            float moveThisFrame =
+                speed *
+                Time.fixedDeltaTime;
+
+            moveThisFrame =
+                Mathf.Min(
+                    moveThisFrame,
+                    distance -
+                    movedDistance
+                );
+
+            rb.linearVelocity =
+                new Vector2(
+                    direction * speed,
+                    rb.linearVelocity.y
+                );
+
+            movedDistance +=
+                moveThisFrame;
+
+            yield return
+                new WaitForFixedUpdate();
+        }
+
+        rb.linearVelocity =
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
+    }
+
+    private IEnumerator BasicComboGapRoutine()
+    {
+        rb.linearVelocity =
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
+
+        float elapsed = 0f;
+
+        while (elapsed <
+               basicComboGap)
+        {
+            if (!CanContinueBasicCombo())
+            {
+                rb.linearVelocity =
+                    new Vector2(
+                        0f,
+                        rb.linearVelocity.y
+                    );
+
+                yield return new WaitForSeconds(
+                    basicPrepareHoldTime
+                );
+
+                FinishBasicCombo();
+                yield break;
+            }
+
+            elapsed +=
+                Time.deltaTime;
+
+            yield return null;
+        }
+    }
+
+    private bool CanContinueBasicCombo()
+    {
+        if (player == null)
+            return false;
+
+        float distance =
+            Mathf.Abs(
+                player.position.x -
+                transform.position.x
+            );
+
+        return distance <=
+            basicComboContinueDistance;
+    }
+
+    private void FinishBasicCombo()
+    {
+        currentHitbox?
+            .Deactivate();
+
+        if (rb != null)
+        {
+            rb.linearVelocity =
+                new Vector2(
+                    0f,
+                    rb.linearVelocity.y
+                );
+        }
+
+        bossAnimator?
+            .SetPlaybackSpeed(1f);
 
         currentBasicAttackData = null;
         currentHitbox = null;
 
+        basicHitTriggered = false;
+        basicHitTimedOut = false;
+
         isAttacking = false;
     }
-   
+
     private void TryPerfectDodgeDistanceGrace()
     {
         if (player == null)
@@ -437,6 +624,7 @@ public class BossAction : MonoBehaviour
                 transform
             );
     }
+
     public void OnBasicHit()
     {
         if (!isAttacking ||
@@ -452,8 +640,10 @@ public class BossAction : MonoBehaviour
         currentHitbox.Activate(
             currentBasicAttackData
         );
+
         TryPerfectDodgeDistanceGrace();
     }
+
     private IEnumerator HeavySlashRoutine(BossAttack attack)
     {
         isAttacking = true;
@@ -463,34 +653,17 @@ public class BossAction : MonoBehaviour
 
         currentHitbox = hitbox;
 
-        // =====================================
-        // 1. Heavy 예고
-        // 검을 들고 빤짝하는 고정 모션
-        // =====================================
-
         bossAnimator?.PlayHeavyPrepare();
 
         yield return new WaitForSeconds(
             heavyPrepareCueTime
         );
 
-
-        // =====================================
-        // 2. 실제 HeavyAttack 시작
-        // =====================================
-
         bossAnimator?.PlayHeavyAttack();
 
-
-        // 찌르기 직전 자세까지 이동
         yield return new WaitForSeconds(
             heavyPreHoldTime
         );
-
-
-        // =====================================
-        // 3. 찌르기 직전 자세에서 Adaptive Hold
-        // =====================================
 
         float holdTime =
             nextHeavyHoldTime >= 0f
@@ -499,24 +672,13 @@ public class BossAction : MonoBehaviour
 
         nextHeavyHoldTime = -1f;
 
-
-        // 현재 공격 자세에서 애니메이션 정지
         bossAnimator?.SetPlaybackSpeed(0f);
 
         yield return new WaitForSeconds(
             holdTime
         );
 
-        // 다시 재생
         bossAnimator?.SetPlaybackSpeed(1f);
-
-
-        // =====================================
-        // 4. Hold 이후 실제 타격까지 재생
-        //
-        // startupTime = HeavyAttack 시작부터
-        // Hit까지 전체 시간
-        // =====================================
 
         float releaseTime =
             Mathf.Max(
@@ -528,11 +690,6 @@ public class BossAction : MonoBehaviour
         yield return new WaitForSeconds(
             releaseTime
         );
-
-
-        // =====================================
-        // 5. Active
-        // =====================================
 
         hitbox.Activate(data);
 
@@ -548,11 +705,6 @@ public class BossAction : MonoBehaviour
 
         hitbox.Deactivate();
 
-
-        // =====================================
-        // 6. Recovery
-        // =====================================
-
         yield return new WaitForSeconds(
             data.recoveryTime
         );
@@ -560,6 +712,7 @@ public class BossAction : MonoBehaviour
         currentHitbox = null;
         isAttacking = false;
     }
+
     public void ForceCancelAttack()
     {
         StopAllCoroutines();
@@ -573,7 +726,10 @@ public class BossAction : MonoBehaviour
         if (rb != null)
         {
             rb.linearVelocity =
-                new Vector2(0f, rb.linearVelocity.y);
+                new Vector2(
+                    0f,
+                    rb.linearVelocity.y
+                );
         }
 
         RestoreBossState();
@@ -583,7 +739,9 @@ public class BossAction : MonoBehaviour
         isFrontStepping = false;
         currentBasicAttackData = null;
         basicHitTriggered = false;
+        basicHitTimedOut = false;
     }
+
     private IEnumerator ChargeSlashRoutine(BossAttack attack)
     {
         isAttacking = true;
@@ -592,27 +750,27 @@ public class BossAction : MonoBehaviour
         Hitbox hitbox = attack.hitbox;
 
         currentHitbox = hitbox;
+
         float postPassDelay =
             nextChargePostPassDelay >= 0f
                 ? nextChargePostPassDelay
                 : chargePostPassDelay;
 
-        // 이번 Charge에만 적용
         nextChargePostPassDelay = -1f;
-        // 공격을 결정한 순간 방향 고정
+
         float direction =
-            Mathf.Sign(player.position.x - transform.position.x);
+            Mathf.Sign(
+                player.position.x -
+                transform.position.x
+            );
 
-        // 공격 결정 당시 플레이어 위치
-        float playerXAtStart = player.position.x;
+        float playerXAtStart =
+            player.position.x;
 
-        // 플레이어 뒤쪽까지 통과
         float targetX =
-            playerXAtStart + direction * dashBehindDistance;
-
-        // ==========================================
-        // 1. Dash 시작 위치 저장
-        // ==========================================
+            playerXAtStart +
+            direction *
+            dashBehindDistance;
 
         Vector2 dashStartCenter =
             hitbox.GetWorldCenter();
@@ -621,15 +779,10 @@ public class BossAction : MonoBehaviour
 
         float elapsed = 0f;
 
-        // ==========================================
-        // 2. Dash
-        // 노데미지
-        // ==========================================
-
         while (
-            (targetX - transform.position.x) * direction > 0f &&
-            elapsed < maxDashDuration
-        )
+            (targetX - transform.position.x) *
+                direction > 0f &&
+            elapsed < maxDashDuration)
         {
             rb.linearVelocity =
                 new Vector2(
@@ -637,36 +790,34 @@ public class BossAction : MonoBehaviour
                     rb.linearVelocity.y
                 );
 
-            elapsed += Time.fixedDeltaTime;
+            elapsed +=
+                Time.fixedDeltaTime;
 
-            yield return new WaitForFixedUpdate();
+            yield return
+                new WaitForFixedUpdate();
         }
 
         rb.linearVelocity =
-            new Vector2(0f, rb.linearVelocity.y);
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
 
-        // 중요:
-        // 플레이어를 지나쳤어도 뒤돌지 않는다.
-
-        // Dash 종료 위치
         Vector2 dashEndCenter =
             hitbox.GetWorldCenter();
-        CombatLogger.Instance?.MarkChargePassEnd();
-        // ==========================================
-        // 3. 제자리에서 DashAttack 모션
-        // ==========================================
-        yield return new WaitForSeconds(postPassDelay);
+
+        CombatLogger.Instance?
+            .MarkChargePassEnd();
+
+        yield return new WaitForSeconds(
+            postPassDelay
+        );
+
         bossAnimator?.PlayDashAttack();
 
-        // 실제 검을 휘두르는 프레임까지 기다림
         yield return new WaitForSeconds(
             data.startupTime
         );
-
-        // ==========================================
-        // 4. 일섬 판정
-        // 지금 이 순간 대시 궤적 전체 공격
-        // ==========================================
 
         hitbox.Activate(data);
 
@@ -675,16 +826,11 @@ public class BossAction : MonoBehaviour
             dashEndCenter
         );
 
-        // 검이 실제로 베고 있는 짧은 시간
         yield return new WaitForSeconds(
             data.activeTime
         );
 
         hitbox.Deactivate();
-
-        // ==========================================
-        // 5. Recovery
-        // ==========================================
 
         yield return new WaitForSeconds(
             data.recoveryTime
@@ -693,6 +839,7 @@ public class BossAction : MonoBehaviour
         currentHitbox = null;
         isAttacking = false;
     }
+
     private IEnumerator JumpSlamRoutine(BossAttack attack)
     {
         isAttacking = true;
@@ -702,9 +849,8 @@ public class BossAction : MonoBehaviour
 
         currentHitbox = hitbox;
 
-        // 1. 점프 준비 + 점프 애니메이션
-        // 1. 점프 애니메이션 + 실제 상승
-        rb.linearVelocity = Vector2.zero;
+        rb.linearVelocity =
+            Vector2.zero;
 
         bossAnimator?.PlayJump();
 
@@ -715,76 +861,65 @@ public class BossAction : MonoBehaviour
 
         while (elapsed < jumpUpTime)
         {
-            rb.linearVelocity = new Vector2(
+            rb.linearVelocity =
+                new Vector2(
+                    0f,
+                    jumpUpSpeed
+                );
+
+            elapsed +=
+                Time.fixedDeltaTime;
+
+            yield return
+                new WaitForFixedUpdate();
+        }
+
+        rb.linearVelocity =
+            new Vector2(
                 0f,
                 jumpUpSpeed
             );
 
-            elapsed += Time.fixedDeltaTime;
-            yield return new WaitForFixedUpdate();
-        }
-
-        rb.linearVelocity = new Vector2(
-            0f,
-            jumpUpSpeed
+        yield return new WaitForSeconds(
+            data.startupTime
         );
 
-        yield return new WaitForSeconds(data.startupTime);
-
-        // 2. 화면 밖으로 사라짐
         if (visual != null)
             visual.gameObject.SetActive(false);
 
         if (bodyCollider != null)
             bodyCollider.enabled = false;
 
-        rb.linearVelocity = Vector2.zero;
+        rb.linearVelocity =
+            Vector2.zero;
 
-        yield return new WaitForSeconds(jumpSlamVanishTime);
+        yield return new WaitForSeconds(
+            jumpSlamVanishTime
+        );
 
-        // 3. 플레이어 위쪽으로 위치 이동
-        // 왼쪽 / 오른쪽 상공 랜덤 등장
-        // ==========================================
-
-        // -1 = 플레이어 왼쪽에서 등장
-        //  1 = 플레이어 오른쪽에서 등장
         float spawnSide =
-            Random.value < 0.5f ? -1f : 1f;
+            Random.value < 0.5f
+                ? -1f
+                : 1f;
 
-        // 등장한 쪽 반대 방향으로 내려찍음
         float slamDirection =
             -spawnSide;
 
-
-        // ==========================================
-        // 착지 목표
-        // 플레이어를 살짝 지나가는 위치
-        // ==========================================
-
         float landingX =
             player.position.x -
-            slamDirection * jumpLandingOffset;
-
-
-        // ==========================================
-        // 등장 위치
-        // 반드시 플레이어의 왼쪽 / 오른쪽으로 분리
-        // ==========================================
+            slamDirection *
+            jumpLandingOffset;
 
         float spawnX =
             player.position.x +
-            spawnSide * jumpSlamSpawnSideOffset;
-
-
-        // ==========================================
-        // 빠른 낙하에서도 정확히 landingX까지
-        // 도달하도록 수평 속도를 역산
-        // ==========================================
+            spawnSide *
+            jumpSlamSpawnSideOffset;
 
         float fallDistance =
             Mathf.Max(
                 0.1f,
-                jumpSlamSpawnHeight - groundOffset
+                jumpSlamSpawnHeight -
+                groundOffset
             );
 
         float estimatedFallTime =
@@ -798,63 +933,64 @@ public class BossAction : MonoBehaviour
             horizontalDistance /
             estimatedFallTime;
 
-        transform.position = new Vector3(
-            spawnX,
-            jumpSlamGroundY + jumpSlamSpawnHeight,
-            transform.position.z
-        );
-        rb.linearVelocity = Vector2.zero;
-        rb.gravityScale = 0f;
+        transform.position =
+            new Vector3(
+                spawnX,
+                jumpSlamGroundY +
+                    jumpSlamSpawnHeight,
+                transform.position.z
+            );
 
-        // ==========================================
-        // 4. 재등장 + 회피 경고 시간
-        // ==========================================
+        rb.linearVelocity =
+            Vector2.zero;
+
+        rb.gravityScale = 0f;
 
         if (visual != null)
             visual.gameObject.SetActive(true);
 
         movement.FaceTarget();
 
-        rb.linearVelocity = Vector2.zero;
-        bossAnimator?.PlayJumpHover();
-        // 이 시점에서 이미 landingX / 궤적은 확정되어 있음.
-        // 플레이어는 이 시간 안에 위험 지점에서 벗어나야 한다.
+        rb.linearVelocity =
+            Vector2.zero;
+
+        bossAnimator?
+            .PlayJumpHover();
+
         yield return new WaitForSeconds(
             jumpSlamHoverTime
         );
 
-        // ==========================================
-        // 5. Commit 아래로 낙하
-        // 여기부터는 플레이어 위치를 다시 추적하지 않음
-        // ==========================================
-        bool jumpAttackStarted = false;
+        bool jumpAttackStarted =
+            false;
+
         while (true)
         {
-            rb.linearVelocity = new Vector2(
-                slamHorizontalVelocity,
-                -jumpSlamFallSpeed
-            );
+            rb.linearVelocity =
+                new Vector2(
+                    slamHorizontalVelocity,
+                    -jumpSlamFallSpeed
+                );
 
-            RaycastHit2D hit = Physics2D.Raycast(
-                transform.position,
-                Vector2.down,
-                groundCheckDistance,
-                groundLayer
-            );
+            RaycastHit2D hit =
+                Physics2D.Raycast(
+                    transform.position,
+                    Vector2.down,
+                    groundCheckDistance,
+                    groundLayer
+                );
 
             if (hit.collider != null)
             {
                 float distanceToGround =
-                    transform.position.y - hit.point.y;
-
-                // =====================================
-                // 착지 직전에 공격 모션 선행 재생
-                // =====================================
+                    transform.position.y -
+                    hit.point.y;
 
                 float remainingFallDistance =
                     Mathf.Max(
                         0f,
-                        distanceToGround - groundOffset
+                        distanceToGround -
+                            groundOffset
                     );
 
                 float timeToGround =
@@ -865,15 +1001,11 @@ public class BossAction : MonoBehaviour
                     timeToGround <=
                         jumpSlamAttackLeadTime)
                 {
-                    bossAnimator?.PlayJumpAttack();
+                    bossAnimator?
+                        .PlayJumpAttack();
 
                     jumpAttackStarted = true;
                 }
-
-
-                // =====================================
-                // 착지
-                // =====================================
 
                 if (distanceToGround <=
                     groundOffset)
@@ -893,36 +1025,34 @@ public class BossAction : MonoBehaviour
                 }
             }
 
-            yield return new WaitForFixedUpdate();
+            yield return
+                new WaitForFixedUpdate();
         }
-        rb.gravityScale = defaultGravityScale;
 
-        // 6. 착지 후 몸 충돌 복구
+        rb.gravityScale =
+            defaultGravityScale;
+
         if (bodyCollider != null)
             bodyCollider.enabled = true;
-
-        // ==========================================
-        // 7. 착지 공격 판정
-        // 회피 판단은 공중 Hover 동안 끝났으므로
-        // 착지 후 추가 회피시간은 거의 주지 않음
-        // ==========================================
 
         hitbox.Activate(data);
 
         float activeElapsed = 0f;
 
-        while (activeElapsed < data.activeTime)
+        while (activeElapsed <
+               data.activeTime)
         {
             TryPerfectDodgeDistanceGrace();
 
-            activeElapsed += Time.deltaTime;
+            activeElapsed +=
+                Time.deltaTime;
+
             yield return null;
         }
 
         hitbox.Deactivate();
         currentHitbox = null;
 
-        // 8. 후딜
         yield return new WaitForSeconds(
             data.recoveryTime
         );
@@ -935,32 +1065,43 @@ public class BossAction : MonoBehaviour
         if (IsBusy)
             return;
 
-        StartCoroutine(BackDodgeRoutine());
+        StartCoroutine(
+            BackDodgeRoutine()
+        );
     }
-    
+
     private IEnumerator BackDodgeRoutine()
     {
         isDodging = true;
-        bossAnimator?.PlayBackDodge();
-        // 시작 순간 플레이어 반대 방향 고정
+
+        bossAnimator?
+            .PlayBackDodge();
+
         float direction =
-            Mathf.Sign(transform.position.x - player.position.x);
+            Mathf.Sign(
+                transform.position.x -
+                player.position.x
+            );
 
         float speed =
-            backDodgeDistance / backDodgeDuration;
+            backDodgeDistance /
+            backDodgeDuration;
 
         float movedDistance = 0f;
 
-        while (movedDistance < backDodgeDistance)
+        while (movedDistance <
+               backDodgeDistance)
         {
             float moveThisFrame =
-                speed * Time.fixedDeltaTime;
+                speed *
+                Time.fixedDeltaTime;
 
-            // 목표 거리 초과 방지
-            moveThisFrame = Mathf.Min(
-                moveThisFrame,
-                backDodgeDistance - movedDistance
-            );
+            moveThisFrame =
+                Mathf.Min(
+                    moveThisFrame,
+                    backDodgeDistance -
+                        movedDistance
+                );
 
             rb.linearVelocity =
                 new Vector2(
@@ -968,23 +1109,32 @@ public class BossAction : MonoBehaviour
                     rb.linearVelocity.y
                 );
 
-            movedDistance += moveThisFrame;
+            movedDistance +=
+                moveThisFrame;
 
-            yield return new WaitForFixedUpdate();
+            yield return
+                new WaitForFixedUpdate();
         }
 
         rb.linearVelocity =
-            new Vector2(0f, rb.linearVelocity.y);
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
 
         isDodging = false;
     }
+
     public void ExecuteFrontStep()
     {
         if (IsBusy)
             return;
 
-        StartCoroutine(FrontStepRoutine());
+        StartCoroutine(
+            FrontStepRoutine()
+        );
     }
+
     private IEnumerator FrontStepRoutine()
     {
         if (player == null)
@@ -1002,8 +1152,8 @@ public class BossAction : MonoBehaviour
         float currentDistance =
             Mathf.Abs(deltaX);
 
-        // 이미 충분히 가까우면 FrontStep하지 않음
-        if (currentDistance <= frontStepStopDistance)
+        if (currentDistance <=
+            frontStepStopDistance)
         {
             isFrontStepping = false;
             yield break;
@@ -1012,12 +1162,11 @@ public class BossAction : MonoBehaviour
         float direction =
             Mathf.Sign(deltaX);
 
-        // 플레이어를 뚫고 지나가지 않도록
         float moveDistance =
             Mathf.Min(
                 frontStepDistance,
                 currentDistance -
-                frontStepStopDistance
+                    frontStepStopDistance
             );
 
         float speed =
@@ -1026,15 +1175,18 @@ public class BossAction : MonoBehaviour
 
         float movedDistance = 0f;
 
-        while (movedDistance < moveDistance)
+        while (movedDistance <
+               moveDistance)
         {
             float moveThisFrame =
-                speed * Time.fixedDeltaTime;
+                speed *
+                Time.fixedDeltaTime;
 
             moveThisFrame =
                 Mathf.Min(
                     moveThisFrame,
-                    moveDistance - movedDistance
+                    moveDistance -
+                        movedDistance
                 );
 
             rb.linearVelocity =
@@ -1043,9 +1195,11 @@ public class BossAction : MonoBehaviour
                     rb.linearVelocity.y
                 );
 
-            movedDistance += moveThisFrame;
+            movedDistance +=
+                moveThisFrame;
 
-            yield return new WaitForFixedUpdate();
+            yield return
+                new WaitForFixedUpdate();
         }
 
         rb.linearVelocity =
@@ -1056,9 +1210,12 @@ public class BossAction : MonoBehaviour
 
         isFrontStepping = false;
     }
+
     private void RestoreBossState()
     {
-        bossAnimator?.SetPlaybackSpeed(1f);
+        bossAnimator?
+            .SetPlaybackSpeed(1f);
+
         if (visual != null)
             visual.gameObject.SetActive(true);
 
@@ -1066,6 +1223,7 @@ public class BossAction : MonoBehaviour
             bodyCollider.enabled = true;
 
         if (rb != null)
-            rb.gravityScale = defaultGravityScale;
+            rb.gravityScale =
+                defaultGravityScale;
     }
 }

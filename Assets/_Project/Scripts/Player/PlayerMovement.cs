@@ -20,18 +20,18 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float groundCheckRadius = 0.15f;
     [SerializeField] private LayerMask groundLayer;
     [SerializeField] private Transform facingRoot;
+
     [Header("Hit Recovery")]
     [SerializeField] private float hitMoveRecoveryTime = 0.15f;
 
     private float hitMoveRecoveryTimer;
     private bool wasStunned;
-    private Rigidbody2D rb;
 
+    private Rigidbody2D rb;
     private Vector2 moveInput;
 
     private float coyoteTimeCounter;
     private float jumpBufferCounter;
-
     private bool jumpReleased;
 
     private PlayerDash playerDash;
@@ -40,27 +40,48 @@ public class PlayerMovement : MonoBehaviour
     public float FacingDirection => facingDirection;
 
     private PlayerDamageReceiver damageReceiver;
-
     private PlayerCounter playerCounter;
     private PlayerCombat playerCombat;
     private PlayerHeal playerHeal;
     private PlayerAnimator playerAnimator;
+
     private bool isGrounded;
+
     private bool isDashAttacking;
     private float dashAttackDirection;
     private float dashAttackMoveSpeed;
-    public bool IsGroundedState => isGrounded;
-    public float VerticalVelocity => rb.linearVelocity.y;
-    public float HorizontalVelocity => rb.linearVelocity.x;
+
+    public bool IsGroundedState =>
+        isGrounded;
+
+    public float VerticalVelocity =>
+        rb.linearVelocity.y;
+
+    public float HorizontalVelocity =>
+        rb.linearVelocity.x;
+
     private void Awake()
     {
-        rb = GetComponent<Rigidbody2D>();
-        playerDash = GetComponent<PlayerDash>();
-        damageReceiver = GetComponent<PlayerDamageReceiver>();
-        playerCounter = GetComponent<PlayerCounter>();
-        playerCombat = GetComponent<PlayerCombat>();
-        playerHeal = GetComponent<PlayerHeal>();
-        playerAnimator = GetComponent<PlayerAnimator>();
+        rb =
+            GetComponent<Rigidbody2D>();
+
+        playerDash =
+            GetComponent<PlayerDash>();
+
+        damageReceiver =
+            GetComponent<PlayerDamageReceiver>();
+
+        playerCounter =
+            GetComponent<PlayerCounter>();
+
+        playerCombat =
+            GetComponent<PlayerCombat>();
+
+        playerHeal =
+            GetComponent<PlayerHeal>();
+
+        playerAnimator =
+            GetComponent<PlayerAnimator>();
     }
 
     private void Update()
@@ -69,119 +90,203 @@ public class PlayerMovement : MonoBehaviour
         UpdateJumpBuffer();
 
         bool isStunned =
-            damageReceiver != null && damageReceiver.IsStunned;
+            damageReceiver != null &&
+            damageReceiver.IsStunned;
 
         if (wasStunned && !isStunned)
         {
-            hitMoveRecoveryTimer = hitMoveRecoveryTime;
+            hitMoveRecoveryTimer =
+                hitMoveRecoveryTime;
         }
 
-        // 현재 입력과 Facing을 지속적으로 동기화
         UpdateFacing();
 
         if (hitMoveRecoveryTimer > 0f)
         {
-            hitMoveRecoveryTimer -= Time.deltaTime;
+            hitMoveRecoveryTimer -=
+                Time.deltaTime;
         }
 
         wasStunned = isStunned;
     }
+
     private void FixedUpdate()
     {
-        if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
+        if (damageReceiver != null &&
+            (damageReceiver.IsStunned ||
+             damageReceiver.IsDead))
         {
             return;
         }
-        if (playerCounter != null && playerCounter.IsCountering)
+
+        if (playerCounter != null &&
+            playerCounter.IsCountering)
         {
             rb.linearVelocity =
-                new Vector2(0f, rb.linearVelocity.y);
+                new Vector2(
+                    0f,
+                    rb.linearVelocity.y
+                );
 
             return;
         }
-        if (playerDash != null && playerDash.IsDashing)
+
+        if (playerDash != null &&
+            playerDash.IsDashing)
+        {
             return;
+        }
+
         if (isDashAttacking)
         {
-            rb.linearVelocity = new Vector2(
-                dashAttackDirection * dashAttackMoveSpeed,
-                rb.linearVelocity.y
-            );
-
-            return;
-        }    
-        if (playerCombat != null && playerCombat.IsCharging)
-        {
             rb.linearVelocity =
-                new Vector2(0f, rb.linearVelocity.y);
+                new Vector2(
+                    dashAttackDirection *
+                        dashAttackMoveSpeed,
+                    rb.linearVelocity.y
+                );
 
             return;
         }
-        if (playerHeal != null && playerHeal.IsHealing)
+
+        if (playerCombat != null &&
+            playerCombat.IsCharging)
         {
             rb.linearVelocity =
-                new Vector2(0f, rb.linearVelocity.y);
+                new Vector2(
+                    0f,
+                    rb.linearVelocity.y
+                );
 
             return;
         }
+
+        if (playerHeal != null &&
+            playerHeal.IsHealing)
+        {
+            rb.linearVelocity =
+                new Vector2(
+                    0f,
+                    rb.linearVelocity.y
+                );
+
+            return;
+        }
+
         Move();
         HandleJump();
         ApplyBetterGravity();
     }
 
-    public void OnMove(InputAction.CallbackContext context)
+    public void OnMove(
+        InputAction.CallbackContext context)
     {
-        moveInput = context.ReadValue<Vector2>();
+        moveInput =
+            context.ReadValue<Vector2>();
     }
+
+    // 공격 전체를 잠그지 않고,
+    // 실제 공격 준비/타격 구간만 이동을 잠근다.
+    // Recovery부터는 제어권을 돌려준다.
+    private bool IsAttackMovementLocked()
+    {
+        if (playerCombat == null)
+            return false;
+
+        // Enhanced Heavy는 공격 모션이 완전히 끝날 때까지 이동 잠금
+        if (playerCombat.IsEnhancedHeavyAttack)
+            return true;
+
+        return
+            playerCombat.CurrentPhase ==
+                PlayerCombat.AttackPhase.Startup ||
+            playerCombat.CurrentPhase ==
+                PlayerCombat.AttackPhase.Active;
+    }
+
     private bool CanChangeFacing()
     {
         if (damageReceiver != null &&
-            (damageReceiver.IsStunned || damageReceiver.IsDead))
+            (damageReceiver.IsStunned ||
+             damageReceiver.IsDead))
+        {
             return false;
+        }
 
-        if (playerDash != null && playerDash.IsDashing)
+        if (playerDash != null &&
+            playerDash.IsDashing)
+        {
             return false;
-        if (playerAnimator != null && playerAnimator.IsPerfectDodging)
-            return false;
-        
-        if (playerCounter != null && playerCounter.IsCountering)
-            return false;
+        }
 
-        if (playerHeal != null && playerHeal.IsHealing)
+        if (playerAnimator != null &&
+            playerAnimator.IsPerfectDodging)
+        {
             return false;
+        }
+
+        if (playerCounter != null &&
+            playerCounter.IsCountering)
+        {
+            return false;
+        }
+
+        if (playerHeal != null &&
+            playerHeal.IsHealing)
+        {
+            return false;
+        }
 
         if (playerCombat != null &&
-            (playerCombat.IsAttacking || playerCombat.IsCharging))
+            (playerCombat.IsCharging ||
+             IsAttackMovementLocked()))
+        {
             return false;
+        }
 
         return true;
     }
+
     private void UpdateFacing()
     {
-        if (Mathf.Abs(moveInput.x) <= 0.01f)
+        if (Mathf.Abs(moveInput.x) <=
+            0.01f)
+        {
             return;
+        }
 
         if (!CanChangeFacing())
             return;
 
-        float newDirection = Mathf.Sign(moveInput.x);
+        float newDirection =
+            Mathf.Sign(moveInput.x);
 
-        if (newDirection == facingDirection)
+        if (newDirection ==
+            facingDirection)
+        {
             return;
+        }
 
-        facingDirection = newDirection;
+        facingDirection =
+            newDirection;
 
-        facingRoot.localScale = new Vector3(
-            facingDirection,
-            1f,
-            1f
-        );
+        facingRoot.localScale =
+            new Vector3(
+                facingDirection,
+                1f,
+                1f
+            );
 
-        playerDash?.SetDirection(facingDirection);
+        playerDash?
+            .SetDirection(
+                facingDirection
+            );
     }
+
     public float GetActionDirection()
     {
-        if (Mathf.Abs(moveInput.x) > 0.01f)
+        if (Mathf.Abs(moveInput.x) >
+            0.01f)
         {
             return Mathf.Sign(
                 moveInput.x
@@ -190,10 +295,15 @@ public class PlayerMovement : MonoBehaviour
 
         return facingDirection;
     }
-    public void ForceFacing(float direction)
+
+    public void ForceFacing(
+        float direction)
     {
-        if (Mathf.Abs(direction) <= 0.01f)
+        if (Mathf.Abs(direction) <=
+            0.01f)
+        {
             return;
+        }
 
         facingDirection =
             Mathf.Sign(direction);
@@ -213,20 +323,40 @@ public class PlayerMovement : MonoBehaviour
                 facingDirection
             );
     }
-    public void OnJump(InputAction.CallbackContext context)
-    {
-        if (damageReceiver != null && (damageReceiver.IsStunned || damageReceiver.IsDead))
-            return;
-        if (playerCounter != null && playerCounter.IsCountering)
-            return;  
 
-        if (playerCombat != null && playerCombat.IsCharging)
-            return;      
-        if (playerHeal != null && playerHeal.IsHealing)
+    public void OnJump(
+        InputAction.CallbackContext context)
+    {
+        if (damageReceiver != null &&
+            (damageReceiver.IsStunned ||
+             damageReceiver.IsDead))
+        {
             return;
+        }
+
+        if (playerCounter != null &&
+            playerCounter.IsCountering)
+        {
+            return;
+        }
+
+        if (playerCombat != null &&
+            playerCombat.IsCharging)
+        {
+            return;
+        }
+
+        if (playerHeal != null &&
+            playerHeal.IsHealing)
+        {
+            return;
+        }
+
         if (context.performed)
         {
-            jumpBufferCounter = jumpBufferTime;
+            jumpBufferCounter =
+                jumpBufferTime;
+
             jumpReleased = false;
         }
 
@@ -238,13 +368,17 @@ public class PlayerMovement : MonoBehaviour
 
     private void Move()
     {
-        if (playerCombat != null &&
-            (playerCombat.IsAttacking || playerCombat.IsCharging))
+        // 기존에는 IsAttacking 전체 기간 동안
+        // 수평 속도를 매 FixedUpdate마다 0으로 만들었다.
+        // 이제 Startup / Active에서만 고정하고,
+        // Recovery부터 즉시 이동을 허용한다.
+        if (IsAttackMovementLocked())
         {
-            rb.linearVelocity = new Vector2(
-                0f,
-                rb.linearVelocity.y
-            );
+            rb.linearVelocity =
+                new Vector2(
+                    0f,
+                    rb.linearVelocity.y
+                );
 
             return;
         }
@@ -254,26 +388,36 @@ public class PlayerMovement : MonoBehaviour
         if (hitMoveRecoveryTimer > 0f)
         {
             moveMultiplier =
-                1f - (hitMoveRecoveryTimer / hitMoveRecoveryTime);
+                1f -
+                (
+                    hitMoveRecoveryTimer /
+                    hitMoveRecoveryTime
+                );
         }
 
-        rb.linearVelocity = new Vector2(
-            moveInput.x * moveSpeed * moveMultiplier,
-            rb.linearVelocity.y
-        );
+        rb.linearVelocity =
+            new Vector2(
+                moveInput.x *
+                    moveSpeed *
+                    moveMultiplier,
+                rb.linearVelocity.y
+            );
     }
 
     private void UpdateGroundState()
     {
-        isGrounded = IsGrounded();
+        isGrounded =
+            IsGrounded();
 
         if (isGrounded)
         {
-            coyoteTimeCounter = coyoteTime;
+            coyoteTimeCounter =
+                coyoteTime;
         }
         else
         {
-            coyoteTimeCounter -= Time.deltaTime;
+            coyoteTimeCounter -=
+                Time.deltaTime;
         }
     }
 
@@ -281,34 +425,40 @@ public class PlayerMovement : MonoBehaviour
     {
         if (jumpBufferCounter > 0f)
         {
-            jumpBufferCounter -= Time.deltaTime;
+            jumpBufferCounter -=
+                Time.deltaTime;
         }
     }
 
     private void HandleJump()
     {
-        if (jumpBufferCounter > 0f && coyoteTimeCounter > 0f)
+        if (jumpBufferCounter > 0f &&
+            coyoteTimeCounter > 0f)
         {
-            rb.linearVelocity = new Vector2(
-                rb.linearVelocity.x,
-                jumpForce
-            );
+            rb.linearVelocity =
+                new Vector2(
+                    rb.linearVelocity.x,
+                    jumpForce
+                );
 
-            CombatLogger.Instance?.RecordPlayerResponse(
-                PlayerResponseType.Jump
-            );
+            CombatLogger.Instance?
+                .RecordPlayerResponse(
+                    PlayerResponseType.Jump
+                );
 
             jumpBufferCounter = 0f;
             coyoteTimeCounter = 0f;
         }
 
-        // 버튼을 일찍 놓으면 상승 속도를 잘라서 낮은 점프
-        if (jumpReleased && rb.linearVelocity.y > 0f)
+        if (jumpReleased &&
+            rb.linearVelocity.y > 0f)
         {
-            rb.linearVelocity = new Vector2(
-                rb.linearVelocity.x,
-                rb.linearVelocity.y * jumpCutMultiplier
-            );
+            rb.linearVelocity =
+                new Vector2(
+                    rb.linearVelocity.x,
+                    rb.linearVelocity.y *
+                        jumpCutMultiplier
+                );
 
             jumpReleased = false;
         }
@@ -316,13 +466,13 @@ public class PlayerMovement : MonoBehaviour
 
     private void ApplyBetterGravity()
     {
-        // 내려갈 때 더 빠르게
         if (rb.linearVelocity.y < 0f)
         {
-            rb.linearVelocity += Vector2.up
-                * Physics2D.gravity.y
-                * (fallMultiplier - 1f)
-                * Time.fixedDeltaTime;
+            rb.linearVelocity +=
+                Vector2.up *
+                Physics2D.gravity.y *
+                (fallMultiplier - 1f) *
+                Time.fixedDeltaTime;
         }
     }
 
@@ -337,20 +487,24 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
-        if (groundCheck == null) return;
+        if (groundCheck == null)
+            return;
 
         Gizmos.DrawWireSphere(
             groundCheck.position,
             groundCheckRadius
         );
     }
+
     public void StartDashAttackMove(
         float direction,
         float moveDistance,
         float moveDuration)
     {
         isDashAttacking = true;
-        dashAttackDirection = Mathf.Sign(direction);
+
+        dashAttackDirection =
+            Mathf.Sign(direction);
 
         if (moveDuration <= 0f)
         {
@@ -359,7 +513,8 @@ public class PlayerMovement : MonoBehaviour
         }
 
         dashAttackMoveSpeed =
-            moveDistance / moveDuration;
+            moveDistance /
+            moveDuration;
     }
 
     public void StopDashAttackMove()
@@ -367,9 +522,10 @@ public class PlayerMovement : MonoBehaviour
         isDashAttacking = false;
         dashAttackMoveSpeed = 0f;
 
-        rb.linearVelocity = new Vector2(
-            0f,
-            rb.linearVelocity.y
-        );
+        rb.linearVelocity =
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
     }
 }

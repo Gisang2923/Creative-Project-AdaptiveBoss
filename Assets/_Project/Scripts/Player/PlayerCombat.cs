@@ -11,11 +11,13 @@ public class PlayerCombat : MonoBehaviour
         Active,
         Recovery
     }
+
     public ChargeState CurrentChargeState => chargeState;
-    
+
     [Header("Normal Attack")]
     [SerializeField] private AttackData normalAttackData;
     [SerializeField] private Hitbox normalAttackHitbox;
+
     public enum AttackType
     {
         None,
@@ -24,6 +26,7 @@ public class PlayerCombat : MonoBehaviour
         DashAttack,
         EnhancedDashAttack
     }
+
     public enum EnhancedDashPhase
     {
         None,
@@ -37,27 +40,39 @@ public class PlayerCombat : MonoBehaviour
     public EnhancedDashPhase CurrentEnhancedDashPhase =>
         enhancedDashPhase;
 
-    private AttackType currentAttackType = AttackType.None;
-    public AttackType CurrentAttackType => currentAttackType;
+    private AttackType currentAttackType =
+        AttackType.None;
+
+    public AttackType CurrentAttackType =>
+        currentAttackType;
+
     public enum ChargeState
     {
         None,
         Charging,
         Charged
     }
+
+    [Header("Charge Attack")]
     [SerializeField] private AttackData chargeAttackData;
     [SerializeField] private Hitbox chargeAttackHitbox;
     [SerializeField] private float chargeTime = 0.7f;
-    
 
-    private ChargeState chargeState = ChargeState.None;
+    private ChargeState chargeState =
+        ChargeState.None;
+
     private float chargeTimer;
-    private AttackPhase currentPhase = AttackPhase.None;
 
-    public AttackPhase CurrentPhase => currentPhase;
-    public bool IsAttacking => currentPhase != AttackPhase.None;
+    private AttackPhase currentPhase =
+        AttackPhase.None;
 
-    // Active가 끝난 이후에는 대시 캔슬 허용
+    public AttackPhase CurrentPhase =>
+        currentPhase;
+
+    public bool IsAttacking =>
+        currentPhase != AttackPhase.None;
+
+    // Active가 끝난 Recovery에서는 Dash Cancel 허용
     public bool CanDashCancel =>
         currentPhase == AttackPhase.None ||
         currentPhase == AttackPhase.Recovery;
@@ -85,50 +100,84 @@ public class PlayerCombat : MonoBehaviour
 
     [SerializeField] private float enhancedDashMoveDistance = 6f;
     [SerializeField] private float enhancedDashMoveDuration = 0.4f;
-    
+
     [Header("Enhanced Heavy")]
     [SerializeField] private AttackData enhancedHeavyAttackData;
+
+    // Enhanced Heavy는 기존 ChargeAttack 애니메이션을 사용하지만
+    // 판정 타이밍은 Animation Event로 제어한다.
+    private bool enhancedHeavyAttackActive;
+    private Coroutine enhancedHeavySafetyCoroutine;
+
+    private const float EnhancedHeavySafetyTimeout = 2.5f;
+
+    public bool IsEnhancedHeavyAttack =>
+        enhancedHeavyAttackActive;
+
     private float enhancedDashDirection;
-
     private Vector2 enhancedDashSweepStart;
-
     private bool enhancedDashActive;
-
     private Coroutine enhancedDashMoveCoroutine;
 
     private void Awake()
     {
-        damageReceiver = GetComponent<PlayerDamageReceiver>();
-        playerCounter = GetComponent<PlayerCounter>();
-        playerHeal = GetComponent<PlayerHeal>();
-        playerDash = GetComponent<PlayerDash>();
-        playerMovement = GetComponent<PlayerMovement>();
-        precisionStack = GetComponent<PlayerPrecisionStack>();
+        damageReceiver =
+            GetComponent<PlayerDamageReceiver>();
+
+        playerCounter =
+            GetComponent<PlayerCounter>();
+
+        playerHeal =
+            GetComponent<PlayerHeal>();
+
+        playerDash =
+            GetComponent<PlayerDash>();
+
+        playerMovement =
+            GetComponent<PlayerMovement>();
+
+        precisionStack =
+            GetComponent<PlayerPrecisionStack>();
     }
 
     private void Update()
     {
-        if (chargeState != ChargeState.Charging)
+        if (chargeState !=
+            ChargeState.Charging)
+        {
             return;
+        }
 
         chargeTimer += Time.deltaTime;
 
         if (chargeTimer >= chargeTime)
         {
-            chargeState = ChargeState.Charged;
+            chargeState =
+                ChargeState.Charged;
         }
     }
-    public void OnAttack(InputAction.CallbackContext context)
+
+    public void OnAttack(
+        InputAction.CallbackContext context)
     {
-        if (playerHeal != null && playerHeal.IsHealing)
+        if (playerHeal != null &&
+            playerHeal.IsHealing)
+        {
             return;
+        }
 
         if (damageReceiver != null &&
-            (damageReceiver.IsStunned || damageReceiver.IsDead))
+            (damageReceiver.IsStunned ||
+             damageReceiver.IsDead))
+        {
             return;
+        }
 
-        if (playerCounter != null && playerCounter.IsCountering)
+        if (playerCounter != null &&
+            playerCounter.IsCountering)
+        {
             return;
+        }
 
         if (!context.performed)
             return;
@@ -137,67 +186,74 @@ public class PlayerCombat : MonoBehaviour
             return;
 
         // Dash 중 공격 입력 → DashAttack
-        if (playerDash != null && playerDash.IsDashing)
+        if (playerDash != null &&
+            playerDash.IsDashing)
         {
             StartDashAttack();
             return;
         }
 
-
         // =====================================
-        // Precision Point 5 / 5
-        // 다음 기본공격 1회를 Heavy로 대체
+        // Precision Point 최대치
+        // 다음 기본공격 1회를 Enhanced Heavy로 대체
         // =====================================
-
         if (precisionStack != null &&
             precisionStack.CanUseEnhancedAttack)
         {
-            if (precisionStack.TryConsumeEnhancedAttack())
+            if (precisionStack
+                    .TryConsumeEnhancedAttack())
             {
                 Debug.Log(
                     "[Precision Attack] " +
-                    "Normal Attack -> Heavy"
+                    "Normal Attack -> Enhanced Heavy"
                 );
 
-                StartCoroutine(
-                    ChargeAttack(
-                        enhancedHeavyAttackData
-                    )
-                );
-
+                StartEnhancedHeavyAttack();
                 return;
             }
         }
 
-
         // =====================================
         // 일반 기본공격
         // =====================================
-        StartCoroutine(NormalAttack());
-    
-}
+        StartCoroutine(
+            NormalAttack()
+        );
+    }
 
     public void CancelAttack()
     {
-        if (currentPhase != AttackPhase.Recovery)
+        if (currentPhase !=
+            AttackPhase.Recovery)
+        {
             return;
+        }
 
         StopAllCoroutines();
 
-        currentAttackType = AttackType.None;
-        normalAttackHitbox.Deactivate();
-        chargeAttackHitbox.Deactivate();
-        dashAttackHitbox.Deactivate();
-        enhancedDashAttackHitbox?.Deactivate();
-        playerMovement?.StopDashAttackMove();
+        currentAttackType =
+            AttackType.None;
 
-        enhancedDashPhase = EnhancedDashPhase.None;
+        normalAttackHitbox?.Deactivate();
+        chargeAttackHitbox?.Deactivate();
+        dashAttackHitbox?.Deactivate();
+        enhancedDashAttackHitbox?.Deactivate();
+
+        playerMovement?
+            .StopDashAttackMove();
+
+        enhancedDashPhase =
+            EnhancedDashPhase.None;
+
         enhancedDashActive = false;
         enhancedDashMoveCoroutine = null;
 
-        currentPhase = AttackPhase.None;
+        ResetEnhancedHeavyState();
+
+        currentPhase =
+            AttackPhase.None;
     }
-    
+
     public void ForceCancelAttack()
     {
         StopAllCoroutines();
@@ -206,33 +262,53 @@ public class PlayerCombat : MonoBehaviour
         chargeAttackHitbox?.Deactivate();
         dashAttackHitbox?.Deactivate();
         enhancedDashAttackHitbox?.Deactivate();
-        playerMovement?.StopDashAttackMove();
-        
-        currentAttackType = AttackType.None;
-        chargeState = ChargeState.None;
+
+        playerMovement?
+            .StopDashAttackMove();
+
+        currentAttackType =
+            AttackType.None;
+
+        chargeState =
+            ChargeState.None;
+
         chargeTimer = 0f;
 
-        enhancedDashPhase = EnhancedDashPhase.None;
+        enhancedDashPhase =
+            EnhancedDashPhase.None;
+
         enhancedDashActive = false;
         enhancedDashMoveCoroutine = null;
 
-        currentPhase = AttackPhase.None;
+        ResetEnhancedHeavyState();
+
+        currentPhase =
+            AttackPhase.None;
     }
+
     private IEnumerator NormalAttack()
     {
-        currentAttackType = AttackType.Normal;
-        currentPhase = AttackPhase.Startup;
+        currentAttackType =
+            AttackType.Normal;
 
-        CombatLogger.Instance?.RecordPlayerResponse(
-            PlayerResponseType.NormalAttack
-        );
+        currentPhase =
+            AttackPhase.Startup;
+
+        CombatLogger.Instance?
+            .RecordPlayerResponse(
+                PlayerResponseType.NormalAttack
+            );
+
         yield return new WaitForSeconds(
             normalAttackData.startupTime
         );
 
-        currentPhase = AttackPhase.Active;
+        currentPhase =
+            AttackPhase.Active;
 
-        normalAttackHitbox.Activate(normalAttackData);
+        normalAttackHitbox.Activate(
+            normalAttackData
+        );
 
         yield return new WaitForSeconds(
             normalAttackData.activeTime
@@ -240,26 +316,41 @@ public class PlayerCombat : MonoBehaviour
 
         normalAttackHitbox.Deactivate();
 
-        currentPhase = AttackPhase.Recovery;
+        currentPhase =
+            AttackPhase.Recovery;
 
         yield return new WaitForSeconds(
             normalAttackData.recoveryTime
         );
 
-        currentAttackType = AttackType.None;
-        currentPhase = AttackPhase.None;
+        currentAttackType =
+            AttackType.None;
+
+        currentPhase =
+            AttackPhase.None;
     }
-    public void OnChargeAttack(InputAction.CallbackContext context)
+
+    public void OnChargeAttack(
+        InputAction.CallbackContext context)
     {
         if (damageReceiver != null &&
-            (damageReceiver.IsStunned || damageReceiver.IsDead))
+            (damageReceiver.IsStunned ||
+             damageReceiver.IsDead))
+        {
             return;
+        }
 
-        if (playerHeal != null && playerHeal.IsHealing)
+        if (playerHeal != null &&
+            playerHeal.IsHealing)
+        {
             return;
+        }
 
-        if (playerCounter != null && playerCounter.IsCountering)
+        if (playerCounter != null &&
+            playerCounter.IsCountering)
+        {
             return;
+        }
 
         if (context.performed)
         {
@@ -270,6 +361,7 @@ public class PlayerCombat : MonoBehaviour
             ReleaseCharge();
         }
     }
+
     private void StartCharge()
     {
         if (IsAttacking)
@@ -277,22 +369,33 @@ public class PlayerCombat : MonoBehaviour
 
         if (playerCounter != null &&
             playerCounter.IsCountering)
+        {
             return;
+        }
 
         if (damageReceiver != null &&
             (damageReceiver.IsStunned ||
-            damageReceiver.IsDead))
+             damageReceiver.IsDead))
+        {
             return;
+        }
 
-        chargeState = ChargeState.Charging;
+        chargeState =
+            ChargeState.Charging;
+
         chargeTimer = 0f;
     }
+
     private void ReleaseCharge()
     {
-        if (chargeState == ChargeState.None)
+        if (chargeState ==
+            ChargeState.None)
+        {
             return;
+        }
 
-        if (chargeState == ChargeState.Charged)
+        if (chargeState ==
+            ChargeState.Charged)
         {
             StartCoroutine(
                 ChargeAttack(
@@ -301,7 +404,9 @@ public class PlayerCombat : MonoBehaviour
             );
         }
 
-        chargeState = ChargeState.None;
+        chargeState =
+            ChargeState.None;
+
         chargeTimer = 0f;
     }
 
@@ -349,6 +454,174 @@ public class PlayerCombat : MonoBehaviour
         currentPhase =
             AttackPhase.None;
     }
+
+    // ==========================================
+    // Enhanced Heavy
+    //
+    // 기존에는 enhancedHeavyAttackData의
+    // startup / active / recovery 시간을 그대로 사용했다.
+    //
+    // 이제는 실제 공격 Sprite에 Animation Event를 배치해서
+    // 판정 시작 / 종료 / 공격 종료를 직접 맞춘다.
+    // ==========================================
+
+    private void StartEnhancedHeavyAttack()
+    {
+        if (enhancedHeavyAttackData == null ||
+            chargeAttackHitbox == null)
+        {
+            Debug.LogWarning(
+                "[Enhanced Heavy] " +
+                "AttackData or Hitbox is missing."
+            );
+
+            return;
+        }
+
+        enhancedHeavyAttackActive = true;
+
+        // PlayerAnimator의 기존 ChargeAttack 상태를 그대로 사용하기 위해
+        // AttackType은 Charge를 유지한다.
+        currentAttackType =
+            AttackType.Charge;
+
+        currentPhase =
+            AttackPhase.Startup;
+
+        CombatLogger.Instance?
+            .RecordPlayerResponse(
+                PlayerResponseType.ChargeAttack
+            );
+
+        if (enhancedHeavySafetyCoroutine != null)
+        {
+            StopCoroutine(
+                enhancedHeavySafetyCoroutine
+            );
+        }
+
+        enhancedHeavySafetyCoroutine =
+            StartCoroutine(
+                EnhancedHeavySafetyRoutine()
+            );
+
+        Debug.Log(
+            "[Enhanced Heavy] Start | " +
+            "Waiting for Animation Events"
+        );
+    }
+
+    // Animation Event:
+    // 검이 실제로 적을 베기 시작하는 첫 프레임에 배치
+    public void OnEnhancedHeavyHitboxOn()
+    {
+        if (!enhancedHeavyAttackActive)
+            return;
+
+        if (currentAttackType !=
+            AttackType.Charge)
+        {
+            return;
+        }
+
+        if (currentPhase !=
+            AttackPhase.Startup)
+        {
+            return;
+        }
+
+        currentPhase =
+            AttackPhase.Active;
+
+        chargeAttackHitbox.Activate(
+            enhancedHeavyAttackData
+        );
+
+        Debug.Log(
+            "[Enhanced Heavy] Hitbox ON"
+        );
+    }
+
+    // Animation Event:
+    // 검이 타격 구간을 완전히 지난 직후 프레임에 배치
+    public void OnEnhancedHeavyHitboxOff()
+    {
+        if (!enhancedHeavyAttackActive)
+            return;
+
+        chargeAttackHitbox?.Deactivate();
+
+        currentPhase =
+            AttackPhase.Recovery;
+
+        Debug.Log(
+            "[Enhanced Heavy] Hitbox OFF " +
+            "-> Recovery / Movement Unlocked"
+        );
+    }
+
+    // Animation Event:
+    // 공격 후속 모션이 끝나는 프레임에 배치
+    public void OnEnhancedHeavyAttackEnd()
+    {
+        if (!enhancedHeavyAttackActive)
+            return;
+
+        chargeAttackHitbox?.Deactivate();
+
+        enhancedHeavyAttackActive = false;
+
+        currentAttackType =
+            AttackType.None;
+
+        currentPhase =
+            AttackPhase.None;
+
+        if (enhancedHeavySafetyCoroutine != null)
+        {
+            StopCoroutine(
+                enhancedHeavySafetyCoroutine
+            );
+
+            enhancedHeavySafetyCoroutine = null;
+        }
+
+        Debug.Log(
+            "[Enhanced Heavy] End"
+        );
+    }
+
+    // Animation Event를 잘못 배치했거나 빠뜨렸을 때
+    // 플레이어가 영구적으로 공격 상태에 갇히는 것만 방지한다.
+    private IEnumerator EnhancedHeavySafetyRoutine()
+    {
+        yield return new WaitForSeconds(
+            EnhancedHeavySafetyTimeout
+        );
+
+        if (!enhancedHeavyAttackActive)
+            yield break;
+
+        Debug.LogWarning(
+            "[Enhanced Heavy] " +
+            "Animation Event timeout. " +
+            "Check HitboxOn / HitboxOff / AttackEnd events."
+        );
+
+        chargeAttackHitbox?.Deactivate();
+
+        enhancedHeavyAttackActive = false;
+        currentAttackType = AttackType.None;
+        currentPhase = AttackPhase.None;
+        enhancedHeavySafetyCoroutine = null;
+    }
+
+    private void ResetEnhancedHeavyState()
+    {
+        enhancedHeavyAttackActive = false;
+        enhancedHeavySafetyCoroutine = null;
+    }
+
     private void StartDashAttack()
     {
         if (playerDash == null ||
@@ -359,8 +632,8 @@ public class PlayerCombat : MonoBehaviour
 
         float direction =
             playerMovement != null
-            ? playerMovement.FacingDirection
-            : 1f;
+                ? playerMovement.FacingDirection
+                : 1f;
 
         playerDash.CancelDashForAttack();
 
@@ -369,7 +642,6 @@ public class PlayerCombat : MonoBehaviour
 
         currentPhase =
             AttackPhase.Startup;
-
 
         if (playerMovement != null)
         {
@@ -380,17 +652,16 @@ public class PlayerCombat : MonoBehaviour
             );
         }
 
-
         CombatLogger.Instance?
             .RecordPlayerResponse(
                 PlayerResponseType.DashAttack
             );
 
-
         StartCoroutine(
             StopDashAttackMoveAfterDelay()
         );
     }
+
     public bool TryStartEnhancedDashAttack()
     {
         if (precisionStack == null)
@@ -411,18 +682,11 @@ public class PlayerCombat : MonoBehaviour
             return false;
         }
 
-
-        // =====================================
-        // Precision 5 Point 소비
-        // =====================================
-
-        if (!precisionStack.TryConsumeEnhancedAttack())
+        if (!precisionStack
+                .TryConsumeEnhancedAttack())
+        {
             return false;
-
-
-        // =====================================
-        // Enhanced Dash 시작
-        // =====================================
+        }
 
         enhancedDashDirection =
             playerMovement.FacingDirection;
@@ -436,21 +700,19 @@ public class PlayerCombat : MonoBehaviour
         enhancedDashPhase =
             EnhancedDashPhase.Prepare;
 
-
         Debug.Log(
             "[Precision Attack] " +
             "Enhanced Dash Attack Prepare"
         );
-
 
         CombatLogger.Instance?
             .RecordPlayerResponse(
                 PlayerResponseType.DashAttack
             );
 
-
         return true;
     }
+
     public void OnEnhancedDashPrepareEnd()
     {
         if (currentAttackType !=
@@ -465,15 +727,14 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-
         enhancedDashPhase =
             EnhancedDashPhase.Attack;
-
 
         Debug.Log(
             "[Enhanced Dash] Prepare End"
         );
     }
+
     public void OnEnhancedDashAttackStart()
     {
         if (currentAttackType !=
@@ -491,63 +752,45 @@ public class PlayerCombat : MonoBehaviour
         if (enhancedDashActive)
             return;
 
-
-        // =====================================
-        // Active 시작
-        // =====================================
-
         currentPhase =
             AttackPhase.Active;
 
         enhancedDashActive = true;
 
-
-        // Hitbox 활성화
         enhancedDashAttackHitbox.Activate(
             enhancedDashAttackData
         );
 
-
-        // Sweep 시작점 기록
         enhancedDashSweepStart =
             enhancedDashAttackHitbox
                 .GetWorldCenter();
 
-
-        // 6.0 전진 시작
         playerMovement.StartDashAttackMove(
             enhancedDashDirection,
             enhancedDashMoveDistance,
             enhancedDashMoveDuration
         );
 
-
         Debug.Log(
             "[Enhanced Dash] Attack Start"
         );
 
-
-        // 정확히 MoveDuration 후 이동/판정 종료
         enhancedDashMoveCoroutine =
             StartCoroutine(
                 EnhancedDashMoveRoutine()
             );
     }
+
     private IEnumerator EnhancedDashMoveRoutine()
     {
         yield return new WaitForSeconds(
             enhancedDashMoveDuration
         );
 
-
         FinishEnhancedDashActive();
-
 
         enhancedDashMoveCoroutine = null;
 
-
-        // 애니메이션은 아직 끝나지 않았더라도
-        // 공격 판정은 끝남
         if (currentAttackType ==
             AttackType.EnhancedDashAttack)
         {
@@ -555,26 +798,18 @@ public class PlayerCombat : MonoBehaviour
                 AttackPhase.Recovery;
         }
     }
+
     private void FinishEnhancedDashActive()
     {
         if (!enhancedDashActive)
             return;
 
-
-        // 현재 Hitbox 위치
         Vector2 sweepEnd =
             enhancedDashAttackHitbox
                 .GetWorldCenter();
 
-
-        // 이동 정지
         playerMovement?
             .StopDashAttackMove();
-
-
-        // =====================================
-        // 시작점 → 끝점 전체 타격 판정
-        // =====================================
 
         enhancedDashAttackHitbox
             .SweepFromTo(
@@ -582,18 +817,16 @@ public class PlayerCombat : MonoBehaviour
                 sweepEnd
             );
 
-
         enhancedDashAttackHitbox
             .Deactivate();
 
-
         enhancedDashActive = false;
-
 
         Debug.Log(
             "[Enhanced Dash] Active End"
         );
     }
+
     public void OnEnhancedDashAttackEnd()
     {
         if (currentAttackType !=
@@ -602,9 +835,6 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-
-        // 애니메이션이 MoveDuration보다
-        // 먼저 끝나는 경우도 안전하게 처리
         if (enhancedDashMoveCoroutine != null)
         {
             StopCoroutine(
@@ -614,9 +844,7 @@ public class PlayerCombat : MonoBehaviour
             enhancedDashMoveCoroutine = null;
         }
 
-
         FinishEnhancedDashActive();
-
 
         enhancedDashPhase =
             EnhancedDashPhase.None;
@@ -627,31 +855,41 @@ public class PlayerCombat : MonoBehaviour
         currentPhase =
             AttackPhase.None;
 
-
         Debug.Log(
             "[Enhanced Dash] Attack End"
         );
     }
+
     private IEnumerator StopDashAttackMoveAfterDelay()
     {
         yield return new WaitForSeconds(
             dashAttackMoveDuration
         );
 
-        playerMovement?.StopDashAttackMove();
+        playerMovement?
+            .StopDashAttackMove();
     }
+
     public void OnDashAttackHitboxOn()
     {
-        if (currentAttackType != AttackType.DashAttack)
-            return;
-
-        currentPhase = AttackPhase.Active;
-
-        if (dashAttackHitbox != null && dashAttackData != null)
+        if (currentAttackType !=
+            AttackType.DashAttack)
         {
-            dashAttackHitbox.Activate(dashAttackData);
+            return;
+        }
+
+        currentPhase =
+            AttackPhase.Active;
+
+        if (dashAttackHitbox != null &&
+            dashAttackData != null)
+        {
+            dashAttackHitbox.Activate(
+                dashAttackData
+            );
         }
     }
+
     public void OnDashAttackHitboxOff()
     {
         if (dashAttackHitbox != null)
@@ -659,23 +897,34 @@ public class PlayerCombat : MonoBehaviour
             dashAttackHitbox.Deactivate();
         }
 
-        if (currentAttackType == AttackType.DashAttack)
+        if (currentAttackType ==
+            AttackType.DashAttack)
         {
-            currentPhase = AttackPhase.Recovery;
+            currentPhase =
+                AttackPhase.Recovery;
         }
     }
+
     public void OnDashAttackEnd()
     {
         if (dashAttackHitbox != null)
         {
             dashAttackHitbox.Deactivate();
         }
-        playerMovement?.StopDashAttackMove();
 
-        if (currentAttackType != AttackType.DashAttack)
+        playerMovement?
+            .StopDashAttackMove();
+
+        if (currentAttackType !=
+            AttackType.DashAttack)
+        {
             return;
+        }
 
-        currentAttackType = AttackType.None;
-        currentPhase = AttackPhase.None;
+        currentAttackType =
+            AttackType.None;
+
+        currentPhase =
+            AttackPhase.None;
     }
 }
