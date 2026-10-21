@@ -1,0 +1,442 @@
+fileFormatVersion: 2
+guid: 782c24e024dd9564496877ad852b9063
+TextureImporter:
+  internalIDToNameTable:
+  - first:
+      213: 7971377452321704134
+    second: HPFlask-Sheet_0
+  - first:
+      213: -3180477502167701155
+    second: HPFlask-Sheet_1
+  - first:
+      213: 8738358281958508692
+    second: HPFlask-Sheet_2
+  - first:
+      213: -923753601472780485
+    second: HPFlask-Sheet_3
+  - first:
+      213: 7070650105076909712
+    second: HPFlask-Sheet_4
+  - first:
+      213: -8375573943991044767
+    second: HPFlask-Sheet_5
+  - first:
+      213: 3107517793728247549
+    second: HPFlask-Sheet_6
+  - first:
+      213: -2921706514682395173
+    second: HPFlask-Sheet_7
+  - first:
+      213: -9073880823926494279
+    second: HPFlask-Sheet_8
+  - first:
+      213: 2022664176908821073
+    second: HPFlask-Sheet_9
+  - first:
+      213: 8668228084368657228
+    second: HPFlask-Sheet_10
+  - first:
+      213: -855636933043138387
+    second: HPFlask-Sheet_11
+  externalObjects: {}
+  serializedVersion: 13
+  mipmaps:
+    mipMapMode: 0
+    enableMipMap: 0
+    sRGBTexture: 1
+    linearTexture: 0
+    fadeOut: 0
+    borderMipMap: 0
+    mipMapsPreserveCoverage: 0
+    alphaTestReferenceValue: 0.5
+    mipMapFadeDistanceStart: 1
+    mipMapFadeDistanceEnd: 3
+  bumpmap:
+    convertToNormalMap: 0
+    externalNormalMap: 0
+    heightScale: 0.25
+    normalMapFilter: 0
+    flipGreenChannel: 0
+  isReadable: 0
+  streamingMipmaps: 0
+  streamingMipmapsPriority: 0
+  vTOnly: 0
+  ignoreMipmapLimit: 0
+  grayScaleToAlpha: 0
+  generateCubemap: 6
+  cubemapConvolution: 0
+  seamlessCubemap: 0
+  textureFormat: 1
+  maxTextureSize: 2048
+  textureSettings:
+    serializedVersion: 2
+    filterMode: 1
+    aniso: 1
+    mipBias: 0
+    wrapU: 1
+    wrapV: 1
+    wrapW: 1
+  nPOTScale: 0
+  lightmap: 0
+  compressionQuality: 50
+  spriteMode: 2
+  spriteExtrude: 1
+  spriteMeshType: 1
+  alignment: 0
+  spritePivot: {x: 0.5, y: 0.5}
+  spritePixelsToUnits: 100
+  spriteBorder: {x: 0, y: 0, z: 0, w: 0}
+  spriteGenerateFallbackPhysicsShape: 1
+  alphaUsage: 1
+  alphaIsTransparency: 1
+  spriteTessellationDetail: -1
+  textureType: 8
+  textureShape: 1
+  singleChannelComponent: 0
+  flipbookRows: 1
+  flipbookColumns: 1
+  maxTextureSizeSet: 0
+  compressionQualitySet: 0
+  textureFormatSet: 0
+  ignorePngGamma: 0
+  applyGammaDecoding: 0
+  swizzle: 50462976
+  cookieLightType: 0
+  platformSettings:
+  - serializedVersion: 4
+    buildTarget: DefaultTexturePlatform
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: Standalone
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  - serializedVersion: 4
+    buildTarget: WebGL
+    maxTextureSize: 2048
+    resizeAlgorithm: 0
+    textureFormat: -1
+    textureCompression: 1
+    compressionQuality: 50
+    crunchedCompression: 0
+    allowsAlphaSplitting: 0
+    overridden: 0
+    ignorePlatformSupport: 0
+    androidETC2FallbackOverride: 0
+    forceMaximumCompressionQuality_BC6H_BC7: 0
+  spriteSheet:
+    serializedVersion: 2
+    sprites:
+    - serializedVersion: 2
+      name: HPFlask-Sheet_0
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 62
+        width: 54
+        height: 20
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 6c881380f8500ae60800000000000000
+      internalID: 7971377452321704134
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HPFlask-Sheet_1
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 60
+        width: 54
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: d592c2b009cacd3d0800000000000000
+      internalID: -3180477502167701155
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HPFlask-Sheet_2
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 62
+        width: 55
+        height: 21
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 498ca344f82e44970800000000000000
+      internalID: 8738358281958508692
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HPFlask-Sheet_3
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 60
+        width: 55
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: b372a346efa2e23f0800000000000000
+      internalID: -923753601472780485
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HPFlask-Sheet_4
+      rect:
+        serializedVersion: 2
+        x: 4
+        y: 12
+        width: 55
+        height: 22
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 09600340fceff1260800000000000000
+      internalID: 7070650105076909712
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HPFlask-Sheet_5
+      rect:
+        serializedVersion: 2
+        x: 68
+        y: 10
+        width: 55
+        height: 24
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 1657566afdbf3cb80800000000000000
+      internalID: -8375573943991044767
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HPFlask-Sheet_6
+      rect:
+        serializedVersion: 2
+        x: 132
+        y: 6
+        width: 55
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: df6b06418fe102b20800000000000000
+      internalID: 3107517793728247549
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HPFlask-Sheet_7
+      rect:
+        serializedVersion: 2
+        x: 196
+        y: 5
+        width: 55
+        height: 29
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: bd5496e97630477d0800000000000000
+      internalID: -2921706514682395173
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HPFlask-Sheet_8
+      rect:
+        serializedVersion: 2
+        x: 260
+        y: 11
+        width: 55
+        height: 23
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 9bbe1a35779131280800000000000000
+      internalID: -9073880823926494279
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HPFlask-Sheet_9
+      rect:
+        serializedVersion: 2
+        x: 324
+        y: 9
+        width: 55
+        height: 25
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: 152ee843a52f11c10800000000000000
+      internalID: 2022664176908821073
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HPFlask-Sheet_10
+      rect:
+        serializedVersion: 2
+        x: 388
+        y: 6
+        width: 55
+        height: 28
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: c4bcbd8348bbb4870800000000000000
+      internalID: 8668228084368657228
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    - serializedVersion: 2
+      name: HPFlask-Sheet_11
+      rect:
+        serializedVersion: 2
+        x: 452
+        y: 3
+        width: 55
+        height: 31
+      alignment: 0
+      pivot: {x: 0, y: 0}
+      border: {x: 0, y: 0, z: 0, w: 0}
+      customData: 
+      outline: []
+      physicsShape: []
+      tessellationDetail: -1
+      bones: []
+      spriteID: da052452eba2024f0800000000000000
+      internalID: -855636933043138387
+      vertices: []
+      indices: 
+      edges: []
+      weights: []
+    outline: []
+    customData: 
+    physicsShape: []
+    bones: []
+    spriteID: 
+    internalID: 0
+    vertices: []
+    indices: 
+    edges: []
+    weights: []
+    secondaryTextures: []
+    spriteCustomMetadata:
+      entries: []
+    nameFileIdTable:
+      HPFlask-Sheet_0: 7971377452321704134
+      HPFlask-Sheet_1: -3180477502167701155
+      HPFlask-Sheet_10: 8668228084368657228
+      HPFlask-Sheet_11: -855636933043138387
+      HPFlask-Sheet_2: 8738358281958508692
+      HPFlask-Sheet_3: -923753601472780485
+      HPFlask-Sheet_4: 7070650105076909712
+      HPFlask-Sheet_5: -8375573943991044767
+      HPFlask-Sheet_6: 3107517793728247549
+      HPFlask-Sheet_7: -2921706514682395173
+      HPFlask-Sheet_8: -9073880823926494279
+      HPFlask-Sheet_9: 2022664176908821073
+  mipmapLimitGroupName: 
+  pSDRemoveMatte: 0
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
