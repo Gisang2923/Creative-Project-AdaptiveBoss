@@ -9,6 +9,9 @@ public class PlayerDamageReceiver : DamageReceiver
     [SerializeField] private HitFlash hitFlash;
     [Header("Hit VFX")]
     [SerializeField] private HitVFXSpawner hitVfxSpawner;
+    [Header("Adaptive Hit Stop")]
+    [SerializeField]
+    private float adaptiveBossHitStopDuration = 0.20f;
     private bool isInvincible;
     private bool isStunned;
 
@@ -98,6 +101,20 @@ public class PlayerDamageReceiver : DamageReceiver
 
 
         base.TakeDamage(damageInfo);
+        BossController attackingBoss =
+            damageInfo.Attacker != null
+                ? damageInfo.Attacker
+                    .GetComponentInParent<BossController>()
+                : null;
+
+        if (attackingBoss != null &&
+            attackingBoss.CurrentAttackIsAdaptive)
+        {
+            HitStopManager.Instance?
+                .Play(
+                    adaptiveBossHitStopDuration
+                );
+        }
         CombatLogger.Instance?.RecordPlayerHit();
         if (damageInfo.CameraShakeStrength > 0f)
         {

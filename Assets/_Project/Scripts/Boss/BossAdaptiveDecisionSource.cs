@@ -131,12 +131,15 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     [SerializeField, Min(0f)]
     private float secondaryAttackResponseWeight = 0.35f;
+    [SerializeField, Min(0f)]
+    private float chaseCommitBackDodgeWeight = 3f;
 
     [SerializeField, Min(0f)]
     private float approachPressureWeight = 0.75f;
 
     [SerializeField]
     private bool preventSameAdaptiveResponse = true;
+    
 
     [Header("Heavy Timing Adaptation")]
     [SerializeField, Range(0f, 1f)]
@@ -673,6 +676,12 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             followUpHabit ==
                 AdaptiveHabitType.ChaseCommit)
         {
+            AddCandidate(
+                candidates,
+                AdaptiveResponseAction.BackDodge,
+                chaseCommitBackDodgeWeight,
+                canBackDodge
+            );
             AddCandidate(
                 candidates,
                 AdaptiveResponseAction.Parry,

@@ -19,6 +19,9 @@ public class PlayerCounter : MonoBehaviour
     [SerializeField] private float failRecovery = 0.4f;
     [SerializeField] private float successAnimationDuration = 0.35f;
 
+    [SerializeField]
+    private float normalParryHitStop = 0.8f;
+    private float perfectParryHitStop = 0.18f;    
     private PlayerDamageReceiver damageReceiver;
     private PlayerCombat playerCombat;
 
@@ -158,10 +161,8 @@ public class PlayerCounter : MonoBehaviour
                 $"[Normal Parry] " +
                 $"Timing={responseTime:F3}"
             );
-
             return;
         }
-
 
         // =====================================
         // Perfect Parry
@@ -169,9 +170,10 @@ public class PlayerCounter : MonoBehaviour
 
         Debug.Log(
             $"[Perfect Parry] " +
-            $"Timing={responseTime:F3}"
+            $"Timing={responseTime:F3}"    
         );
-
+        HitStopManager.Instance?
+            .Play(perfectParryHitStop);
         CameraShake.Instance?.Shake(
             0.07f,
             0.10f
@@ -182,7 +184,7 @@ public class PlayerCounter : MonoBehaviour
 
         GameObject attacker =
             incomingDamage.Attacker;
-
+            
 
         // 기존 Perfect Counter 보상 유지
         BossAction bossAction =

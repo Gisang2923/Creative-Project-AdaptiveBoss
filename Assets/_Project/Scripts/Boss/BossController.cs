@@ -148,6 +148,11 @@ public class BossController : MonoBehaviour
     public bool BattleStarted =>
         battleStarted;
 
+    private bool currentAttackIsAdaptive;
+
+    public bool CurrentAttackIsAdaptive =>
+        currentAttackIsAdaptive;    
+
     private void Update()
     {
         if (!battleStarted)
@@ -280,6 +285,7 @@ public class BossController : MonoBehaviour
                 .OpenPostPunishOpportunity();
 
             StartPostAction();
+            currentAttackIsAdaptive = false;
         }
 
         if (wasParrying &&
@@ -797,6 +803,7 @@ public class BossController : MonoBehaviour
     private void StartAttack(
         float distance)
     {
+        currentAttackIsAdaptive = false;
         BossAttack selectedAttack =
             attackSelector
                 .SelectAttack(
@@ -822,7 +829,7 @@ public class BossController : MonoBehaviour
 
         if (selectedAttack == null)
             return false;
-
+        currentAttackIsAdaptive = true;
         ExecuteSelectedAttack(
             selectedAttack,
             distance
@@ -860,7 +867,12 @@ public class BossController : MonoBehaviour
                             .attackData
                             .startupTime
                     );
-
+            if (!Mathf.Approximately(
+                    adaptedHoldTime,
+                    bossAction.HeavyBaseHoldTime))
+            {
+                currentAttackIsAdaptive = true;
+            }
             bossAction
                 .SetNextHeavyHoldTime(
                     adaptedHoldTime
@@ -882,7 +894,12 @@ public class BossController : MonoBehaviour
                             .attackData
                             .startupTime
                     );
-
+            if (!Mathf.Approximately(
+                    adaptedPostPassDelay,
+                    bossAction.ChargePostPassDelay))
+            {
+                currentAttackIsAdaptive = true;
+            }
             bossAction
                 .SetNextChargePostPassDelay(
                     adaptedPostPassDelay

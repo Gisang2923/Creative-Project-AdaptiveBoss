@@ -1,7 +1,10 @@
 using UnityEngine;
+using System;
 
 public class PlayerPrecisionStack : MonoBehaviour
 {
+    public event Action<int, int> OnPrecisionChanged;
+
     [Header("Precision Point")]
     [SerializeField] private int maxPoints = 5;
 
@@ -27,7 +30,10 @@ public class PlayerPrecisionStack : MonoBehaviour
             return;
 
         currentPoints++;
-
+        OnPrecisionChanged?.Invoke(
+            currentPoints,
+            maxPoints
+        );
         currentPoints =
             Mathf.Clamp(
                 currentPoints,
@@ -61,7 +67,10 @@ public class PlayerPrecisionStack : MonoBehaviour
             return false;
 
         currentPoints = 0;
-
+        OnPrecisionChanged?.Invoke(
+            currentPoints,
+            maxPoints
+        );
         Debug.Log(
             $"[Precision Point] " +
             $"Enhanced Attack Consume | " +
