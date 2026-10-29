@@ -1176,7 +1176,7 @@ public class BossController : MonoBehaviour
 
         currentAttackIsAdaptive = false;
         currentAttackFromAdaptiveResponse = false;
-        adaptiveSource? .ClearPreparedReaction();
+        adaptiveSource?.ClearPreparedReaction();
 
         stunTimer =
             duration;
@@ -1273,7 +1273,7 @@ public class BossController : MonoBehaviour
             .ForceCancelAttack();
         currentAttackIsAdaptive = false;
         currentAttackFromAdaptiveResponse = false;
-        adaptiveSource? .ClearPreparedReaction();
+        adaptiveSource?.ClearPreparedReaction();
         // Precision Stun Update는 early return하므로
         // 이전 공격 상태가 복구 후까지 남지 않게 직접 정리한다.
         wasAttacking = false;
@@ -1384,7 +1384,7 @@ public class BossController : MonoBehaviour
         );
         currentAttackIsAdaptive = false;
         currentAttackFromAdaptiveResponse = false;
-        adaptiveSource? .ClearPreparedReaction();
+        adaptiveSource?.ClearPreparedReaction();
         movement.Stop();
 
         precisionStunPhase =
