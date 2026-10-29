@@ -77,7 +77,32 @@ public class BossAttackSelector : MonoBehaviour
 
         return false;
     }
+    public bool CanUseAdaptiveAttackType(
+        BossAttackType attackType)
+    {
+        foreach (BossAttack attack
+                in attacks)
+        {
+            if (attack.attackType !=
+                attackType)
+            {
+                continue;
+            }
 
+            // Adaptive Decision에서는
+            // 거리 조건은 보지 않는다.
+            // 단, 기존 cooldown은 유지한다.
+            if (cooldowns.ContainsKey(
+                    attack))
+            {
+                continue;
+            }
+
+            return true;
+        }
+
+        return false;
+    }
     public BossAttack SelectAttack(
         float distance)
     {
@@ -96,10 +121,20 @@ public class BossAttackSelector : MonoBehaviour
             attackType
         );
     }
-
+    public BossAttack SelectAdaptiveAttackType(
+        BossAttackType attackType,
+        float distance)
+    {
+        return SelectAttackInternal(
+            distance,
+            attackType,
+            true
+        );
+    }
     private BossAttack SelectAttackInternal(
         float distance,
-        BossAttackType? requiredType)
+        BossAttackType? requiredType,
+        bool ignoreRange = false)
     {
         List<BossAttack> candidates =
             new List<BossAttack>();
@@ -121,7 +156,8 @@ public class BossAttackSelector : MonoBehaviour
 
             if (!CanUseAttack(
                     attack,
-                    distance))
+                    distance,
+                    ignoreRange))
             {
                 continue;
             }
@@ -250,9 +286,11 @@ public class BossAttackSelector : MonoBehaviour
 
     private bool CanUseAttack(
         BossAttack attack,
-        float distance)
+        float distance,
+        bool ignoreRange = false)
     {
-        if (!IsInRange(
+        if (!ignoreRange &&
+            !IsInRange(
                 attack,
                 distance))
         {

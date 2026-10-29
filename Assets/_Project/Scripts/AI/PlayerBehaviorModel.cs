@@ -1,6 +1,12 @@
 using System.Collections.Generic;
 using UnityEngine;
-
+public enum AdaptiveReactionType
+{
+    None,
+    Attack,
+    Approach,
+    StayAway
+}
 public class PlayerBehaviorModel : MonoBehaviour
 {
     [Header("Habit Settings")]
@@ -23,6 +29,15 @@ public class PlayerBehaviorModel : MonoBehaviour
     [SerializeField] private int spatialWindow = 6;
     [SerializeField] private int minSpatialSamples = 3;
 
+    [Header("Adaptive Reaction")]
+    [SerializeField]
+    private int adaptiveReactionWindow = 6;
+
+    [SerializeField]
+    private int minAdaptiveReactionSamples = 3;
+
+    [SerializeField]
+    private float adaptiveApproachThreshold = 0.5f;
     public float GetHabitScore(
         BossAttackType bossAttack,
         PlayerResponseType response)
@@ -75,7 +90,40 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         return Mathf.Clamp01(score);
     }
+    private AdaptiveReactionType GetAdaptiveReaction(
+        AttackResponseLog log)
+    {
+        if (log == null ||
+            !log.fromAdaptiveResponse)
+        {
+            return AdaptiveReactionType.None;
+        }
 
+        // 1순위:
+        // Adaptive 공격 중 플레이어가 실제 공격을 시도했는가
+        if (log.playerAttackObserved)
+        {
+            return AdaptiveReactionType.Attack;
+        }
+
+        // 2순위:
+        // 공격은 하지 않았지만 보스와의 거리를 줄였는가
+        float distanceChange =
+            log.distanceBefore -
+            log.distanceAfter;
+
+        if (distanceChange >=
+                adaptiveApproachThreshold ||
+            log.responseDirection ==
+                ResponseDirection.TowardBoss)
+        {
+            return AdaptiveReactionType.Approach;
+        }
+
+        // 공격도 하지 않고
+        // 의미 있게 접근하지 않았다면 거리 유지로 판단
+        return AdaptiveReactionType.StayAway;
+    }
     public float GetBehaviorHabitScore(
         BossBehaviorType bossBehavior,
         PlayerResponseType response)
@@ -1201,5 +1249,91 @@ public class PlayerBehaviorModel : MonoBehaviour
 
         return log.result ==
             CombatResultType.Avoided;
+    }
+    public float GetAdaptiveReactionScore(
+        BossAttackType attackType,
+        AdaptiveReactionType reaction)
+    {
+        IReadOnlyList<AttackResponseLog> logs =
+            CombatLogger.Instance?.Logs;
+
+        if (logs == null ||
+            logs.Count == 0)
+        {
+            return 0f;
+        }
+
+        int checkedCount = 0;
+        int matchedCount = 0;
+
+        for (int i = logs.Count - 1;
+            i >= 0 &&
+            checkedCount <
+                adaptiveReactionWindow;
+            i--)
+        {
+            AttackResponseLog log =
+                logs[i];
+
+            if (log.bossBehavior !=
+                    BossBehaviorType.Attack ||
+                !log.fromAdaptiveResponse ||
+                log.bossAttack !=
+                    attackType)
+            {
+                continue;
+            }
+
+            checkedCount++;
+
+            if (GetAdaptiveReaction(log) ==
+                reaction)
+            {
+                matchedCount++;
+            }
+        }
+
+        if (checkedCount <
+            minAdaptiveReactionSamples)
+        {
+            return 0f;
+        }
+
+        return (float)matchedCount /
+            checkedCount;
+    }
+    public AdaptiveReactionType
+       GetDominantAdaptiveReaction(
+            BossAttackType attackType)
+    {
+        AdaptiveReactionType best =
+            AdaptiveReactionType.None;
+
+        float bestScore = 0f;
+
+        foreach (AdaptiveReactionType reaction
+                in System.Enum.GetValues(
+                    typeof(AdaptiveReactionType)))
+        {
+            if (reaction ==
+                AdaptiveReactionType.None)
+            {
+                continue;
+            }
+
+            float score =
+                GetAdaptiveReactionScore(
+                    attackType,
+                    reaction
+                );
+
+            if (score > bestScore)
+            {
+                bestScore = score;
+                best = reaction;
+            }
+        }
+
+        return best;
     }
 }

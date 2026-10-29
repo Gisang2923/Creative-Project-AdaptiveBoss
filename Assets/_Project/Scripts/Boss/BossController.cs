@@ -152,7 +152,10 @@ public class BossController : MonoBehaviour
 
     public bool CurrentAttackIsAdaptive =>
         currentAttackIsAdaptive;    
+    private bool currentAttackFromAdaptiveResponse;
 
+    public bool CurrentAttackFromAdaptiveResponse =>
+        currentAttackFromAdaptiveResponse;
     private void Update()
     {
         if (!battleStarted)
@@ -285,7 +288,9 @@ public class BossController : MonoBehaviour
                 .OpenPostPunishOpportunity();
 
             StartPostAction();
+
             currentAttackIsAdaptive = false;
+            currentAttackFromAdaptiveResponse = false;
         }
 
         if (wasParrying &&
@@ -535,23 +540,20 @@ public class BossController : MonoBehaviour
 
         bool canCharge =
             attackSelector
-                .CanUseAttackType(
-                    BossAttackType.ChargeSlash,
-                    distance
+                .CanUseAdaptiveAttackType(
+                    BossAttackType.ChargeSlash
                 );
 
         bool canHeavy =
             attackSelector
-                .CanUseAttackType(
-                    BossAttackType.HeavySlash,
-                    distance
+                .CanUseAdaptiveAttackType(
+                    BossAttackType.HeavySlash
                 );
 
         bool canBasic =
             attackSelector
-                .CanUseAttackType(
-                    BossAttackType.BasicSlash,
-                    distance
+                .CanUseAdaptiveAttackType(
+                    BossAttackType.BasicSlash
                 );
 
         if (!adaptiveSource
@@ -804,6 +806,8 @@ public class BossController : MonoBehaviour
         float distance)
     {
         currentAttackIsAdaptive = false;
+        currentAttackFromAdaptiveResponse = false;
+
         BossAttack selectedAttack =
             attackSelector
                 .SelectAttack(
@@ -822,14 +826,17 @@ public class BossController : MonoBehaviour
     {
         BossAttack selectedAttack =
             attackSelector
-                .SelectAttackType(
+                .SelectAdaptiveAttackType(
                     attackType,
                     distance
                 );
 
         if (selectedAttack == null)
             return false;
+
         currentAttackIsAdaptive = true;
+        currentAttackFromAdaptiveResponse = true;
+
         ExecuteSelectedAttack(
             selectedAttack,
             distance
@@ -909,7 +916,8 @@ public class BossController : MonoBehaviour
         CombatLogger.Instance?
             .BeginBossAttack(
                 selectedAttack.attackType,
-                distance
+                distance,
+                currentAttackFromAdaptiveResponse
             );
 
         bossAction.ExecuteAttack(
@@ -1141,6 +1149,9 @@ public class BossController : MonoBehaviour
                 false
             );
 
+        currentAttackIsAdaptive = false;
+        currentAttackFromAdaptiveResponse = false;
+
         stunTimer =
             duration;
 
@@ -1234,7 +1245,8 @@ public class BossController : MonoBehaviour
 
         bossAction?
             .ForceCancelAttack();
-
+        currentAttackIsAdaptive = false;
+        currentAttackFromAdaptiveResponse = false;
         // Precision Stun Update는 early return하므로
         // 이전 공격 상태가 복구 후까지 남지 않게 직접 정리한다.
         wasAttacking = false;
@@ -1343,7 +1355,8 @@ public class BossController : MonoBehaviour
         ChangeState(
             BossState.Dead
         );
-
+        currentAttackIsAdaptive = false;
+        currentAttackFromAdaptiveResponse = false;
         movement.Stop();
 
         precisionStunPhase =

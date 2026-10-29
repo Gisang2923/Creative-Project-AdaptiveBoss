@@ -68,7 +68,7 @@ public class AttackResponseLog
     // 첫 Response와 별개로, 보스 행동 중 플레이어가 공격 입력을
     // 한 번이라도 했는지 추적한다.
     public bool playerAttackObserved;
-
+    public bool fromAdaptiveResponse;
     public AttackResponseLog(
         int sequenceId,
         BossAttackType bossAttack,
@@ -89,6 +89,7 @@ public class AttackResponseLog
         distanceAtResponse = -1f;
         distanceAfter = distanceBefore;
         playerAttackObserved = false;
+        fromAdaptiveResponse = false;
     }
 
     public AttackResponseLog(
@@ -281,7 +282,8 @@ public class CombatLogger : MonoBehaviour
 
     public void BeginBossAttack(
         BossAttackType attackType,
-        float distance)
+        float distance,
+        bool fromAdaptiveResponse = false)
     {
         if (currentLog != null)
         {
@@ -296,9 +298,9 @@ public class CombatLogger : MonoBehaviour
             Time.time,
             distance
         );
-
+        
         responseRecorded = false;
-
+        currentLog.fromAdaptiveResponse =fromAdaptiveResponse;
         Debug.Log(
             $"[CombatLog] START | " +
             $"{attackType} | Distance={distance:F2}"

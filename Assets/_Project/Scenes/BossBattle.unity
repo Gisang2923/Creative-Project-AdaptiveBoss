@@ -778,10 +778,10 @@ MonoBehaviour:
   player: {fileID: 685367515}
   visual: {fileID: 1266593679}
   bodyCollider: {fileID: 402595763}
-  jumpSlamVanishTime: 0.3
-  jumpSlamHoverTime: 0.2
+  jumpSlamVanishTime: 0.2
+  jumpSlamHoverTime: 0.05
   jumpSlamSpawnHeight: 7
-  jumpSlamFallSpeed: 30
+  jumpSlamFallSpeed: 35
   jumpSlamSpawnSideOffset: 4
   jumpSlamGroundY: 0
   jumpLandingOffset: 1
@@ -1050,6 +1050,9 @@ MonoBehaviour:
   recencyWindow: 5
   spatialWindow: 6
   minSpatialSamples: 3
+  adaptiveReactionWindow: 6
+  minAdaptiveReactionSamples: 3
+  adaptiveApproachThreshold: 0.5
 --- !u!114 &402595768
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1087,6 +1090,7 @@ MonoBehaviour:
   postPunishCommitReleaseThreshold: 0.4
   normalDecisionWeight: 1
   secondaryAttackResponseWeight: 0.35
+  chaseCommitBackDodgeWeight: 3
   approachPressureWeight: 0.75
   preventSameAdaptiveResponse: 1
   heavyTimingHabitThreshold: 0.65
@@ -2416,7 +2420,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 415655f83ed1912409e6a4f2e48206a3, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerHeal
-  healAmount: 30
+  healAmount: 100
   healDuration: 1
   maxHealCount: 3
   healEndDuration: 0.7
