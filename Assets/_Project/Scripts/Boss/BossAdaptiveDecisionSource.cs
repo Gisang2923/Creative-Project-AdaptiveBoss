@@ -23,7 +23,6 @@ public enum TimingAdaptMode
 public enum AdaptiveResponseAction
 {
     None,
-    NormalDecision,
     Parry,
     BackDodge,
     FrontStep,
@@ -127,10 +126,8 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     [Header("Adaptive Response Pool")]
     [SerializeField, Min(0f)]
-    private float normalDecisionWeight = 1f;
-
-    [SerializeField, Min(0f)]
     private float secondaryAttackResponseWeight = 0.35f;
+
     [SerializeField, Min(0f)]
     private float chaseCommitBackDodgeWeight = 3f;
 
@@ -139,6 +136,13 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     [SerializeField]
     private bool preventSameAdaptiveResponse = true;
+
+    [Header("Adaptive Reaction Follow-up")]
+    [SerializeField, Range(0f, 1f)]
+    private float adaptiveReactionThreshold = 0.6f;
+
+    [SerializeField, Range(0f, 1f)]
+    private float repeatedAdaptiveResponseWeightMultiplier = 0.25f;
     
 
     [Header("Heavy Timing Adaptation")]
@@ -200,7 +204,15 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     private float followUpHabitScore;
     private float followUpTimer;
     private bool hasFollowUpOpportunity;
+    private AdaptiveReactionType preparedReaction =
+        AdaptiveReactionType.None;
 
+    private float preparedReactionScore;
+
+    private BossAttackType preparedReactionAttack;
+
+    private AdaptiveReactionType followUpReaction =
+        AdaptiveReactionType.None;
     private AdaptiveHabitType backDodgePolicy =
         AdaptiveHabitType.None;
 
@@ -335,7 +347,10 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     // 실제 Adaptive Response가 선택될 때마다 증가한다.
     public int DebugAdaptiveResponseSerial =>
         adaptiveResponseSerial;
-
+    public bool IsReactionFollowUpOpportunity =>
+        hasFollowUpOpportunity &&
+        followUpReaction !=
+            AdaptiveReactionType.None;
     private void Update()
     {
         if (!hasFollowUpOpportunity)
@@ -571,7 +586,117 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             postPunishPolicyScore
         );
     }
+    public void PrepareAdaptiveReaction(
+        BossAttackType attackType)
+    {
+        preparedReaction =
+            AdaptiveReactionType.None;
 
+        preparedReactionScore = 0f;
+        preparedReactionAttack = attackType;
+
+        if (behaviorModel == null)
+            return;
+
+        AdaptiveReactionType dominantReaction =
+            behaviorModel
+                .GetDominantAdaptiveReaction(
+                    attackType
+                );
+
+        if (dominantReaction ==
+            AdaptiveReactionType.None)
+        {
+            return;
+        }
+
+        float score =
+            behaviorModel
+                .GetAdaptiveReactionScore(
+                    attackType,
+                    dominantReaction
+                );
+
+        if (score <
+            adaptiveReactionThreshold)
+        {
+            return;
+        }
+
+        preparedReaction =
+            dominantReaction;
+
+        preparedReactionScore =
+            score;
+
+        Debug.Log(
+            $"[Adaptive Reaction Prepared] " +
+            $"Attack={attackType} | " +
+            $"Expected={preparedReaction} | " +
+            $"Score={preparedReactionScore:F2}"
+        );
+
+        CombatLogger.Instance?
+            .RecordAdaptiveEvent(
+                "ReactionPrepared",
+                attackType.ToString(),
+                preparedReaction.ToString(),
+                preparedReactionScore
+            );
+    }
+
+    public bool OpenPreparedReactionOpportunity()
+    {
+        if (preparedReaction ==
+            AdaptiveReactionType.None)
+        {
+            return false;
+        }
+
+        followUpContext =
+            BossBehaviorType.Attack;
+
+        followUpHabit =
+            AdaptiveHabitType.None;
+
+        followUpReaction =
+            preparedReaction;
+
+        followUpHabitScore =
+            preparedReactionScore;
+
+        followUpTimer =
+            followUpOpportunityDuration;
+
+        hasFollowUpOpportunity = true;
+
+        Debug.Log(
+            $"[Adaptive Reaction Opportunity] " +
+            $"Source={preparedReactionAttack} | " +
+            $"Expected={followUpReaction} | " +
+            $"Score={followUpHabitScore:F2}"
+        );
+
+        CombatLogger.Instance?
+            .RecordAdaptiveEvent(
+                "ReactionOpportunityOpened",
+                preparedReactionAttack.ToString(),
+                followUpReaction.ToString(),
+                followUpHabitScore
+            );
+
+        ClearPreparedReaction();
+
+        return true;
+    }
+
+    public void ClearPreparedReaction()
+    {
+        preparedReaction =
+            AdaptiveReactionType.None;
+
+        preparedReactionScore = 0f;
+    }
     private void SetFollowUpOpportunity(
         BossBehaviorType context,
         AdaptiveHabitType habit,
@@ -579,9 +704,15 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     {
         followUpContext = context;
         followUpHabit = habit;
+
+        followUpReaction =
+            AdaptiveReactionType.None;
+
         followUpHabitScore = score;
+
         followUpTimer =
             followUpOpportunityDuration;
+
         hasFollowUpOpportunity = true;
 
         Debug.Log(
@@ -590,6 +721,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             $"Policy={habit} | " +
             $"Score={score:F2}"
         );
+
         CombatLogger.Instance?
             .RecordAdaptiveEvent(
                 "OpportunityOpened",
@@ -630,7 +762,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     // Explicit Adaptive Response Pool
     // =====================================
 
-    public bool TrySelectFollowUpResponse(
+   public bool TrySelectFollowUpResponse(
         bool canParry,
         bool canBackDodge,
         bool canFrontStep,
@@ -650,15 +782,126 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         List<WeightedResponse> candidates =
             new List<WeightedResponse>();
 
-        // Normal Decision은 항상 탈출구로 남긴다.
-        AddCandidate(
-            candidates,
-            AdaptiveResponseAction.NormalDecision,
-            normalDecisionWeight,
-            true
-        );
+        bool isReactionOpportunity =
+            followUpReaction !=
+                AdaptiveReactionType.None;
 
-        if (followUpContext ==
+
+        // =====================================
+        // Adaptive Reaction Follow-up
+        // =====================================
+
+        if (isReactionOpportunity)
+        {
+            switch (followUpReaction)
+            {
+                case AdaptiveReactionType.Attack:
+
+                    AddCandidate(
+                        candidates,
+                        AdaptiveResponseAction.Parry,
+                        maxAttackParryChance,
+                        canParry
+                    );
+
+                    AddCandidate(
+                        candidates,
+                        AdaptiveResponseAction.BackDodge,
+                        maxCounterBackDodgeChance,
+                        canBackDodge
+                    );
+
+                    AddCandidate(
+                        candidates,
+                        AdaptiveResponseAction.Neutral,
+                        maxCounterHoldChance,
+                        true
+                    );
+
+                    AddCandidate(
+                        candidates,
+                        AdaptiveResponseAction.BasicSlash,
+                        secondaryAttackResponseWeight,
+                        canBasic
+                    );
+
+                    break;
+
+
+                case AdaptiveReactionType.Approach:
+
+                    AddCandidate(
+                        candidates,
+                        AdaptiveResponseAction.BackDodge,
+                        maxCounterBackDodgeChance,
+                        canBackDodge
+                    );
+
+                    AddCandidate(
+                        candidates,
+                        AdaptiveResponseAction.BasicSlash,
+                        secondaryAttackResponseWeight,
+                        canBasic
+                    );
+
+                    AddCandidate(
+                        candidates,
+                        AdaptiveResponseAction.HeavySlash,
+                        secondaryAttackResponseWeight,
+                        canHeavy
+                    );
+
+                    AddCandidate(
+                        candidates,
+                        AdaptiveResponseAction.Neutral,
+                        maxCounterHoldChance,
+                        true
+                    );
+
+                    break;
+
+
+                case AdaptiveReactionType.StayAway:
+
+                    AddCandidate(
+                        candidates,
+                        AdaptiveResponseAction.ChargeSlash,
+                        maxRetreatChargeMultiplier,
+                        canCharge
+                    );
+
+                    AddCandidate(
+                        candidates,
+                        AdaptiveResponseAction.FrontStep,
+                        maxRetreatFrontStepChance,
+                        canFrontStep
+                    );
+
+                    AddCandidate(
+                        candidates,
+                        AdaptiveResponseAction.Approach,
+                        approachPressureWeight,
+                        true
+                    );
+
+                    AddCandidate(
+                        candidates,
+                        AdaptiveResponseAction.HeavySlash,
+                        secondaryAttackResponseWeight,
+                        canHeavy
+                    );
+
+                    break;
+            }
+        }
+
+
+        // =====================================
+        // Habit Adaptive Response
+        // =====================================
+
+        else if (
+            followUpContext ==
                 BossBehaviorType.BackDodge &&
             followUpHabit ==
                 AdaptiveHabitType.Chase)
@@ -677,6 +920,8 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 canHeavy
             );
         }
+
+
         else if (
             followUpContext ==
                 BossBehaviorType.BackDodge &&
@@ -689,6 +934,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 chaseCommitBackDodgeWeight,
                 canBackDodge
             );
+
             AddCandidate(
                 candidates,
                 AdaptiveResponseAction.Parry,
@@ -710,6 +956,8 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 canCharge
             );
         }
+
+
         else if (
             followUpContext ==
                 BossBehaviorType.FrontStep &&
@@ -737,6 +985,8 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 true
             );
         }
+
+
         else if (
             followUpContext ==
                 BossBehaviorType.FrontStep &&
@@ -764,14 +1014,14 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 canHeavy
             );
         }
+
+
         else if (
             followUpContext ==
                 BossBehaviorType.FrontStep &&
             followUpHabit ==
                 AdaptiveHabitType.Counter)
         {
-            // 기존 Hold 확률/시간은 버리지 않고
-            // "공격하지 않는 Neutral"의 강도/길이로 재사용한다.
             AddCandidate(
                 candidates,
                 AdaptiveResponseAction.Neutral,
@@ -800,6 +1050,8 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 canBasic
             );
         }
+
+
         else if (
             followUpContext ==
                 BossBehaviorType.Attack &&
@@ -828,13 +1080,23 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             );
         }
 
+
+        // =====================================
+        // 사용할 수 있는 Adaptive 행동이 없다.
+        // Opportunity를 종료하고 일반 AI로 fallback.
+        // =====================================
+
         if (candidates.Count == 0)
+        {
+            ClearFollowUpOpportunity();
             return false;
+        }
+
 
         float totalWeight = 0f;
 
         foreach (WeightedResponse candidate
-                 in candidates)
+                in candidates)
         {
             totalWeight +=
                 Mathf.Max(
@@ -844,7 +1106,11 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         }
 
         if (totalWeight <= 0f)
+        {
+            ClearFollowUpOpportunity();
             return false;
+        }
+
 
         float random =
             Random.Range(
@@ -855,7 +1121,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         float accumulated = 0f;
 
         foreach (WeightedResponse candidate
-                 in candidates)
+                in candidates)
         {
             accumulated +=
                 Mathf.Max(
@@ -871,6 +1137,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 return true;
             }
         }
+
 
         selected =
             candidates[
@@ -892,11 +1159,18 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             return;
         }
 
+        float adjustedWeight =
+            weight;
+
         if (preventSameAdaptiveResponse &&
-            action !=
-                AdaptiveResponseAction.NormalDecision &&
             action ==
                 lastAdaptiveResponse)
+        {
+            adjustedWeight *=
+                repeatedAdaptiveResponseWeightMultiplier;
+        }
+
+        if (adjustedWeight <= 0f)
         {
             return;
         }
@@ -904,7 +1178,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         candidates.Add(
             new WeightedResponse(
                 action,
-                weight
+                adjustedWeight
             )
         );
     }
@@ -922,38 +1196,34 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         if (!hasFollowUpOpportunity)
             return;
 
+        string source =
+            followUpReaction !=
+                AdaptiveReactionType.None
+                ? $"Reaction:{followUpReaction}"
+                : $"Habit:{followUpHabit}";
+
         Debug.Log(
             $"[Adaptive Decision] " +
             $"Context={followUpContext} | " +
-            $"SourceHabit={followUpHabit} | " +
+            $"Source={source} | " +
             $"SelectedAction={selectedAction}"
         );
+
         CombatLogger.Instance?
             .RecordAdaptiveEvent(
                 "ResponseSelected",
                 followUpContext.ToString(),
-                followUpHabit.ToString(),
+                source,
                 followUpHabitScore,
                 selectedAction
             );
-        if (responseAction ==
-            AdaptiveResponseAction.NormalDecision)
-        {
-            // Normal Decision이 한 번 끼면
-            // "같은 Adaptive Response 연속"이 아니므로 리셋한다.
-            lastAdaptiveResponse =
-                AdaptiveResponseAction.None;
 
-            lastAdaptiveResponseHabit =
-                AdaptiveHabitType.None;
-        }
-        else if (responseAction !=
-                 AdaptiveResponseAction.None)
+        if (responseAction !=
+            AdaptiveResponseAction.None)
         {
             lastAdaptiveResponse =
                 responseAction;
 
-            // ClearFollowUpOpportunity() 전에 Source Habit을 저장한다.
             lastAdaptiveResponseHabit =
                 followUpHabit;
 
@@ -966,8 +1236,13 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     private void ClearFollowUpOpportunity()
     {
         hasFollowUpOpportunity = false;
+
         followUpHabit =
             AdaptiveHabitType.None;
+
+        followUpReaction =
+            AdaptiveReactionType.None;
+
         followUpHabitScore = 0f;
         followUpTimer = 0f;
     }

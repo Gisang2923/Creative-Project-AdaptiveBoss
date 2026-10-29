@@ -273,21 +273,39 @@ public class BossController : MonoBehaviour
             !bossAction.IsAttacking &&
             stunTimer <= 0f)
         {
-            // BossAction의 isAttacking은 기존 Recovery가
-            // 끝난 뒤 false가 되므로, 여기부터가
-            // Post-Punish Commit 관찰의 기준점이다.
+            bool wasAdaptiveResponseAttack =
+                currentAttackFromAdaptiveResponse;
+
             CombatLogger.Instance?
                 .EndBossAttack(
                     movement.DistanceToTarget
                 );
 
-            // 현재 입력을 읽고 대응하는 것이 아니라,
-            // 이전 Post-Punish 로그로 이미 학습된 Policy만
-            // 다음 판단에 사용한다.
-            adaptiveSource?
-                .OpenPostPunishOpportunity();
+            bool openedReactionOpportunity =
+                false;
 
-            StartPostAction();
+            if (wasAdaptiveResponseAttack &&
+                adaptiveSource != null)
+            {
+                openedReactionOpportunity =
+                    adaptiveSource
+                        .OpenPreparedReactionOpportunity();
+            }
+
+            if (!openedReactionOpportunity)
+            {
+                adaptiveSource?
+                    .OpenPostPunishOpportunity();
+
+                StartPostAction();
+            }
+            else
+            {
+                currentPostAction =
+                    BossPostAction.Hold;
+
+                repositionTimer = 0f;
+            }
 
             currentAttackIsAdaptive = false;
             currentAttackFromAdaptiveResponse = false;
@@ -571,20 +589,6 @@ public class BossController : MonoBehaviour
             return false;
         }
 
-        // Normal을 뽑은 경우에도 이번 Adaptive Opportunity의
-        // 판단은 끝난 것이므로 소비한 뒤 기존 AI로 돌아간다.
-        if (response ==
-            AdaptiveResponseAction.NormalDecision)
-        {
-            adaptiveSource
-                .ConsumeFollowUpOpportunity(
-                    "NormalDecision",
-                    response
-                );
-
-            return false;
-        }
-
         switch (response)
         {
             case AdaptiveResponseAction.Parry:
@@ -836,6 +840,27 @@ public class BossController : MonoBehaviour
 
         currentAttackIsAdaptive = true;
         currentAttackFromAdaptiveResponse = true;
+
+
+        bool isReactionFollowUp =
+            adaptiveSource != null &&
+            adaptiveSource
+                .IsReactionFollowUpOpportunity;
+
+
+        // Habit에 의해 선택된 Adaptive 공격에서만
+        // 플레이어의 다음 반응을 예측한다.
+        //
+        // Reaction에 의해 선택된 공격은
+        // 다시 즉시 Reaction Chain을 만들지 않는다.
+        if (!isReactionFollowUp)
+        {
+            adaptiveSource?
+                .PrepareAdaptiveReaction(
+                    selectedAttack.attackType
+                );
+        }
+
 
         ExecuteSelectedAttack(
             selectedAttack,
@@ -1151,6 +1176,7 @@ public class BossController : MonoBehaviour
 
         currentAttackIsAdaptive = false;
         currentAttackFromAdaptiveResponse = false;
+        adaptiveSource? .ClearPreparedReaction();
 
         stunTimer =
             duration;
@@ -1247,6 +1273,7 @@ public class BossController : MonoBehaviour
             .ForceCancelAttack();
         currentAttackIsAdaptive = false;
         currentAttackFromAdaptiveResponse = false;
+        adaptiveSource? .ClearPreparedReaction();
         // Precision Stun Update는 early return하므로
         // 이전 공격 상태가 복구 후까지 남지 않게 직접 정리한다.
         wasAttacking = false;
@@ -1357,6 +1384,7 @@ public class BossController : MonoBehaviour
         );
         currentAttackIsAdaptive = false;
         currentAttackFromAdaptiveResponse = false;
+        adaptiveSource? .ClearPreparedReaction();
         movement.Stop();
 
         precisionStunPhase =
