@@ -1,5 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
+using System;
+using System.IO;
 
 public enum PlayerResponseType
 {
@@ -136,6 +138,72 @@ public class PostPunishCommitLog
     }
 }
 
+[System.Serializable]
+public class PlayerActionEventLog
+{
+    public float time;
+    public string action;
+    public float distanceToBoss;
+    public int relatedSequenceId;
+
+    public PlayerActionEventLog(
+        float time,
+        string action,
+        float distanceToBoss,
+        int relatedSequenceId)
+    {
+        this.time = time;
+        this.action = action;
+        this.distanceToBoss = distanceToBoss;
+        this.relatedSequenceId = relatedSequenceId;
+    }
+}
+
+[System.Serializable]
+public class AdaptiveEventLog
+{
+    public float time;
+
+    public string eventType;
+    public string context;
+    public string habit;
+
+    public float score;
+
+    public string response;
+
+    public AdaptiveEventLog(
+        float time,
+        string eventType,
+        string context,
+        string habit,
+        float score,
+        string response)
+    {
+        this.time = time;
+        this.eventType = eventType;
+        this.context = context;
+        this.habit = habit;
+        this.score = score;
+        this.response = response;
+    }
+}
+[System.Serializable]
+public class BattleSessionLog
+{
+    public string sessionId;
+    public string savedAt;
+
+    public float battleDuration;
+    public string battleResult;
+
+    public List<AttackResponseLog> combatLogs;
+    public List<PostPunishCommitLog> postPunishLogs;
+
+    public List<PlayerActionEventLog> playerActionEvents;
+    public List<AdaptiveEventLog> adaptiveEvents;
+}
+
 public class CombatLogger : MonoBehaviour
 {
     [Header("References")]
@@ -157,6 +225,9 @@ public class CombatLogger : MonoBehaviour
     private readonly List<AttackResponseLog> logs = new();
     private readonly List<PostPunishCommitLog> postPunishLogs = new();
 
+    private float battleStartTime;
+    private string sessionId;
+
     private AttackResponseLog currentLog;
     private bool responseRecorded;
     private int nextSequenceId = 0;
@@ -169,7 +240,11 @@ public class CombatLogger : MonoBehaviour
     public IReadOnlyList<AttackResponseLog> Logs => logs;
     public IReadOnlyList<PostPunishCommitLog> PostPunishLogs =>
         postPunishLogs;
+    private readonly List<PlayerActionEventLog>
+        playerActionEvents = new();
 
+    private readonly List<AdaptiveEventLog>
+        adaptiveEvents = new();
     private void Awake()
     {
         if (Instance != null && Instance != this)
@@ -179,6 +254,12 @@ public class CombatLogger : MonoBehaviour
         }
 
         Instance = this;
+        battleStartTime = Time.time;
+
+        sessionId =
+            DateTime.Now.ToString(
+                "yyyyMMdd_HHmmss"
+            );
     }
 
     private void Update()
@@ -268,6 +349,9 @@ public class CombatLogger : MonoBehaviour
     public void RecordPlayerResponse(
         PlayerResponseType response)
     {
+        RecordPlayerAction(
+            response.ToString()
+        );
         // Post-Punish 관찰은 현재 Boss 로그가 없어도
         // 플레이어 공격 입력을 받아야 한다.
         TryRecordPostPunishCommit(response);
@@ -701,5 +785,132 @@ public class CombatLogger : MonoBehaviour
             $"[Charge Timing Anchor] " +
             $"Pass End"
         );
+    }
+    public void SaveBattleLog(
+        string battleResult)
+    {
+        BattleSessionLog session =
+            new BattleSessionLog
+            {
+                sessionId = sessionId,
+
+                savedAt =
+                    DateTime.Now.ToString(
+                        "yyyy-MM-dd HH:mm:ss"
+                    ),
+
+                battleDuration =
+                    Time.time -
+                    battleStartTime,
+
+                battleResult =
+                    battleResult,
+
+                combatLogs =
+                    new List<AttackResponseLog>(
+                        logs
+                    ),
+                postPunishLogs =
+                    new List<PostPunishCommitLog>(
+                        postPunishLogs
+                    ),
+
+                playerActionEvents =
+                    new List<PlayerActionEventLog>(
+                        playerActionEvents
+                    ),
+
+                adaptiveEvents =
+                    new List<AdaptiveEventLog>(
+                        adaptiveEvents
+                    )    
+            };
+
+
+        string json =
+            JsonUtility.ToJson(
+                session,
+                true
+            );
+
+
+        string folder =
+            Path.Combine(
+                Application.persistentDataPath,
+                "CombatLogs"
+            );
+
+        Directory.CreateDirectory(
+            folder
+        );
+
+
+        string path =
+            Path.Combine(
+                folder,
+                $"Battle_{sessionId}.json"
+            );
+
+
+        File.WriteAllText(
+            path,
+            json
+        );
+
+
+        Debug.Log(
+            $"[Combat Log Saved] {path}"
+        );
+    }
+    public void RecordPlayerAction(
+        string action)
+    {
+        int relatedSequenceId =
+            currentLog != null
+                ? currentLog.sequenceId
+                : -1;
+
+        PlayerActionEventLog log =
+            new PlayerActionEventLog(
+                Time.time,
+                action,
+                GetCurrentDistance(),
+                relatedSequenceId
+            );
+
+        playerActionEvents.Add(log);
+    }
+    public void RecordAdaptiveEvent(
+        string eventType,
+        string context,
+        string habit,
+        float score,
+        string response = "")
+    {
+        AdaptiveEventLog log =
+            new AdaptiveEventLog(
+                Time.time,
+                eventType,
+                context,
+                habit,
+                score,
+                response
+            );
+
+        adaptiveEvents.Add(log);
+
+        Debug.Log(
+            $"[Adaptive Log] " +
+            $"{eventType} | " +
+            $"{context} | " +
+            $"{habit} | " +
+            $"Score={score:F2} | " +
+            $"Response={response}"
+        );
+    }
+    [ContextMenu("Save Battle Log")]
+    private void SaveTestBattleLog()
+    {
+        SaveBattleLog("Test");
     }
 }

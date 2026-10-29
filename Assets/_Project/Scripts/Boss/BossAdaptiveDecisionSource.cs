@@ -590,6 +590,13 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             $"Policy={habit} | " +
             $"Score={score:F2}"
         );
+        CombatLogger.Instance?
+            .RecordAdaptiveEvent(
+                "OpportunityOpened",
+                context.ToString(),
+                habit.ToString(),
+                score
+            );
     }
 
     private void UpdatePersistentPolicy(
@@ -921,7 +928,14 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             $"SourceHabit={followUpHabit} | " +
             $"SelectedAction={selectedAction}"
         );
-
+        CombatLogger.Instance?
+            .RecordAdaptiveEvent(
+                "ResponseSelected",
+                followUpContext.ToString(),
+                followUpHabit.ToString(),
+                followUpHabitScore,
+                selectedAction
+            );
         if (responseAction ==
             AdaptiveResponseAction.NormalDecision)
         {
@@ -1089,6 +1103,13 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             $"{previous} → {policy} | " +
             $"Score={score:F2}"
         );
+        CombatLogger.Instance?
+            .RecordAdaptiveEvent(
+                $"Policy{reason}",
+                "BackDodge",
+                policy.ToString(),
+                score
+            );
     }
 
     private void ReleaseBackDodgePolicy()
@@ -1099,7 +1120,13 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             $"Policy={backDodgePolicy} | " +
             $"Score={backDodgePolicyScore:F2}"
         );
-
+        CombatLogger.Instance?
+            .RecordAdaptiveEvent(
+                "PolicyReleased",
+                "BackDodge",
+                backDodgePolicy.ToString(),
+                backDodgePolicyScore
+            );
         backDodgePolicy =
             AdaptiveHabitType.None;
         backDodgePolicyScore = 0f;
@@ -1276,6 +1303,13 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             $"{previous} → {policy} | " +
             $"Score={score:F2}"
         );
+        CombatLogger.Instance?
+            .RecordAdaptiveEvent(
+                $"Policy{reason}",
+                "FrontStep",
+                policy.ToString(),
+                score
+            );
     }
 
     private void ReleaseFrontStepPolicy()
@@ -1286,7 +1320,13 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             $"Policy={frontStepPolicy} | " +
             $"Score={frontStepPolicyScore:F2}"
         );
-
+        CombatLogger.Instance?
+            .RecordAdaptiveEvent(
+                "PolicyReleased",
+                "FrontStep",
+                frontStepPolicy.ToString(),
+                frontStepPolicyScore
+            );
         frontStepPolicy =
             AdaptiveHabitType.None;
         frontStepPolicyScore = 0f;
@@ -1308,7 +1348,13 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
             postPunishPolicyActive = true;
             postPunishPolicyScore = score;
-
+            CombatLogger.Instance?
+                .RecordAdaptiveEvent(
+                    "PolicyLearned",
+                    "PostPunish",
+                    "PostPunishCommit",
+                    score
+                );
             Debug.Log(
                 $"[Adaptive Policy Learned] " +
                 $"Context=PostPunish | " +
@@ -1324,6 +1370,13 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         if (score <
             postPunishCommitReleaseThreshold)
         {
+            CombatLogger.Instance?
+                .RecordAdaptiveEvent(
+                    "PolicyReleased",
+                    "PostPunish",
+                    "PostPunishCommit",
+                    score
+                );
             postPunishPolicyActive = false;
             postPunishPolicyScore = 0f;
 

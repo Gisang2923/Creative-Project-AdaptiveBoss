@@ -172,6 +172,10 @@ public class PlayerCounter : MonoBehaviour
             $"[Perfect Parry] " +
             $"Timing={responseTime:F3}"    
         );
+        CombatLogger.Instance?
+            .RecordPlayerAction(
+                "PerfectParry"
+            );
         HitStopManager.Instance?
             .Play(perfectParryHitStop);
         CameraShake.Instance?.Shake(

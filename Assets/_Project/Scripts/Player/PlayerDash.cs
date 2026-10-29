@@ -246,6 +246,10 @@ public class PlayerDash : MonoBehaviour
             $"[Perfect Dodge] " +
             $"Timing={dodgeTiming:F3}"
         );
+        CombatLogger.Instance?
+            .RecordPlayerAction(
+                "PerfectDodge"
+            );
 
         return true;
     }
@@ -295,7 +299,10 @@ public class PlayerDash : MonoBehaviour
             $"Timing={dodgeTiming:F3} | " +
             $"Distance={distance:F2}"
         );
-
+        CombatLogger.Instance?
+            .RecordPlayerAction(
+                "PerfectDodge"
+            );
         return true;
     }
     public void ForceCancelDash()
