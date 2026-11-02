@@ -9,6 +9,10 @@ public class BossAnimationEventReceiver : MonoBehaviour
     {
         bossAction?.OnBasicHit();
     }
+    public void HeavyHit()
+    {
+        bossAction?.OnHeavyHit();
+    }
     public void CounterHitboxOn()
     {
         bossParry?.OnCounterHitboxOn();

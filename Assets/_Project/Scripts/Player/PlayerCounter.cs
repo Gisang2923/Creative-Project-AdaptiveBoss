@@ -44,6 +44,7 @@ public class PlayerCounter : MonoBehaviour
     public float ParryWindow =>
         parryWindow;
     private Coroutine counterRoutine;
+    private GameObject pendingCounterTarget;
 
     private void Awake()
     {
@@ -191,10 +192,6 @@ public class PlayerCounter : MonoBehaviour
                 "PerfectParry"
             );
 
-        CameraShake.Instance?.Shake(
-            0.07f,
-            0.10f
-        );
         // Precision Stack 획득
         precisionStack?.GainStack();
 
@@ -202,7 +199,7 @@ public class PlayerCounter : MonoBehaviour
         GameObject attacker =
             incomingDamage.Attacker;
             
-
+        pendingCounterTarget = attacker;
         // 기존 Perfect Counter 보상 유지
         BossAction bossAction =
             attacker.GetComponent<BossAction>();
@@ -223,33 +220,6 @@ public class PlayerCounter : MonoBehaviour
         bossAnimator?
             .PlayCounterHit();
 
-
-        // 기존 Counter Damage 유지
-        IDamageable target =
-            attacker.GetComponent<IDamageable>();
-
-        if (target != null)
-        {
-            Vector2 direction =
-                (
-                    attacker.transform.position -
-                    transform.position
-                ).normalized;
-
-            DamageInfo counterDamage =
-                new DamageInfo(
-                    counterAttackData.damage,
-                    direction,
-                    counterAttackData.knockbackForce,
-                    gameObject,
-                    counterAttackData.attackId,
-                    false
-                );
-
-            target.TakeDamage(
-                counterDamage
-            );
-        }
     }
     private IEnumerator CounterSuccessRoutine()
     {
@@ -279,7 +249,52 @@ public class PlayerCounter : MonoBehaviour
                 ? perfectParryHitStop
                 : normalParryHitStop;
 
+        // 먼저 실제 충돌 결과 발생
+        if (perfectParrySucceeded &&
+            pendingCounterTarget != null &&
+            counterAttackData != null)
+        {
+            IDamageable target =
+                pendingCounterTarget
+                    .GetComponentInParent<IDamageable>();
+
+            if (target != null)
+            {
+                Vector2 direction =
+                    (
+                        pendingCounterTarget.transform.position -
+                        transform.position
+                    ).normalized;
+
+                DamageInfo counterDamage =
+                    new DamageInfo(
+                        counterAttackData.damage,
+                        direction,
+                        counterAttackData.knockbackForce,
+                        gameObject,
+                        counterAttackData.attackId,
+                        false
+                    );
+
+                target.TakeDamage(
+                    counterDamage
+                );
+            }
+
+            pendingCounterTarget = null;
+        }
+
+        // 같은 프레임에 Hit Stop
         HitStopManager.Instance?
             .Play(duration);
+
+        if (perfectParrySucceeded)
+        {
+            CameraShake.Instance?
+                .Shake(
+                    0.07f,
+                    0.10f
+                );
+        }
     }
 }

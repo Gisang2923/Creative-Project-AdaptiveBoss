@@ -53,7 +53,8 @@ public class BossAction : MonoBehaviour
     [SerializeField] private float heavyForwardStopDistance = 0.75f;
 
     private float nextHeavyHoldTime = -1f;
-
+    private AttackData currentHeavyAttackData;
+    private bool heavyHitTriggered;
     public float HeavyPrepareCueTime =>
         heavyPrepareCueTime;
 
@@ -652,7 +653,24 @@ public class BossAction : MonoBehaviour
 
         TryPerfectDodgeDistanceGrace();
     }
+    public void OnHeavyHit()
+    {
+        if (!isAttacking ||
+            heavyHitTriggered ||
+            currentHitbox == null ||
+            currentHeavyAttackData == null)
+        {
+            return;
+        }
 
+        heavyHitTriggered = true;
+
+        currentHitbox.Activate(
+            currentHeavyAttackData
+        );
+
+        TryPerfectDodgeDistanceGrace();
+    }
     private IEnumerator HeavySlashRoutine(BossAttack attack)
     {
         isAttacking = true;
@@ -661,6 +679,8 @@ public class BossAction : MonoBehaviour
         Hitbox hitbox = attack.hitbox;
 
         currentHitbox = hitbox;
+        currentHeavyAttackData = data;
+        heavyHitTriggered = false;
 
         // 1. 공격 예고
         bossAnimator?.PlayHeavyPrepare();
@@ -714,22 +734,21 @@ public class BossAction : MonoBehaviour
         if (direction == 0f)
             direction = 1f;
 
-        float releaseTime =
+        float releaseTimeout =
             Mathf.Max(
-                0f,
+                0.05f,
                 data.startupTime -
                 heavyPreHoldTime
             );
 
-        // 5. 앞으로 크게 찌르기
+        // Animation Event가 발생할 때까지
+        // 앞으로 파고들며 대기
         yield return StartCoroutine(
-            HeavyReleaseLunge(
+            HeavyReleaseUntilHit(
                 direction,
-                releaseTime
+                releaseTimeout
             )
         );
-
-        hitbox.Activate(data);
 
         float activeElapsed = 0f;
 
@@ -748,6 +767,9 @@ public class BossAction : MonoBehaviour
         );
 
         currentHitbox = null;
+        currentHeavyAttackData = null;
+        heavyHitTriggered = false;
+
         isAttacking = false;
     }
     private IEnumerator HeavyBackStep()
@@ -831,23 +853,18 @@ public class BossAction : MonoBehaviour
         }
     }
 
-    private IEnumerator HeavyReleaseLunge(
+    private IEnumerator HeavyReleaseUntilHit(
         float direction,
-        float duration)
+        float timeout)
     {
-        if (rb == null ||
-            duration <= 0f ||
-            heavyForwardMaxDistance <= 0f ||
-            heavyForwardSpeed <= 0f)
-        {
+        if (rb == null)
             yield break;
-        }
 
         float elapsed = 0f;
         float movedDistance = 0f;
 
-        while (elapsed < duration &&
-            movedDistance < heavyForwardMaxDistance)
+        while (!heavyHitTriggered &&
+            elapsed < timeout)
         {
             float distanceToPlayer =
                 player != null
@@ -857,48 +874,37 @@ public class BossAction : MonoBehaviour
                     )
                     : Mathf.Infinity;
 
-            if (distanceToPlayer <=
-                heavyForwardStopDistance)
+            bool canMove =
+                movedDistance <
+                    heavyForwardMaxDistance &&
+                distanceToPlayer >
+                    heavyForwardStopDistance;
+
+            if (canMove)
             {
-                break;
+                rb.linearVelocity =
+                    new Vector2(
+                        direction *
+                        heavyForwardSpeed,
+                        rb.linearVelocity.y
+                    );
+
+                movedDistance +=
+                    heavyForwardSpeed *
+                    Time.deltaTime;
+            }
+            else
+            {
+                rb.linearVelocity =
+                    new Vector2(
+                        0f,
+                        rb.linearVelocity.y
+                    );
             }
 
-            float remainingDistance =
-                heavyForwardMaxDistance -
-                movedDistance;
+            elapsed += Time.deltaTime;
 
-            float remainingToStop =
-                Mathf.Max(
-                    0f,
-                    distanceToPlayer -
-                    heavyForwardStopDistance
-                );
-
-            float moveThisStep =
-                Mathf.Min(
-                    heavyForwardSpeed *
-                        Time.fixedDeltaTime,
-                    remainingDistance,
-                    remainingToStop
-                );
-
-            if (moveThisStep <= 0f)
-                break;
-
-            float actualSpeed =
-                moveThisStep /
-                Time.fixedDeltaTime;
-
-            rb.linearVelocity =
-                new Vector2(
-                    direction * actualSpeed,
-                    rb.linearVelocity.y
-                );
-
-            movedDistance += moveThisStep;
-            elapsed += Time.fixedDeltaTime;
-
-            yield return new WaitForFixedUpdate();
+            yield return null;
         }
 
         rb.linearVelocity =
@@ -906,6 +912,18 @@ public class BossAction : MonoBehaviour
                 0f,
                 rb.linearVelocity.y
             );
+
+        // Animation Event 누락 방지
+        if (!heavyHitTriggered)
+        {
+            Debug.LogWarning(
+                "[Boss Heavy] " +
+                "HeavyHit Animation Event timeout. " +
+                "Fallback hit triggered."
+            );
+
+            OnHeavyHit();
+        }
     }
     public void ForceCancelAttack()
     {
@@ -915,6 +933,16 @@ public class BossAction : MonoBehaviour
         {
             currentHitbox.Deactivate();
             currentHitbox = null;
+        }
+
+        // Charge Trail 강제 정리
+        if (activeChargeTrail != null)
+        {
+            Destroy(
+                activeChargeTrail.gameObject
+            );
+
+            activeChargeTrail = null;
         }
 
         if (rb != null)
@@ -931,9 +959,13 @@ public class BossAction : MonoBehaviour
         isAttacking = false;
         isDodging = false;
         isFrontStepping = false;
+
         currentBasicAttackData = null;
         basicHitTriggered = false;
         basicHitTimedOut = false;
+
+        currentHeavyAttackData = null;
+        heavyHitTriggered = false;
     }
 
     private IEnumerator ChargeSlashRoutine(BossAttack attack)
