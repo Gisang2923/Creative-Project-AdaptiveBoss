@@ -2408,6 +2408,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 254ac5804704f7548a28901fc9bb99bd, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCounter
+  hitFlash: {fileID: 1266593683}
   counterAttackData: {fileID: 11400000, guid: 7617769d75c454846bbfdb763dae1fbd, type: 2}
   parryBox: {fileID: 1695386534}
   hurtbox: {fileID: 722405369}
@@ -2445,7 +2446,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimator
   animator: {fileID: 1726732469}
-  counter: {fileID: 0}
 --- !u!114 &685367527
 MonoBehaviour:
   m_ObjectHideFlags: 0

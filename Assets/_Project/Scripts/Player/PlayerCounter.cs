@@ -4,6 +4,8 @@ using UnityEngine.InputSystem;
 
 public class PlayerCounter : MonoBehaviour
 {
+    [SerializeField]
+    private HitFlash hitFlash;
     [Header("Counter")]
     [SerializeField] private AttackData counterAttackData;
 
@@ -61,7 +63,11 @@ public class PlayerCounter : MonoBehaviour
             GetComponent<PlayerPrecisionStack>();
         playerAnimator =
             GetComponent<PlayerAnimator>();    
-
+        if (hitFlash == null)
+        {
+            hitFlash =
+                GetComponentInChildren<HitFlash>();
+        }
         parryBox.SetActive(false);
         hurtbox.SetActive(true);
     }
@@ -249,7 +255,7 @@ public class PlayerCounter : MonoBehaviour
                 ? perfectParryHitStop
                 : normalParryHitStop;
 
-        // 먼저 실제 충돌 결과 발생
+        // Perfect Parry Counter Damage
         if (perfectParrySucceeded &&
             pendingCounterTarget != null &&
             counterAttackData != null)
@@ -273,7 +279,8 @@ public class PlayerCounter : MonoBehaviour
                         counterAttackData.knockbackForce,
                         gameObject,
                         counterAttackData.attackId,
-                        false
+                        false,
+                        suppressHitVfx: true
                     );
 
                 target.TakeDamage(
@@ -283,6 +290,15 @@ public class PlayerCounter : MonoBehaviour
 
             pendingCounterTarget = null;
         }
+
+        // 보스를 살짝 하얗게
+        hitFlash?.Flash(
+            perfectParrySucceeded
+                ? 0.8f
+                : 0.5f,
+            duration,
+            true
+        );
 
         // 같은 프레임에 Hit Stop
         HitStopManager.Instance?

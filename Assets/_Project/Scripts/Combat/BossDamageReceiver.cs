@@ -76,9 +76,12 @@ public class BossDamageReceiver : DamageReceiver
             damageInfo.HitDirection,
             damageInfo.CausesBossStun
         );
-        hitVfxSpawner?.Play(
-            damageInfo.HitDirection
-        );
+        if (!damageInfo.SuppressHitVfx)
+        {
+            hitVfxSpawner?.Play(
+                damageInfo.HitDirection
+            );
+        }
         // 데미지 처리 중 사망했다면 종료
         if (isDead)
             return;

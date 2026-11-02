@@ -21,24 +21,73 @@ public class HitFlash : MonoBehaviour
             material = spriteRenderer.material;
     }
 
+    // 기존 피격용
     public void Flash()
+    {
+        Flash(
+            1f,
+            flashDuration,
+            false
+        );
+    }
+
+    // 패링 등 강도 조절용
+    public void Flash(
+        float amount,
+        float duration,
+        bool useUnscaledTime)
     {
         if (material == null)
             return;
 
         if (flashRoutine != null)
+        {
             StopCoroutine(flashRoutine);
+            material.SetFloat(
+                FlashAmount,
+                0f
+            );
+        }
 
-        flashRoutine = StartCoroutine(FlashRoutine());
+        flashRoutine =
+            StartCoroutine(
+                FlashRoutine(
+                    amount,
+                    duration,
+                    useUnscaledTime
+                )
+            );
     }
 
-    private IEnumerator FlashRoutine()
+    private IEnumerator FlashRoutine(
+        float amount,
+        float duration,
+        bool useUnscaledTime)
     {
-        material.SetFloat(FlashAmount, 1f);
+        material.SetFloat(
+            FlashAmount,
+            Mathf.Clamp01(amount)
+        );
 
-        yield return new WaitForSeconds(flashDuration);
+        if (useUnscaledTime)
+        {
+            yield return
+                new WaitForSecondsRealtime(
+                    duration
+                );
+        }
+        else
+        {
+            yield return
+                new WaitForSeconds(
+                    duration
+                );
+        }
 
-        material.SetFloat(FlashAmount, 0f);
+        material.SetFloat(
+            FlashAmount,
+            0f
+        );
 
         flashRoutine = null;
     }

@@ -17,6 +17,7 @@ public struct DamageInfo
     public float CameraShakeDuration;
     public float CameraShakeStrength;
     public float HitStopDuration;
+    public bool SuppressHitVfx;
     public DamageInfo(
         int damage,
         Vector2 hitDirection,
@@ -31,7 +32,8 @@ public struct DamageInfo
         float knockdownDuration = 0f,
         float cameraShakeDuration = 0f,
         float cameraShakeStrength = 0f,
-        float hitStopDuration = 0f)
+        float hitStopDuration = 0f,
+        bool suppressHitVfx = false)
     {
         Damage = damage;
         HitDirection = hitDirection;
@@ -40,26 +42,17 @@ public struct DamageInfo
         AttackId = attackId;
         Parryable = parryable;
 
-        CausesBossStun =
-            causesBossStun;
+        CausesBossStun = causesBossStun;
+        CausesKnockdown = causesKnockdown;
 
-        CausesKnockdown =
-            causesKnockdown;
+        KnockdownX = knockdownX;
+        KnockdownY = knockdownY;
+        KnockdownDuration = knockdownDuration;
 
-        KnockdownX =
-            knockdownX;
+        CameraShakeDuration = cameraShakeDuration;
+        CameraShakeStrength = cameraShakeStrength;
+        HitStopDuration = hitStopDuration;
 
-        KnockdownY =
-            knockdownY;
-
-        KnockdownDuration =
-            knockdownDuration;
-        CameraShakeDuration =
-            cameraShakeDuration;
-
-        CameraShakeStrength =
-            cameraShakeStrength;
-        HitStopDuration =
-            hitStopDuration;
+        SuppressHitVfx = suppressHitVfx;
     }
 }
