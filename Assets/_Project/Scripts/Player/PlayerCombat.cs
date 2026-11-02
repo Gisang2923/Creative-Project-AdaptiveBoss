@@ -15,9 +15,24 @@ public class PlayerCombat : MonoBehaviour
     public ChargeState CurrentChargeState => chargeState;
 
     [Header("Normal Attack")]
-    [SerializeField] private AttackData normalAttackData;
-    [SerializeField] private Hitbox normalAttackHitbox;
+    [SerializeField]
+    private AttackData normalAttackData;
 
+    [SerializeField]
+    private AttackData normalAttack2Data;
+
+    [SerializeField]
+    private AttackData normalAttack3Data;
+
+    [SerializeField]
+    private Hitbox normalAttackHitbox;
+
+    private int normalComboStep;
+    private bool normalComboBuffered;
+    private bool normalComboWindowOpen;
+
+    public int CurrentNormalComboStep =>
+        normalComboStep;
     public enum AttackType
     {
         None,
@@ -118,7 +133,7 @@ public class PlayerCombat : MonoBehaviour
     private Vector2 enhancedDashSweepStart;
     private bool enhancedDashActive;
     private Coroutine enhancedDashMoveCoroutine;
-
+    private PlayerAnimator playerAnimator;
     private void Awake()
     {
         damageReceiver =
@@ -138,6 +153,8 @@ public class PlayerCombat : MonoBehaviour
 
         precisionStack =
             GetComponent<PlayerPrecisionStack>();
+        playerAnimator =
+            GetComponent<PlayerAnimator>();    
     }
 
     private void Update()
@@ -182,6 +199,19 @@ public class PlayerCombat : MonoBehaviour
         if (!context.performed)
             return;
 
+        // =====================================
+        // Normal Combo 중 추가 공격 입력
+        // → 다음 공격 예약
+        // =====================================
+
+        if (IsAttacking &&
+            currentAttackType ==
+                AttackType.Normal)
+        {
+            QueueNormalCombo();
+            return;
+        }
+
         if (IsAttacking || IsCharging)
             return;
 
@@ -212,13 +242,7 @@ public class PlayerCombat : MonoBehaviour
                 return;
             }
         }
-
-        // =====================================
-        // 일반 기본공격
-        // =====================================
-        StartCoroutine(
-            NormalAttack()
-        );
+        StartNormalCombo();
     }
 
     public void CancelAttack()
@@ -249,7 +273,9 @@ public class PlayerCombat : MonoBehaviour
         enhancedDashMoveCoroutine = null;
 
         ResetEnhancedHeavyState();
-
+        normalComboStep = 0;
+        normalComboBuffered = false;
+        normalComboWindowOpen = false;
         currentPhase =
             AttackPhase.None;
     }
@@ -281,12 +307,23 @@ public class PlayerCombat : MonoBehaviour
         enhancedDashMoveCoroutine = null;
 
         ResetEnhancedHeavyState();
-
+        normalComboStep = 0;
+        normalComboBuffered = false;
+        normalComboWindowOpen = false;
         currentPhase =
             AttackPhase.None;
     }
+    private void StartNormalCombo()
+    {
+        normalComboStep = 1;
 
-    private IEnumerator NormalAttack()
+        normalComboBuffered = false;
+        normalComboWindowOpen = false;
+
+        StartNormalComboStep();
+    }
+
+    private void StartNormalComboStep()
     {
         currentAttackType =
             AttackType.Normal;
@@ -294,34 +331,160 @@ public class PlayerCombat : MonoBehaviour
         currentPhase =
             AttackPhase.Startup;
 
+        normalComboBuffered = false;
+        normalComboWindowOpen = false;
+
+        normalAttackHitbox?
+            .Deactivate();
+
+        playerAnimator?
+            .PlayNormalAttack(
+                normalComboStep
+            );
+
         CombatLogger.Instance?
             .RecordPlayerResponse(
                 PlayerResponseType.NormalAttack
             );
 
-        yield return new WaitForSeconds(
-            normalAttackData.startupTime
+        Debug.Log(
+            $"[Player Combo] " +
+            $"Attack {normalComboStep}"
         );
+    }
+    private void QueueNormalCombo()
+    {
+        if (normalComboStep <= 0 ||
+            normalComboStep >= 3)
+        {
+            return;
+        }
+
+        // 이미 연결 가능한 시점이면
+        // 바로 다음 공격 실행
+        if (normalComboWindowOpen)
+        {
+            StartNextNormalComboStep();
+            return;
+        }
+
+        // 아직 연결 시점 전이면 입력 저장
+        normalComboBuffered = true;
+
+        Debug.Log(
+            $"[Player Combo] " +
+            $"Buffered after {normalComboStep}"
+        );
+    }
+    public void OnNormalAttackHitboxOn()
+    {
+        if (currentAttackType !=
+            AttackType.Normal)
+        {
+            return;
+        }
+
+        AttackData data =
+            GetCurrentNormalAttackData();
+
+        if (data == null ||
+            normalAttackHitbox == null)
+        {
+            return;
+        }
 
         currentPhase =
             AttackPhase.Active;
 
         normalAttackHitbox.Activate(
-            normalAttackData
+            data
         );
+    }
+    public void OnNormalAttackHitboxOff()
+    {
+        if (currentAttackType !=
+            AttackType.Normal)
+        {
+            return;
+        }
 
-        yield return new WaitForSeconds(
-            normalAttackData.activeTime
-        );
-
-        normalAttackHitbox.Deactivate();
+        normalAttackHitbox?
+            .Deactivate();
 
         currentPhase =
             AttackPhase.Recovery;
+    }
+    public void OnNormalComboWindow()
+    {
+        if (currentAttackType !=
+            AttackType.Normal)
+        {
+            return;
+        }
 
-        yield return new WaitForSeconds(
-            normalAttackData.recoveryTime
-        );
+        if (normalComboStep >= 3)
+            return;
+
+        normalComboWindowOpen = true;
+
+        if (normalComboBuffered)
+        {
+            StartNextNormalComboStep();
+        }
+    }
+    private AttackData GetCurrentNormalAttackData()
+    {
+        switch (normalComboStep)
+        {
+            case 2:
+                return normalAttack2Data != null
+                    ? normalAttack2Data
+                    : normalAttackData;
+
+            case 3:
+                return normalAttack3Data != null
+                    ? normalAttack3Data
+                    : normalAttackData;
+
+            default:
+                return normalAttackData;
+        }
+    }
+    private void StartNextNormalComboStep()
+    {
+        if (normalComboStep >= 3)
+            return;
+
+        normalComboStep++;
+
+        StartNormalComboStep();
+    }
+    public void OnNormalAttackEnd()
+    {
+        if (currentAttackType !=
+            AttackType.Normal)
+        {
+            return;
+        }
+
+        // 마지막 순간 입력까지 받아줌
+        if (normalComboBuffered &&
+            normalComboStep < 3)
+        {
+            StartNextNormalComboStep();
+            return;
+        }
+
+        ResetNormalCombo();
+    }
+    private void ResetNormalCombo()
+    {
+        normalAttackHitbox?
+            .Deactivate();
+
+        normalComboStep = 0;
+        normalComboBuffered = false;
+        normalComboWindowOpen = false;
 
         currentAttackType =
             AttackType.None;
@@ -329,7 +492,6 @@ public class PlayerCombat : MonoBehaviour
         currentPhase =
             AttackPhase.None;
     }
-
     public void OnChargeAttack(
         InputAction.CallbackContext context)
     {

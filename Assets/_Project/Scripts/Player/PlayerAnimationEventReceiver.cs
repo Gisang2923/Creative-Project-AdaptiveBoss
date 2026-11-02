@@ -29,6 +29,34 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
     public void OnCounter(){}
 
     // =====================================
+    // Normal Attack
+    // =====================================
+
+    public void NormalAttackHitboxOn()
+    {
+        playerCombat?
+            .OnNormalAttackHitboxOn();
+    }
+
+    public void NormalAttackHitboxOff()
+    {
+        playerCombat?
+            .OnNormalAttackHitboxOff();
+    }
+
+    public void NormalComboWindow()
+    {
+        playerCombat?
+            .OnNormalComboWindow();
+    }
+
+    public void NormalAttackEnd()
+    {
+        playerCombat?
+            .OnNormalAttackEnd();
+    }
+
+    // =====================================
     // Dash Attack
     // =====================================
 

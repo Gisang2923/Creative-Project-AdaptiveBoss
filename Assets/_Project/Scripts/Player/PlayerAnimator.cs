@@ -24,8 +24,14 @@ public class PlayerAnimator : MonoBehaviour
 
     private static readonly int Dash =
         Animator.StringToHash("Dash");
+
     private static readonly int LightAttack =
     Animator.StringToHash("LightAtk");
+    private static readonly int LightAttack2 =
+        Animator.StringToHash("LightAtk2");
+    private static readonly int LightAttack3 =
+        Animator.StringToHash("LightAtk3");
+
     private static readonly int ChargeHold =
     Animator.StringToHash("ChargeHold");
     private static readonly int ChargeAttack =
@@ -154,9 +160,13 @@ public class PlayerAnimator : MonoBehaviour
         }
         if (combat != null &&
             combat.IsAttacking &&
-            combat.CurrentAttackType == PlayerCombat.AttackType.Normal)
+            combat.CurrentAttackType ==
+                PlayerCombat.AttackType.Normal)
         {
-            PlayState(LightAttack);
+            PlayNormalAttack(
+                combat.CurrentNormalComboStep
+            );
+
             return;
         }
         if (combat != null &&
@@ -266,6 +276,37 @@ public class PlayerAnimator : MonoBehaviour
 
         animator.Play(
             targetState,
+            0,
+            0f
+        );
+    }
+    public void PlayNormalAttack(
+        int comboStep)
+    {
+        int stateHash;
+
+        switch (comboStep)
+        {
+            case 2:
+                stateHash = LightAttack2;
+                break;
+
+            case 3:
+                stateHash = LightAttack3;
+                break;
+
+            default:
+                stateHash = LightAttack;
+                break;
+        }
+
+        if (currentState == stateHash)
+            return;
+
+        currentState = stateHash;
+
+        animator.Play(
+            stateHash,
             0,
             0f
         );
