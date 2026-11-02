@@ -2352,7 +2352,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerCombat
   normalAttackData: {fileID: 11400000, guid: 70a28fe37605dc4479048c8983e42547, type: 2}
+  normalAttack2Data: {fileID: 11400000, guid: 70a28fe37605dc4479048c8983e42547, type: 2}
+  normalAttack3Data: {fileID: 11400000, guid: 70a28fe37605dc4479048c8983e42547, type: 2}
   normalAttackHitbox: {fileID: 1672193365}
+  combo3ForwardDistance: 3
+  combo3ForwardDuration: 0.6
   chargeAttackData: {fileID: 11400000, guid: b14f6dfa434f60a429b2577539a1b7f0, type: 2}
   chargeAttackHitbox: {fileID: 1059957506}
   chargeTime: 0.7
@@ -4384,7 +4388,7 @@ BoxCollider2D:
   m_UsedByEffector: 0
   m_CompositeOperation: 0
   m_CompositeOrder: 0
-  m_Offset: {x: 0.22739118, y: 0.26021594}
+  m_Offset: {x: -0.32845014, y: 0.26021594}
   m_SpriteTilingProperty:
     border: {x: 0, y: 0, z: 0, w: 0}
     pivot: {x: 0, y: 0}
@@ -4394,7 +4398,7 @@ BoxCollider2D:
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
-  m_Size: {x: 1.2547823, y: 1.4204321}
+  m_Size: {x: 2.3664641, y: 1.4204321}
   m_EdgeRadius: 0
 --- !u!1 &1695386534
 GameObject:

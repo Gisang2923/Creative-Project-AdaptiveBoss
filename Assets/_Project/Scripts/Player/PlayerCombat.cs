@@ -27,6 +27,13 @@ public class PlayerCombat : MonoBehaviour
     [SerializeField]
     private Hitbox normalAttackHitbox;
 
+    [Header("Normal Combo Finisher")]
+    [SerializeField]
+    private float combo3ForwardDistance = 0.55f;
+
+    [SerializeField]
+    private float combo3ForwardDuration = 0.10f;
+
     private int normalComboStep;
     private bool normalComboBuffered;
     private bool normalComboWindowOpen;
@@ -378,10 +385,10 @@ public class PlayerCombat : MonoBehaviour
     }
     public void OnNormalAttackHitboxOn()
     {
-        if (currentAttackType !=
-            AttackType.Normal)
+        if (normalComboStep == 3)
         {
-            return;
+            playerMovement?
+                .StopNormalAttackMove();
         }
 
         AttackData data =
@@ -467,7 +474,12 @@ public class PlayerCombat : MonoBehaviour
             return;
         }
 
-        // 마지막 순간 입력까지 받아줌
+        if (normalComboStep == 3)
+        {
+            playerMovement?
+                .StopNormalAttackMove();
+        }
+
         if (normalComboBuffered &&
             normalComboStep < 3)
         {
@@ -491,6 +503,22 @@ public class PlayerCombat : MonoBehaviour
 
         currentPhase =
             AttackPhase.None;
+    }
+    public void OnNormalFinisherLunge()
+    {
+        if (currentAttackType !=
+            AttackType.Normal)
+            return;
+
+        if (normalComboStep != 3)
+            return;
+
+        playerMovement?
+            .StartNormalAttackMove(
+                playerMovement.FacingDirection,
+                combo3ForwardDistance,
+                combo3ForwardDuration
+            );
     }
     public void OnChargeAttack(
         InputAction.CallbackContext context)
@@ -1089,4 +1117,5 @@ public class PlayerCombat : MonoBehaviour
         currentPhase =
             AttackPhase.None;
     }
+
 }

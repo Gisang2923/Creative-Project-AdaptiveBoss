@@ -33,6 +33,10 @@ public class PlayerMovement : MonoBehaviour
     private float coyoteTimeCounter;
     private float jumpBufferCounter;
     private bool jumpReleased;
+    private bool isNormalAttackMoving;
+    private float normalAttackDirection;
+    private float normalAttackMoveSpeed;
+    private float normalAttackMoveTimer;
 
     private PlayerDash playerDash;
 
@@ -148,6 +152,25 @@ public class PlayerMovement : MonoBehaviour
 
             return;
         }
+        if (isNormalAttackMoving)
+        {
+            rb.linearVelocity =
+                new Vector2(
+                    normalAttackDirection *
+                        normalAttackMoveSpeed,
+                    rb.linearVelocity.y
+                );
+
+            normalAttackMoveTimer -=
+                Time.fixedDeltaTime;
+
+            if (normalAttackMoveTimer <= 0f)
+            {
+                StopNormalAttackMove();
+            }
+
+            return;
+        }
 
         if (playerCombat != null &&
             playerCombat.IsCharging)
@@ -193,15 +216,9 @@ public class PlayerMovement : MonoBehaviour
         if (playerCombat == null)
             return false;
 
-        // Enhanced Heavy는 공격 모션이 완전히 끝날 때까지 이동 잠금
-        if (playerCombat.IsEnhancedHeavyAttack)
-            return true;
-
         return
-            playerCombat.CurrentPhase ==
-                PlayerCombat.AttackPhase.Startup ||
-            playerCombat.CurrentPhase ==
-                PlayerCombat.AttackPhase.Active;
+            playerCombat.IsAttacking ||
+            playerCombat.IsCharging;
     }
 
     private bool CanChangeFacing()
@@ -339,7 +356,12 @@ public class PlayerMovement : MonoBehaviour
         {
             return;
         }
-
+        if (playerCombat != null &&
+            (playerCombat.IsAttacking ||
+            playerCombat.IsCharging))
+        {
+            return;
+        }
         if (playerCombat != null &&
             playerCombat.IsCharging)
         {
@@ -521,6 +543,42 @@ public class PlayerMovement : MonoBehaviour
     {
         isDashAttacking = false;
         dashAttackMoveSpeed = 0f;
+
+        rb.linearVelocity =
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
+    }
+    public void StartNormalAttackMove(
+        float direction,
+        float distance,
+        float duration)
+    {
+        if (duration <= 0f ||
+            distance <= 0f)
+            return;
+
+        isNormalAttackMoving = true;
+
+        normalAttackDirection =
+            Mathf.Sign(direction);
+
+        normalAttackMoveSpeed =
+            distance / duration;
+
+        normalAttackMoveTimer =
+            duration;
+    }
+
+    public void StopNormalAttackMove()
+    {
+        if (!isNormalAttackMoving)
+            return;
+
+        isNormalAttackMoving = false;
+        normalAttackMoveSpeed = 0f;
+        normalAttackMoveTimer = 0f;
 
         rb.linearVelocity =
             new Vector2(

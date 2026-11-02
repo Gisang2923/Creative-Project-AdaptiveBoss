@@ -55,6 +55,11 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
         playerCombat?
             .OnNormalAttackEnd();
     }
+    public void NormalFinisherLunge()
+    {
+        playerCombat?
+            .OnNormalFinisherLunge();
+    }
 
     // =====================================
     // Dash Attack

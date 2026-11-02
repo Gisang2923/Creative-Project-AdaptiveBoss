@@ -104,7 +104,7 @@ AnimationClip:
   m_HasMotionFloatCurves: 0
   m_Events:
   - time: 0.23333333
-    functionName: 
+    functionName: NormalAttackHitboxOn
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
@@ -125,7 +125,7 @@ AnimationClip:
     intParameter: 0
     messageOptions: 0
   - time: 0.48333332
-    functionName: 
+    functionName: NormalComboWindow
     data: 
     objectReferenceParameter: {fileID: 0}
     floatParameter: 0
