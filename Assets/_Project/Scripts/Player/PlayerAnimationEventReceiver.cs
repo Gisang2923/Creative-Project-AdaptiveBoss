@@ -4,7 +4,7 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
 {
     [SerializeField]
     private PlayerDamageReceiver playerDamageReceiver;
-
+    
     [SerializeField]
     private PlayerAnimator playerAnimator;
 
@@ -13,6 +13,8 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
 
     [SerializeField]
     private PlayerCombat playerCombat;
+    [SerializeField]
+    private PlayerCounter playerCounter;
 
     // Imported animation에서 들어오는 기존 이벤트 더미
     public void OnResetVelocity(){}
@@ -122,5 +124,10 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
     {
         perfectDodgeAfterimage?
             .StopAfterimage();
+    }
+    public void ParryImpactFrame()
+    {
+        playerCounter?
+            .OnParryImpactFrame();
     }
 }

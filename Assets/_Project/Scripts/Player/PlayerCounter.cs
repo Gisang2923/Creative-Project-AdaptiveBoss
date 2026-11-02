@@ -20,22 +20,27 @@ public class PlayerCounter : MonoBehaviour
     [SerializeField] private float successAnimationDuration = 0.35f;
 
     [SerializeField]
-    private float normalParryHitStop = 0.8f;
+    private float normalParryHitStop = 0.08f;
     private float perfectParryHitStop = 0.18f;    
     private PlayerDamageReceiver damageReceiver;
     private PlayerCombat playerCombat;
 
-    private bool isCountering;
+    
     private PlayerHeal playerHeal;
+    private PlayerAnimator playerAnimator;
+    private bool isCountering;
     public bool IsCountering => isCountering;
     private bool counterSucceeded;
-
-    private float counterStartTime;
-    private PlayerPrecisionStack precisionStack;
-
-
     public bool CounterSucceeded => counterSucceeded;
 
+
+    private bool perfectParrySucceeded;
+
+    public bool PerfectParrySucceeded =>
+        perfectParrySucceeded;
+
+    private float counterStartTime;
+    private PlayerPrecisionStack precisionStack;    
     public float ParryWindow =>
         parryWindow;
     private Coroutine counterRoutine;
@@ -53,6 +58,8 @@ public class PlayerCounter : MonoBehaviour
 
         precisionStack =
             GetComponent<PlayerPrecisionStack>();
+        playerAnimator =
+            GetComponent<PlayerAnimator>();    
 
         parryBox.SetActive(false);
         hurtbox.SetActive(true);
@@ -85,6 +92,7 @@ public class PlayerCounter : MonoBehaviour
     {
         isCountering = true;
         counterSucceeded = false;
+        perfectParrySucceeded = false;
 
         counterStartTime = Time.time;
 
@@ -133,11 +141,16 @@ public class PlayerCounter : MonoBehaviour
         bool isPerfect =
             responseTime <= perfectParryWindow;
 
-
+        perfectParrySucceeded = isPerfect;
         // Parry 자체는 성공
         counterSucceeded = true;
 
         EndCounter();
+
+        playerAnimator?
+            .PlayCounterSuccess(
+                isPerfect
+            );
 
         StartCoroutine(
             CounterSuccessRoutine()
@@ -161,6 +174,7 @@ public class PlayerCounter : MonoBehaviour
                 $"[Normal Parry] " +
                 $"Timing={responseTime:F3}"
             );
+
             return;
         }
 
@@ -176,8 +190,7 @@ public class PlayerCounter : MonoBehaviour
             .RecordPlayerAction(
                 "PerfectParry"
             );
-        HitStopManager.Instance?
-            .Play(perfectParryHitStop);
+
         CameraShake.Instance?.Shake(
             0.07f,
             0.10f
@@ -258,5 +271,15 @@ public class PlayerCounter : MonoBehaviour
         hurtbox.SetActive(true);
 
         isCountering = false;
+    }
+    public void OnParryImpactFrame()
+    {
+        float duration =
+            perfectParrySucceeded
+                ? perfectParryHitStop
+                : normalParryHitStop;
+
+        HitStopManager.Instance?
+            .Play(duration);
     }
 }

@@ -34,6 +34,10 @@ public class PlayerAnimator : MonoBehaviour
     Animator.StringToHash("Counter");
     private static readonly int CounterSuccess =
     Animator.StringToHash("CounterSuccess");
+    private static readonly int PerfectCounterSuccess =
+    Animator.StringToHash(
+        "PerfectCounterSuccess"
+    );
     private static readonly int Heal =
     Animator.StringToHash("Heal");
     private static readonly int HealEnd =
@@ -117,9 +121,21 @@ public class PlayerAnimator : MonoBehaviour
             return;
         if (counter != null && counter.CounterSucceeded)
         {
-            PlayState(CounterSuccess);
+            if (counter.PerfectParrySucceeded)
+            {
+                PlayState(
+                    PerfectCounterSuccess
+                );
+            }
+            else
+            {
+                PlayState(
+                    CounterSuccess
+                );
+            }
+
             return;
-        }    
+        }
         if (counter != null && counter.IsCountering)
         {
             PlayState(Counter);
@@ -237,5 +253,21 @@ public class PlayerAnimator : MonoBehaviour
     public void OnPerfectDodgeEnd()
     {
         isPerfectDodging = false;
+    }
+    public void PlayCounterSuccess(
+        bool isPerfect)
+    {
+        int targetState =
+            isPerfect
+                ? PerfectCounterSuccess
+                : CounterSuccess;
+
+        currentState = targetState;
+
+        animator.Play(
+            targetState,
+            0,
+            0f
+        );
     }
 }

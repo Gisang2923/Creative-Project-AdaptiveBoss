@@ -39,15 +39,18 @@ public class BossAction : MonoBehaviour
     private bool basicHitTimedOut;
 
     [Header("Heavy Slash")]
-    // 빤짝 Prepare를 보여주는 고정 시간
     [SerializeField] private float heavyPrepareCueTime = 0.2f;
-
-    // 찌르기 직전 자세에서 기본적으로 기다리는 시간
-    [SerializeField] private float heavyBaseHoldTime = 0.3f;
-
-    // HeavyAttack 시작 후
-    // '찌르기 직전 자세'까지 도달하는 시간
+    [SerializeField] private float heavyBaseHoldTime = 0.22f;
     [SerializeField] private float heavyPreHoldTime = 0.18f;
+
+    // 준비 중 뒤로 빠지는 거리
+    [SerializeField] private float heavyBackStepDistance = 0.6f;
+    [SerializeField] private float heavyBackStepDuration = 0.12f;
+
+    // Release 순간 전진
+    [SerializeField] private float heavyForwardSpeed = 7f;
+    [SerializeField] private float heavyForwardMaxDistance = 1.4f;
+    [SerializeField] private float heavyForwardStopDistance = 0.75f;
 
     private float nextHeavyHoldTime = -1f;
 
@@ -87,6 +90,12 @@ public class BossAction : MonoBehaviour
     [SerializeField] private Transform player;
     [SerializeField] private Transform visual;
     [SerializeField] private Collider2D bodyCollider;
+
+    [Header("Charge Slash VFX")]
+    [SerializeField]
+    private ChargeTrailVFX chargeTrailPrefab;
+
+    private ChargeTrailVFX activeChargeTrail;
 
     [SerializeField] private float jumpSlamVanishTime = 0.35f;
     [SerializeField] private float jumpSlamHoverTime = 0.4f;
@@ -653,16 +662,27 @@ public class BossAction : MonoBehaviour
 
         currentHitbox = hitbox;
 
+        // 1. 공격 예고
         bossAnimator?.PlayHeavyPrepare();
 
-        yield return new WaitForSeconds(
-            heavyPrepareCueTime
+        yield return StartCoroutine(
+            HeavyTrackTargetForDuration(
+                heavyPrepareCueTime
+            )
         );
 
+        // 2. 플레이어 반대 방향으로 짧게 Back Step
+        yield return StartCoroutine(
+            HeavyBackStep()
+        );
+
+        // 3. 실제 Heavy Attack 모션 시작
         bossAnimator?.PlayHeavyAttack();
 
-        yield return new WaitForSeconds(
-            heavyPreHoldTime
+        yield return StartCoroutine(
+            HeavyTrackTargetForDuration(
+                heavyPreHoldTime
+            )
         );
 
         float holdTime =
@@ -674,11 +694,25 @@ public class BossAction : MonoBehaviour
 
         bossAnimator?.SetPlaybackSpeed(0f);
 
-        yield return new WaitForSeconds(
-            holdTime
+        yield return StartCoroutine(
+            HeavyTrackTargetForDuration(
+                holdTime
+            )
         );
 
         bossAnimator?.SetPlaybackSpeed(1f);
+
+        // 4. 여기서 방향 고정
+        float direction =
+            player != null
+                ? Mathf.Sign(
+                    player.position.x -
+                    transform.position.x
+                )
+                : 1f;
+
+        if (direction == 0f)
+            direction = 1f;
 
         float releaseTime =
             Mathf.Max(
@@ -687,8 +721,12 @@ public class BossAction : MonoBehaviour
                 heavyPreHoldTime
             );
 
-        yield return new WaitForSeconds(
-            releaseTime
+        // 5. 앞으로 크게 찌르기
+        yield return StartCoroutine(
+            HeavyReleaseLunge(
+                direction,
+                releaseTime
+            )
         );
 
         hitbox.Activate(data);
@@ -712,7 +750,163 @@ public class BossAction : MonoBehaviour
         currentHitbox = null;
         isAttacking = false;
     }
+    private IEnumerator HeavyBackStep()
+    {
+        if (rb == null ||
+            player == null ||
+            heavyBackStepDistance <= 0f ||
+            heavyBackStepDuration <= 0f)
+        {
+            yield break;
+        }
 
+        float directionAway =
+            Mathf.Sign(
+                transform.position.x -
+                player.position.x
+            );
+
+        if (directionAway == 0f)
+            directionAway = 1f;
+
+        float speed =
+            heavyBackStepDistance /
+            heavyBackStepDuration;
+
+        float movedDistance = 0f;
+
+        while (movedDistance <
+            heavyBackStepDistance)
+        {
+            float moveThisFrame =
+                speed *
+                Time.fixedDeltaTime;
+
+            moveThisFrame =
+                Mathf.Min(
+                    moveThisFrame,
+                    heavyBackStepDistance -
+                        movedDistance
+                );
+
+            rb.linearVelocity =
+                new Vector2(
+                    directionAway * speed,
+                    rb.linearVelocity.y
+                );
+
+            movedDistance +=
+                moveThisFrame;
+
+            yield return
+                new WaitForFixedUpdate();
+        }
+
+        rb.linearVelocity =
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
+    }
+    private IEnumerator HeavyTrackTargetForDuration(
+        float duration)
+    {
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            movement?.FaceTarget();
+
+            if (rb != null)
+            {
+                rb.linearVelocity =
+                    new Vector2(
+                        0f,
+                        rb.linearVelocity.y
+                    );
+            }
+
+            elapsed += Time.deltaTime;
+            yield return null;
+        }
+    }
+
+    private IEnumerator HeavyReleaseLunge(
+        float direction,
+        float duration)
+    {
+        if (rb == null ||
+            duration <= 0f ||
+            heavyForwardMaxDistance <= 0f ||
+            heavyForwardSpeed <= 0f)
+        {
+            yield break;
+        }
+
+        float elapsed = 0f;
+        float movedDistance = 0f;
+
+        while (elapsed < duration &&
+            movedDistance < heavyForwardMaxDistance)
+        {
+            float distanceToPlayer =
+                player != null
+                    ? Mathf.Abs(
+                        player.position.x -
+                        transform.position.x
+                    )
+                    : Mathf.Infinity;
+
+            if (distanceToPlayer <=
+                heavyForwardStopDistance)
+            {
+                break;
+            }
+
+            float remainingDistance =
+                heavyForwardMaxDistance -
+                movedDistance;
+
+            float remainingToStop =
+                Mathf.Max(
+                    0f,
+                    distanceToPlayer -
+                    heavyForwardStopDistance
+                );
+
+            float moveThisStep =
+                Mathf.Min(
+                    heavyForwardSpeed *
+                        Time.fixedDeltaTime,
+                    remainingDistance,
+                    remainingToStop
+                );
+
+            if (moveThisStep <= 0f)
+                break;
+
+            float actualSpeed =
+                moveThisStep /
+                Time.fixedDeltaTime;
+
+            rb.linearVelocity =
+                new Vector2(
+                    direction * actualSpeed,
+                    rb.linearVelocity.y
+                );
+
+            movedDistance += moveThisStep;
+            elapsed += Time.fixedDeltaTime;
+
+            yield return new WaitForFixedUpdate();
+        }
+
+        rb.linearVelocity =
+            new Vector2(
+                0f,
+                rb.linearVelocity.y
+            );
+    }
     public void ForceCancelAttack()
     {
         StopAllCoroutines();
@@ -805,6 +999,18 @@ public class BossAction : MonoBehaviour
 
         Vector2 dashEndCenter =
             hitbox.GetWorldCenter();
+        if (chargeTrailPrefab != null)
+        {
+            activeChargeTrail =
+                Instantiate(
+                    chargeTrailPrefab
+                );
+
+            activeChargeTrail.Setup(
+                dashStartCenter,
+                dashEndCenter
+            );
+        }    
 
         CombatLogger.Instance?
             .MarkChargePassEnd();
@@ -812,7 +1018,14 @@ public class BossAction : MonoBehaviour
         yield return new WaitForSeconds(
             postPassDelay
         );
+        if (activeChargeTrail != null)
+        {
+            Destroy(
+                activeChargeTrail.gameObject
+            );
 
+            activeChargeTrail = null;
+        }
         bossAnimator?.PlayDashAttack();
 
         yield return new WaitForSeconds(

@@ -153,16 +153,19 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     private float heavyTimingReleaseThreshold = 0.3f;
 
     [SerializeField, Range(0f, 1f)]
+    private float minHeavyTimingAdaptChance = 0.45f;
+
+    [SerializeField, Range(0f, 1f)]
     private float maxHeavyTimingAdaptChance = 0.7f;
 
     [SerializeField]
     private float heavyTimingMargin = 0.07f;
 
     [SerializeField]
-    private float minHeavyHoldTime = 0.15f;
+    private float minHeavyHoldTime = 0.12f;
 
     [SerializeField]
-    private float maxHeavyHoldTime = 0.9f;
+    private float maxHeavyHoldTime = 0.55f;
 
     [SerializeField]
     private float heavyTimingJitter = 0.04f;
@@ -1814,7 +1817,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
         float adaptChance =
             Mathf.Lerp(
-                0.75f,
+                minHeavyTimingAdaptChance,
                 maxHeavyTimingAdaptChance,
                 influence
             );

@@ -768,9 +768,14 @@ MonoBehaviour:
   basicComboGap: 0.18
   basicComboContinueDistance: 3
   basicFinalRecoveryTime: 0.2
-  heavyPrepareCueTime: 0.35
-  heavyBaseHoldTime: 0.45
-  heavyPreHoldTime: 0.3
+  heavyPrepareCueTime: 0.2
+  heavyBaseHoldTime: 0.22
+  heavyPreHoldTime: 0.18
+  heavyBackStepDistance: 0.6
+  heavyBackStepDuration: 0.12
+  heavyForwardSpeed: 12
+  heavyForwardMaxDistance: 3
+  heavyForwardStopDistance: 2
   chargePostPassDelay: 0.3
   dashSpeed: 30
   dashBehindDistance: 2
@@ -778,10 +783,11 @@ MonoBehaviour:
   player: {fileID: 685367515}
   visual: {fileID: 1266593679}
   bodyCollider: {fileID: 402595763}
+  chargeTrailPrefab: {fileID: 4471195735208406880, guid: 8760b31ce6c3c454484ee767991ac539, type: 3}
   jumpSlamVanishTime: 0.2
   jumpSlamHoverTime: 0.05
   jumpSlamSpawnHeight: 7
-  jumpSlamFallSpeed: 35
+  jumpSlamFallSpeed: 40
   jumpSlamSpawnSideOffset: 4
   jumpSlamGroundY: 0
   jumpLandingOffset: 1
@@ -1088,13 +1094,15 @@ MonoBehaviour:
   policySwitchMargin: 0.15
   postPunishCommitThreshold: 0.6
   postPunishCommitReleaseThreshold: 0.4
-  normalDecisionWeight: 1
   secondaryAttackResponseWeight: 0.35
   chaseCommitBackDodgeWeight: 3
   approachPressureWeight: 0.75
   preventSameAdaptiveResponse: 1
+  adaptiveReactionThreshold: 0.6
+  repeatedAdaptiveResponseWeightMultiplier: 0.25
   heavyTimingHabitThreshold: 0.65
   heavyTimingReleaseThreshold: 0.4
+  minHeavyTimingAdaptChance: 0.45
   maxHeavyTimingAdaptChance: 0.9
   heavyTimingMargin: 0.12
   minHeavyHoldTime: 0.3
@@ -2407,7 +2415,7 @@ MonoBehaviour:
   perfectParryWindow: 0.13
   failRecovery: 0.4
   successAnimationDuration: 0.28
-  normalParryHitStop: 0.8
+  normalParryHitStop: 0.08
 --- !u!114 &685367525
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2437,6 +2445,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerAnimator
   animator: {fileID: 1726732469}
+  counter: {fileID: 0}
 --- !u!114 &685367527
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4610,6 +4619,7 @@ MonoBehaviour:
   playerAnimator: {fileID: 685367526}
   perfectDodgeAfterimage: {fileID: 685367529}
   playerCombat: {fileID: 685367521}
+  playerCounter: {fileID: 685367524}
 --- !u!114 &1726732471
 MonoBehaviour:
   m_ObjectHideFlags: 0
