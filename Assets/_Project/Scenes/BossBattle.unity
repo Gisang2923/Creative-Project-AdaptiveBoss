@@ -753,8 +753,13 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::BossAction
   rb: {fileID: 402595759}
-  basicPreHoldTime: 0.06
   basicPrepareHoldTime: 0.18
+  basicAnticipationSpeed1: 0.5
+  basicAnticipationSpeed2: 0.5
+  basicAnticipationSpeed3: 0.5
+  basicReleaseSpeed1: 1.65
+  basicReleaseSpeed2: 1.8
+  basicReleaseSpeed3: 1.9
   basicAttack1Duration: 1.1
   basicAttack2Duration: 1.05
   basicAttack3Duration: 1.4
@@ -777,7 +782,7 @@ MonoBehaviour:
   heavyForwardMaxDistance: 3
   heavyForwardStopDistance: 2
   chargePostPassDelay: 0.3
-  dashSpeed: 30
+  dashSpeed: 50
   dashBehindDistance: 2
   maxDashDuration: 0.6
   player: {fileID: 685367515}

@@ -9,6 +9,11 @@ public class BossAnimationEventReceiver : MonoBehaviour
     {
         bossAction?.OnBasicHit();
     }
+    public void BasicRelease()
+    {
+        bossAction?
+            .OnBasicRelease();
+    }
     public void HeavyHit()
     {
         bossAction?.OnHeavyHit();

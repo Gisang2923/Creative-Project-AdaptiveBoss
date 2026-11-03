@@ -5,9 +5,18 @@ public class BossAction : MonoBehaviour
 {
     [SerializeField] private Rigidbody2D rb;
 
-    [Header("Basic Slash")]
-    [SerializeField] private float basicPreHoldTime = 0.06f;
+    [Header("Basic Slash Timing")]
     [SerializeField] private float basicPrepareHoldTime = 0.18f;
+
+    [SerializeField] private float basicAnticipationSpeed1 = 0.80f;
+    [SerializeField] private float basicAnticipationSpeed2 = 0.80f;
+    [SerializeField] private float basicAnticipationSpeed3 = 0.70f;
+
+    [SerializeField] private float basicReleaseSpeed1 = 1.65f;
+    [SerializeField] private float basicReleaseSpeed2 = 1.80f;
+    [SerializeField] private float basicReleaseSpeed3 = 1.90f;
+
+    private int currentBasicStrikeIndex;
 
     // Animation Event가 누락됐을 때 무한 대기를 막는 Safety Timeout
     [SerializeField] private float basicAttack1Duration = 1.10f;
@@ -336,38 +345,30 @@ public class BossAction : MonoBehaviour
         float eventTimeout =
             basicAttack1Duration;
 
+        currentBasicStrikeIndex =
+            strikeIndex;
+
         switch (strikeIndex)
         {
             case 1:
+                bossAnimator?
+                    .SetPlaybackSpeed(
+                        basicAnticipationSpeed1
+                    );
+
                 bossAnimator?
                     .PlayLightAttack1();
 
                 eventTimeout =
                     basicAttack1Duration;
-
-                // 첫 타의 기존 예고 Hold는 유지
-                yield return new WaitForSeconds(
-                    basicPreHoldTime
-                );
-
-                rb.linearVelocity =
-                    new Vector2(
-                        0f,
-                        rb.linearVelocity.y
-                    );
-
-                bossAnimator?
-                    .SetPlaybackSpeed(0f);
-
-                yield return new WaitForSeconds(
-                    basicPrepareHoldTime
-                );
-
-                bossAnimator?
-                    .SetPlaybackSpeed(1f);
                 break;
 
             case 2:
+                bossAnimator?
+                    .SetPlaybackSpeed(
+                        basicAnticipationSpeed2
+                    );
+
                 bossAnimator?
                     .PlayLightAttack2();
 
@@ -376,6 +377,11 @@ public class BossAction : MonoBehaviour
                 break;
 
             case 3:
+                bossAnimator?
+                    .SetPlaybackSpeed(
+                        basicAnticipationSpeed3
+                    );
+
                 bossAnimator?
                     .PlayLightAttack3();
 
@@ -429,7 +435,36 @@ public class BossAction : MonoBehaviour
             )
         );
     }
+    public void OnBasicRelease()
+    {
+        if (!isAttacking)
+            return;
 
+        float releaseSpeed;
+
+        switch (currentBasicStrikeIndex)
+        {
+            case 2:
+                releaseSpeed =
+                    basicReleaseSpeed2;
+                break;
+
+            case 3:
+                releaseSpeed =
+                    basicReleaseSpeed3;
+                break;
+
+            default:
+                releaseSpeed =
+                    basicReleaseSpeed1;
+                break;
+        }
+
+        bossAnimator?
+            .SetPlaybackSpeed(
+                releaseSpeed
+            );
+    }
     private IEnumerator WaitForBasicHitWithLunge(
         float direction,
         float maxDistance,
@@ -646,7 +681,8 @@ public class BossAction : MonoBehaviour
         }
 
         basicHitTriggered = true;
-
+        bossAnimator?.SetPlaybackSpeed(1f);
+        
         currentHitbox.Activate(
             currentBasicAttackData
         );
