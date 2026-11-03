@@ -37,4 +37,15 @@ public class BossAnimationEventReceiver : MonoBehaviour
         bossController?
             .OnPrecisionStunRecoverEnd();
     }
+    public void ChargeCueSFX()
+    {
+        bossAction?
+            .OnChargeCueSFX();
+    }
+
+    public void ChargeHit()
+    {
+        bossAction?
+            .OnChargeHit();
+    }
 }

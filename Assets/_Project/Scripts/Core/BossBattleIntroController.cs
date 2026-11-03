@@ -3,6 +3,7 @@ using UnityEngine;
 
 public class BossBattleIntroController : MonoBehaviour
 {
+    [SerializeField] private BossSFX bossSFX;
     [Header("References")]
     [SerializeField] private BossController bossController;
     [SerializeField] private BossAnimator bossAnimator;
@@ -21,6 +22,13 @@ public class BossBattleIntroController : MonoBehaviour
             animator.enabled = false;
         if (bossHurtbox != null)
             bossHurtbox.SetActive(false);
+        if (bossSFX == null &&
+            bossController != null)
+        {
+            bossSFX =
+                bossController
+                    .GetComponent<BossSFX>();
+        }    
     }
 
     private void Start()
@@ -41,12 +49,9 @@ public class BossBattleIntroController : MonoBehaviour
 
     private IEnumerator IntroRoutine()
     {
-        Debug.Log("[INTRO] Initial Hold");
-
-        // ★ 여기서 1초 동안 아무것도 하지 않음
         yield return new WaitForSeconds(initialHoldDuration);
 
-        Debug.Log("[INTRO] Ready Start");
+        Debug.Log("[INTRO] Start");
 
         // Ready 시작
         if (animator != null)
@@ -54,7 +59,7 @@ public class BossBattleIntroController : MonoBehaviour
             animator.enabled = true;
             animator.speed = 1f;
         }
-
+        bossSFX?.PlayStart();
         bossAnimator?.PlayReady();
 
         // Ready 애니메이션 2.11초

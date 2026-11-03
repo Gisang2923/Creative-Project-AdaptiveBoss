@@ -30,6 +30,7 @@ public class PlayerCounter : MonoBehaviour
     
     private PlayerHeal playerHeal;
     private PlayerAnimator playerAnimator;
+    private PlayerSFX playerSFX;
     private bool isCountering;
     public bool IsCountering => isCountering;
     private bool counterSucceeded;
@@ -62,7 +63,9 @@ public class PlayerCounter : MonoBehaviour
         precisionStack =
             GetComponent<PlayerPrecisionStack>();
         playerAnimator =
-            GetComponent<PlayerAnimator>();    
+            GetComponent<PlayerAnimator>();  
+        playerSFX =
+            GetComponent<PlayerSFX>();      
         if (hitFlash == null)
         {
             hitFlash =
@@ -147,7 +150,10 @@ public class PlayerCounter : MonoBehaviour
 
         bool isPerfect =
             responseTime <= perfectParryWindow;
-
+        playerSFX?
+            .PlayParry(
+                isPerfect
+            );
         perfectParrySucceeded = isPerfect;
         // Parry 자체는 성공
         counterSucceeded = true;

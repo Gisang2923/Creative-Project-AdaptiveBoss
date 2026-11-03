@@ -153,7 +153,11 @@ public class BossAction : MonoBehaviour
     public bool IsAttacking => isAttacking;
 
     [SerializeField] private BossMovement movement;
-
+    private BossSFX bossSFX;
+    private bool chargeHitTriggered;
+    private Vector2 currentChargeSweepStart;
+    private Vector2 currentChargeSweepEnd;
+    private AttackData currentChargeAttackData;
     private float defaultGravityScale;
 
     private void Awake()
@@ -163,6 +167,7 @@ public class BossAction : MonoBehaviour
 
         if (rb != null)
             defaultGravityScale = rb.gravityScale;
+        bossSFX = GetComponent<BossSFX>();    
     }
 
     public void ExecuteAttack(BossAttack attack)
@@ -682,7 +687,7 @@ public class BossAction : MonoBehaviour
 
         basicHitTriggered = true;
         bossAnimator?.SetPlaybackSpeed(1f);
-        
+
         currentHitbox.Activate(
             currentBasicAttackData
         );
@@ -700,6 +705,7 @@ public class BossAction : MonoBehaviour
         }
 
         heavyHitTriggered = true;
+        bossSFX?.PlayHeavyHit();
 
         currentHitbox.Activate(
             currentHeavyAttackData
@@ -1002,16 +1008,34 @@ public class BossAction : MonoBehaviour
 
         currentHeavyAttackData = null;
         heavyHitTriggered = false;
+        currentChargeAttackData = null;
+        chargeHitTriggered = false;
     }
 
-    private IEnumerator ChargeSlashRoutine(BossAttack attack)
+    private IEnumerator ChargeSlashRoutine(
+        BossAttack attack)
     {
         isAttacking = true;
 
-        AttackData data = attack.attackData;
-        Hitbox hitbox = attack.hitbox;
+        AttackData data =
+            attack.attackData;
 
-        currentHitbox = hitbox;
+        Hitbox hitbox =
+            attack.hitbox;
+
+        currentHitbox =
+            hitbox;
+
+        currentChargeAttackData =
+            data;
+
+        chargeHitTriggered =
+            false;
+
+
+        // =====================================
+        // Adaptive Charge Timing
+        // =====================================
 
         float postPassDelay =
             nextChargePostPassDelay >= 0f
@@ -1020,11 +1044,19 @@ public class BossAction : MonoBehaviour
 
         nextChargePostPassDelay = -1f;
 
+
+        // =====================================
+        // Dash 방향 / 목표 위치
+        // =====================================
+
         float direction =
             Mathf.Sign(
                 player.position.x -
                 transform.position.x
             );
+
+        if (direction == 0f)
+            direction = 1f;
 
         float playerXAtStart =
             player.position.x;
@@ -1034,21 +1066,29 @@ public class BossAction : MonoBehaviour
             direction *
             dashBehindDistance;
 
+
+        // =====================================
+        // Dash Start
+        // =====================================
+
         Vector2 dashStartCenter =
             hitbox.GetWorldCenter();
 
-        bossAnimator?.PlayDash();
+        bossAnimator?
+            .PlayDash();
 
         float elapsed = 0f;
 
         while (
             (targetX - transform.position.x) *
                 direction > 0f &&
-            elapsed < maxDashDuration)
+            elapsed <
+                maxDashDuration)
         {
             rb.linearVelocity =
                 new Vector2(
-                    direction * dashSpeed,
+                    direction *
+                    dashSpeed,
                     rb.linearVelocity.y
                 );
 
@@ -1059,14 +1099,23 @@ public class BossAction : MonoBehaviour
                 new WaitForFixedUpdate();
         }
 
+
         rb.linearVelocity =
             new Vector2(
                 0f,
                 rb.linearVelocity.y
             );
 
+
+        // =====================================
+        // Dash End
+        // =====================================
+
         Vector2 dashEndCenter =
             hitbox.GetWorldCenter();
+
+
+        // Charge Trail 생성
         if (chargeTrailPrefab != null)
         {
             activeChargeTrail =
@@ -1078,14 +1127,33 @@ public class BossAction : MonoBehaviour
                 dashStartCenter,
                 dashEndCenter
             );
-        }    
+        }
+
 
         CombatLogger.Instance?
             .MarkChargePassEnd();
 
-        yield return new WaitForSeconds(
-            postPassDelay
-        );
+
+        // Animation Event에서 사용할
+        // Sweep 위치 저장
+        currentChargeSweepStart =
+            dashStartCenter;
+
+        currentChargeSweepEnd =
+            dashEndCenter;
+
+
+        // =====================================
+        // Adaptive Post Pass Delay
+        // =====================================
+
+        yield return
+            new WaitForSeconds(
+                postPassDelay
+            );
+
+
+        // Trail 제거
         if (activeChargeTrail != null)
         {
             Destroy(
@@ -1094,33 +1162,121 @@ public class BossAction : MonoBehaviour
 
             activeChargeTrail = null;
         }
-        bossAnimator?.PlayDashAttack();
 
-        yield return new WaitForSeconds(
-            data.startupTime
-        );
 
-        hitbox.Activate(data);
+        // =====================================
+        // Charge Slash Attack
+        //
+        // 여기부터는 Animation Event가 담당
+        //
+        // ChargeCueSFX
+        //      ↓
+        // ChargeHit
+        // =====================================
 
-        hitbox.SweepFromTo(
-            dashStartCenter,
-            dashEndCenter
-        );
+        bossAnimator?
+            .PlayDashAttack();
 
-        yield return new WaitForSeconds(
-            data.activeTime
-        );
+
+        // ChargeHit Animation Event 기다림
+        float hitWaitElapsed = 0f;
+
+        float hitEventTimeout =
+            Mathf.Max(
+                data.startupTime + 0.5f,
+                0.8f
+            );
+
+
+        while (
+            !chargeHitTriggered &&
+            hitWaitElapsed <
+                hitEventTimeout)
+        {
+            hitWaitElapsed +=
+                Time.deltaTime;
+
+            yield return null;
+        }
+
+
+        // Animation Event 누락 방지
+        if (!chargeHitTriggered)
+        {
+            Debug.LogWarning(
+                "[Boss Charge] " +
+                "ChargeHit Animation Event timeout. " +
+                "Fallback hit triggered."
+            );
+
+            OnChargeHit();
+        }
+
+
+        // =====================================
+        // Active
+        // =====================================
+
+        yield return
+            new WaitForSeconds(
+                data.activeTime
+            );
 
         hitbox.Deactivate();
 
-        yield return new WaitForSeconds(
-            data.recoveryTime
-        );
+
+        // =====================================
+        // Recovery
+        // =====================================
+
+        yield return
+            new WaitForSeconds(
+                data.recoveryTime
+            );
+
+
+        // =====================================
+        // Cleanup
+        // =====================================
 
         currentHitbox = null;
+
+        currentChargeAttackData = null;
+
+        chargeHitTriggered = false;
+
         isAttacking = false;
     }
+    public void OnChargeCueSFX()
+    {
+        if (!isAttacking)
+            return;
 
+        bossSFX?
+            .PlayCharge();
+    }
+    public void OnChargeHit()
+    {
+        if (!isAttacking ||
+            chargeHitTriggered ||
+            currentHitbox == null)
+        {
+            return;
+        }
+
+        chargeHitTriggered = true;
+
+        currentHitbox.Activate(
+            currentChargeAttackData
+        );
+
+        currentHitbox.SweepFromTo(
+            currentChargeSweepStart,
+            currentChargeSweepEnd
+        );
+
+        TryPerfectDodgeDistanceGrace();
+    }
     private IEnumerator JumpSlamRoutine(BossAttack attack)
     {
         isAttacking = true;

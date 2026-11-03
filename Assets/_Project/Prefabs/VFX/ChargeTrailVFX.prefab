@@ -48,7 +48,7 @@ MonoBehaviour:
   trailRenderer: {fileID: 7066526883282724339}
   trailHeight: 1
   verticalOffset: 0.18
-  widthMultiplier: 1.5
+  widthMultiplier: 1.4
 --- !u!1 &5934530360336114448
 GameObject:
   m_ObjectHideFlags: 0

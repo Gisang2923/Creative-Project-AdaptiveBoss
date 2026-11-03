@@ -41,6 +41,7 @@ public class PlayerDash : MonoBehaviour
     private PlayerCounter playerCounter;
     private PlayerHeal playerHeal;
     private PlayerAnimator playerAnimator;
+    private PlayerSFX playerSFX;
     private void Awake()
     {
         rb = GetComponent<Rigidbody2D>();
@@ -51,6 +52,7 @@ public class PlayerDash : MonoBehaviour
         playerHeal = GetComponent<PlayerHeal>();
         precisionStack = GetComponent<PlayerPrecisionStack>();
         playerAnimator = GetComponent<PlayerAnimator>();
+        playerSFX = GetComponent<PlayerSFX>();
     }
 
     private void Update()
@@ -143,6 +145,7 @@ public class PlayerDash : MonoBehaviour
 
         dashDirection =
             actionDirection;
+        playerSFX?.PlayDash();
         // =====================================
         // Precision 5 / 5
         // Dash → Enhanced Dash Attack

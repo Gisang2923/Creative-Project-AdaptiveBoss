@@ -15,6 +15,7 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
     private PlayerCombat playerCombat;
     [SerializeField]
     private PlayerCounter playerCounter;
+    [SerializeField] private PlayerSFX playerSFX;
 
     // Imported animation에서 들어오는 기존 이벤트 더미
     public void OnResetVelocity(){}
@@ -60,7 +61,17 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
         playerCombat?
             .OnNormalFinisherLunge();
     }
+    public void NormalAttackSFX()
+    {
+        if (playerCombat == null)
+            return;
 
+        playerSFX?
+            .PlayNormalSlash(
+                playerCombat
+                    .CurrentNormalComboStep
+            );
+    }
     // =====================================
     // Dash Attack
     // =====================================

@@ -13,7 +13,7 @@ public class PlayerHeal : MonoBehaviour
     private PlayerDamageReceiver damageReceiver;
     private PlayerCombat playerCombat;
     private PlayerCounter playerCounter;
-
+    private PlayerSFX playerSFX;
     private Coroutine healRoutine;
     private Coroutine healEndRoutine;
     private bool isHealing;
@@ -33,7 +33,7 @@ public class PlayerHeal : MonoBehaviour
         damageReceiver = GetComponent<PlayerDamageReceiver>();
         playerCombat = GetComponent<PlayerCombat>();
         playerCounter = GetComponent<PlayerCounter>();
-
+        playerSFX = GetComponent<PlayerSFX>();
         remainingHealCount = maxHealCount;
     }
 
@@ -75,6 +75,7 @@ public class PlayerHeal : MonoBehaviour
             return;
 
         healButtonHeld = true;
+        playerSFX?.StartHealing();
         CombatLogger.Instance?.RecordPlayerResponse(
             PlayerResponseType.Heal
         );
@@ -96,7 +97,11 @@ public class PlayerHeal : MonoBehaviour
 
         health.Heal(healAmount);
         remainingHealCount--;
+        playerSFX?
+            .StopHealing();
 
+        playerSFX?
+            .PlayHealCompleted();
         isHealing = false;
         healRoutine = null;
 
@@ -125,6 +130,7 @@ public class PlayerHeal : MonoBehaviour
 
     private void EndHeal()
     {
+        playerSFX?.StopHealing();
         healButtonHeld = false;
 
         if (healRoutine != null)
