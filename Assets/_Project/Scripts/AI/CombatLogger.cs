@@ -198,6 +198,9 @@ public class BattleSessionLog
     public float battleDuration;
     public string battleResult;
 
+    public bool adaptiveEnabled;
+    public string aiMode;
+
     public List<AttackResponseLog> combatLogs;
     public List<PostPunishCommitLog> postPunishLogs;
 
@@ -213,6 +216,10 @@ public class CombatLogger : MonoBehaviour
 
     [SerializeField]
     private PlayerBehaviorModel behaviorModel;
+    [SerializeField]
+    private BossAdaptiveDecisionSource adaptiveSource;
+    private bool battleLogSaved;
+    private bool battleLoggingStarted;
 
     [Header("Post-Punish Commit")]
     [SerializeField]
@@ -248,21 +255,45 @@ public class CombatLogger : MonoBehaviour
         adaptiveEvents = new();
     private void Awake()
     {
-        if (Instance != null && Instance != this)
+        if (Instance != null &&
+            Instance != this)
         {
             Destroy(gameObject);
             return;
         }
 
         Instance = this;
-        battleStartTime = Time.time;
+
+        if (adaptiveSource == null &&
+            boss != null)
+        {
+            adaptiveSource =
+                boss.GetComponent<
+                    BossAdaptiveDecisionSource>();
+        }
+
+        battleStartTime =
+            Time.time;
 
         sessionId =
             DateTime.Now.ToString(
-                "yyyyMMdd_HHmmss"
+                "yyyyMMdd_HHmmss_fff"
             );
     }
+    public void MarkBattleStart()
+    {
+        if (battleLoggingStarted)
+            return;
 
+        battleLoggingStarted = true;
+
+        battleStartTime =
+            Time.time;
+
+        Debug.Log(
+            "[Combat Log] Battle Timer Start"
+        );
+    }
     private void Update()
     {
         if (!postPunishObservationActive)
@@ -788,9 +819,64 @@ public class CombatLogger : MonoBehaviour
             $"Pass End"
         );
     }
+    private void FinalizeOpenLogsBeforeSave()
+    {
+        if (postPunishObservationActive)
+        {
+            CompletePostPunishObservation(
+                committed: false,
+                commitDelay: -1f
+            );
+        }
+
+        if (currentLog == null)
+            return;
+
+        currentLog.distanceAfter =
+            GetCurrentDistance();
+
+        if (currentLog.bossBehavior ==
+                BossBehaviorType.FrontStep ||
+            currentLog.bossBehavior ==
+                BossBehaviorType.BackDodge)
+        {
+            UpdateSpatialResponseFromMovement();
+        }
+
+        if (currentLog.result ==
+            CombatResultType.Pending)
+        {
+            currentLog.result =
+                currentLog.bossBehavior ==
+                    BossBehaviorType.Attack
+                    ? CombatResultType.Avoided
+                    : CombatResultType.Completed;
+        }
+
+        logs.Add(
+            currentLog
+        );
+
+        currentLog = null;
+        responseRecorded = false;
+    }
     public void SaveBattleLog(
         string battleResult)
     {
+        if (battleLogSaved)
+            return;
+
+        FinalizeOpenLogsBeforeSave();
+
+        bool adaptiveOn =
+            adaptiveSource != null &&
+            adaptiveSource.AdaptiveEnabled;
+
+        string mode =
+            adaptiveOn
+                ? "AdaptiveOn"
+                : "AdaptiveOff";
+
         BattleSessionLog session =
             new BattleSessionLog
             {
@@ -808,10 +894,17 @@ public class CombatLogger : MonoBehaviour
                 battleResult =
                     battleResult,
 
+                adaptiveEnabled =
+                    adaptiveOn,
+
+                aiMode =
+                    mode,
+
                 combatLogs =
                     new List<AttackResponseLog>(
                         logs
                     ),
+
                 postPunishLogs =
                     new List<PostPunishCommitLog>(
                         postPunishLogs
@@ -825,16 +918,14 @@ public class CombatLogger : MonoBehaviour
                 adaptiveEvents =
                     new List<AdaptiveEventLog>(
                         adaptiveEvents
-                    )    
+                    )
             };
-
 
         string json =
             JsonUtility.ToJson(
                 session,
                 true
             );
-
 
         string folder =
             Path.Combine(
@@ -846,22 +937,24 @@ public class CombatLogger : MonoBehaviour
             folder
         );
 
-
         string path =
             Path.Combine(
                 folder,
-                $"Battle_{sessionId}.json"
+                $"Battle_{mode}_{sessionId}.json"
             );
-
 
         File.WriteAllText(
             path,
             json
         );
 
+        battleLogSaved = true;
 
         Debug.Log(
-            $"[Combat Log Saved] {path}"
+            $"[Combat Log Saved] " +
+            $"{mode} | " +
+            $"{battleResult} | " +
+            $"{path}"
         );
     }
     public void RecordPlayerAction(

@@ -1403,6 +1403,9 @@ public class BossController : MonoBehaviour
 
         battleStarted = true;
 
+        CombatLogger.Instance?
+            .MarkBattleStart();
+
         ChangeState(
             BossState.Idle
         );

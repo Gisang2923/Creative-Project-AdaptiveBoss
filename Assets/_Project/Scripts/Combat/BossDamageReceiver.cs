@@ -132,11 +132,18 @@ public class BossDamageReceiver : DamageReceiver
             bossMovement.Stop();
 
         if (rb != null)
-            rb.linearVelocity = Vector2.zero;
+            rb.linearVelocity =
+                Vector2.zero;
 
-        // Stop()이 BattleIdle을 재생할 수 있으므로 Death는 마지막에
+        // Stop()이 BattleIdle을 재생할 수 있으므로
+        // Death는 마지막에 재생
         if (bossAnimator != null)
             bossAnimator.PlayDeath();
+
+        CombatLogger.Instance?
+            .SaveBattleLog(
+                "PlayerWin"
+            );
 
         Debug.Log("Boss Dead");
     }

@@ -48,7 +48,12 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             this.weight = weight;
         }
     }
+    [Header("Experiment Mode")]
+    [SerializeField]
+    private bool adaptiveEnabled = true;
 
+    public bool AdaptiveEnabled =>
+        adaptiveEnabled;
     [Header("References")]
     [SerializeField]
     private PlayerBehaviorModel behaviorModel;
@@ -351,11 +356,24 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     public int DebugAdaptiveResponseSerial =>
         adaptiveResponseSerial;
     public bool IsReactionFollowUpOpportunity =>
+        adaptiveEnabled &&
         hasFollowUpOpportunity &&
         followUpReaction !=
             AdaptiveReactionType.None;
+
     private void Update()
     {
+        if (!adaptiveEnabled)
+        {
+            if (hasFollowUpOpportunity)
+            {
+                ClearFollowUpOpportunity();
+            }
+
+            ClearPreparedReaction();
+            return;
+        }
+
         if (!hasFollowUpOpportunity)
             return;
 
@@ -378,6 +396,9 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         BossAttack attack,
         float distance)
     {
+        if (!adaptiveEnabled)
+            return 1f;
+
         if (behaviorModel == null)
             return 1f;
 
@@ -447,6 +468,9 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     public float GetParryChance(
         float baseChance)
     {
+        if (!adaptiveEnabled)
+            return baseChance;
+
         bool chaseContext =
             IsActiveFollowUp(
                 BossBehaviorType.BackDodge,
@@ -497,6 +521,9 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     public float GetBackDodgeChance(
         float baseChance)
     {
+        if (!adaptiveEnabled)
+            return baseChance;
+
         if (!IsActiveFollowUp(
                 BossBehaviorType.FrontStep,
                 AdaptiveHabitType.Counter))
@@ -531,6 +558,12 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     public void OpenFollowUpOpportunity(
         BossBehaviorType context)
     {
+        if (!adaptiveEnabled)
+        {
+            ClearFollowUpOpportunity();
+            return;
+        }
+
         if (behaviorModel == null)
             return;
 
@@ -575,6 +608,12 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     public void OpenPostPunishOpportunity()
     {
+        if (!adaptiveEnabled)
+        {
+            ClearFollowUpOpportunity();
+            return;
+        }
+
         if (behaviorModel == null)
             return;
 
@@ -597,6 +636,9 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
         preparedReactionScore = 0f;
         preparedReactionAttack = attackType;
+
+        if (!adaptiveEnabled)
+            return;
 
         if (behaviorModel == null)
             return;
@@ -650,6 +692,12 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     public bool OpenPreparedReactionOpportunity()
     {
+        if (!adaptiveEnabled)
+        {
+            ClearPreparedReaction();
+            return false;
+        }
+
         if (preparedReaction ==
             AdaptiveReactionType.None)
         {
@@ -778,6 +826,12 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
     {
         selected =
             AdaptiveResponseAction.None;
+
+        if (!adaptiveEnabled)
+        {
+            ClearFollowUpOpportunity();
+            return false;
+        }
 
         if (!hasFollowUpOpportunity)
             return false;
@@ -1196,6 +1250,12 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         AdaptiveResponseAction responseAction =
             AdaptiveResponseAction.None)
     {
+        if (!adaptiveEnabled)
+        {
+            ClearFollowUpOpportunity();
+            return;
+        }
+
         if (!hasFollowUpOpportunity)
             return;
 
@@ -1677,6 +1737,9 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         float prepareCueTime,
         float heavyStartupTime)
     {
+        if (!adaptiveEnabled)
+            return baseHoldTime;
+
         if (behaviorModel == null ||
             playerCounter == null)
         {
@@ -1904,6 +1967,9 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         float basePostPassDelay,
         float dashAttackStartupTime)
     {
+        if (!adaptiveEnabled)
+            return basePostPassDelay;
+
         if (behaviorModel == null ||
             playerCounter == null)
         {

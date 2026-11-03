@@ -249,13 +249,30 @@ public class PlayerDamageReceiver : DamageReceiver
     }
     private void HandleDeath()
     {
-        playerCombat?.ForceCancelAttack();
-        playerDash?.ForceCancelDash();
+        playerCombat?
+            .ForceCancelAttack();
+
+        playerDash?
+            .ForceCancelDash();
+
+        playerHeal?
+            .ForceCancelHeal();
 
         isStunned = false;
         isInvincible = true;
 
-        rb.linearVelocity = Vector2.zero;
+        if (rb != null)
+        {
+            rb.linearVelocity =
+                Vector2.zero;
+        }
+
+        CombatLogger.Instance?
+            .SaveBattleLog(
+                "PlayerLose"
+            );
+
+        Debug.Log("Player Dead");
     }
 
 }
