@@ -62,6 +62,7 @@ public class BossAction : MonoBehaviour
     [SerializeField] private float heavyForwardStopDistance = 0.75f;
 
     private float nextHeavyHoldTime = -1f;
+    private float currentHeavyDirection = 1f;
     private AttackData currentHeavyAttackData;
     private bool heavyHitTriggered;
     public float HeavyPrepareCueTime =>
@@ -705,7 +706,29 @@ public class BossAction : MonoBehaviour
         }
 
         heavyHitTriggered = true;
-        bossSFX?.PlayHeavyHit();
+
+
+        // =====================================
+        // Heavy Camera Impact
+        // =====================================
+
+        CameraImpact.Instance?
+            .PunchHorizontal(
+                currentHeavyDirection,
+                0.12f,
+                0.18f
+            );
+
+        CameraShake.Instance?
+            .ShakeVertical(
+                0.08f,
+                0.30f
+            );
+
+
+        // =====================================
+        // Damage
+        // =====================================
 
         currentHitbox.Activate(
             currentHeavyAttackData
@@ -775,7 +798,7 @@ public class BossAction : MonoBehaviour
 
         if (direction == 0f)
             direction = 1f;
-
+        currentHeavyDirection = direction;
         float releaseTimeout =
             Mathf.Max(
                 0.05f,
@@ -1456,6 +1479,12 @@ public class BossAction : MonoBehaviour
                             hit.point.y +
                                 groundOffset,
                             transform.position.z
+                        );
+
+                    CameraShake.Instance?
+                        .ShakeVertical(
+                            0.20f,
+                            0.33f
                         );
 
                     break;

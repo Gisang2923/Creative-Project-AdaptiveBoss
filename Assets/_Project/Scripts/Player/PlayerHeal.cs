@@ -76,6 +76,10 @@ public class PlayerHeal : MonoBehaviour
 
         healButtonHeld = true;
         playerSFX?.StartHealing();
+        CameraZoomEffect.Instance?
+            .StartHealZoom(
+                healDuration
+            );
         CombatLogger.Instance?.RecordPlayerResponse(
             PlayerResponseType.Heal
         );
@@ -102,6 +106,8 @@ public class PlayerHeal : MonoBehaviour
 
         playerSFX?
             .PlayHealCompleted();
+        CameraZoomEffect.Instance?.StopHealZoom();    
+
         isHealing = false;
         healRoutine = null;
 
@@ -130,18 +136,29 @@ public class PlayerHeal : MonoBehaviour
 
     private void EndHeal()
     {
-        playerSFX?.StopHealing();
+        playerSFX?
+            .StopHealing();
+
+        CameraZoomEffect.Instance?
+            .StopHealZoom();
+
         healButtonHeld = false;
 
         if (healRoutine != null)
         {
-            StopCoroutine(healRoutine);
+            StopCoroutine(
+                healRoutine
+            );
+
             healRoutine = null;
         }
 
         if (healEndRoutine != null)
         {
-            StopCoroutine(healEndRoutine);
+            StopCoroutine(
+                healEndRoutine
+            );
+
             healEndRoutine = null;
         }
 
