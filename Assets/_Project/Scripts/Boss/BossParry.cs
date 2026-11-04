@@ -73,7 +73,8 @@ public class BossParry : MonoBehaviour
         EndParry();
     }
 
-    public void ResolveParry(DamageInfo incomingDamage)
+    public void ResolveParry(
+        DamageInfo incomingDamage)
     {
         if (!isParrying)
             return;
@@ -81,18 +82,39 @@ public class BossParry : MonoBehaviour
         if (counterSucceeded)
             return;
 
+
         counterSucceeded = true;
 
+
         if (parryBox != null)
+        {
             parryBox.SetActive(false);
+        }
+
 
         if (parryRoutine != null)
         {
-            StopCoroutine(parryRoutine);
+            StopCoroutine(
+                parryRoutine
+            );
+
             parryRoutine = null;
         }
 
-        StartCoroutine(CounterRoutine(incomingDamage));
+
+        BossController bossController =
+            GetComponentInParent<
+                BossController>();
+
+        bossController?
+            .NotifyAdaptiveParrySuccess();
+
+
+        StartCoroutine(
+            CounterRoutine(
+                incomingDamage
+            )
+        );
     }
 
     private IEnumerator CounterRoutine(DamageInfo incomingDamage)

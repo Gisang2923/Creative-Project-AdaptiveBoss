@@ -64,9 +64,6 @@ public class BossDamageReceiver : DamageReceiver
         base.TakeDamage(
             damageInfo
         );
-        base.TakeDamage(
-            damageInfo
-        );
 
         // =====================================
         // Player Hit SFX

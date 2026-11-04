@@ -79,7 +79,8 @@ public class PlayerDamageReceiver : DamageReceiver
                 damageInfo.KnockdownY
             );
     }
-    public override void TakeDamage(DamageInfo damageInfo)
+    public override void TakeDamage(
+        DamageInfo damageInfo)
     {
         if (health == null || health.IsDead)
             return;
@@ -87,25 +88,37 @@ public class PlayerDamageReceiver : DamageReceiver
         if (isInvincible)
             return;
 
-        // 실제 공격 판정이 닿은 순간
-        // Dash 시작 직후라면 Perfect Dodge
+
+        // 실제 공격 판정이 닿았지만
+        // Perfect Dodge 성공 시 피격 아님
         if (playerDash != null &&
             playerDash.TryPerfectDodge())
         {
             return;
         }
 
+
         playerHeal?.ForceCancelHeal();
         playerCombat?.ForceCancelAttack();
         playerDash?.ForceCancelDash();
 
 
-        base.TakeDamage(damageInfo);
+        base.TakeDamage(
+            damageInfo
+        );
+
+
         BossController attackingBoss =
             damageInfo.Attacker != null
                 ? damageInfo.Attacker
-                    .GetComponentInParent<BossController>()
+                    .GetComponentInParent<
+                        BossController>()
                 : null;
+
+
+        // =====================================
+        // Adaptive Attack Success
+        // =====================================
 
         if (attackingBoss != null &&
             attackingBoss.CurrentAttackIsAdaptive)
@@ -114,19 +127,32 @@ public class PlayerDamageReceiver : DamageReceiver
                 .Play(
                     adaptiveBossHitStopDuration
                 );
+
+            attackingBoss
+                .NotifyAdaptiveAttackHit();
         }
-        CombatLogger.Instance?.RecordPlayerHit();
+
+
+        CombatLogger.Instance?
+            .RecordPlayerHit();
+
+
         if (damageInfo.CameraShakeStrength > 0f)
         {
-            CameraShake.Instance?.Shake(
-                damageInfo.CameraShakeDuration,
-                damageInfo.CameraShakeStrength
-            );
+            CameraShake.Instance?
+                .Shake(
+                    damageInfo.CameraShakeDuration,
+                    damageInfo.CameraShakeStrength
+                );
         }
+
+
         hitFlash?.Flash();
+
         hitVfxSpawner?.Play(
             damageInfo.HitDirection
         );
+
 
         if (health.IsDead)
         {
@@ -134,9 +160,6 @@ public class PlayerDamageReceiver : DamageReceiver
             return;
         }
 
-        // =====================================
-        // Jump Slam 등의 Knockdown 공격
-        // =====================================
 
         if (damageInfo.CausesKnockdown)
         {
@@ -161,10 +184,6 @@ public class PlayerDamageReceiver : DamageReceiver
             return;
         }
 
-
-        // =====================================
-        // 일반 피격
-        // =====================================
 
         ApplyKnockback(
             damageInfo

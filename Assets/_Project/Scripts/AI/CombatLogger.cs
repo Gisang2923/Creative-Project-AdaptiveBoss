@@ -246,6 +246,9 @@ public class CombatLogger : MonoBehaviour
     private BossAttackType postPunishSourceAttack;
 
     public IReadOnlyList<AttackResponseLog> Logs => logs;
+    public bool CurrentBehaviorPlayerAttackObserved =>
+        currentLog != null &&
+        currentLog.playerAttackObserved;
     public IReadOnlyList<PostPunishCommitLog> PostPunishLogs =>
         postPunishLogs;
     private readonly List<PlayerActionEventLog>

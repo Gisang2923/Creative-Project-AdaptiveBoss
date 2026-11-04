@@ -66,7 +66,9 @@ public class AdaptivePresentationController
     [SerializeField, TextArea]
     private string postPunishDialogue =
         "You never miss an opening.";
-
+    [SerializeField, TextArea]
+    private string genericDialogue =
+        "Predictable.";
 
     private Coroutine presentationRoutine;
 
@@ -93,8 +95,8 @@ public class AdaptivePresentationController
         if (adaptiveSource != null)
         {
             adaptiveSource
-                .OnPolicyPresentationRequested
-                += HandlePolicyPresentation;
+                .OnAdaptiveSuccessPresentationRequested
+                += HandleAdaptiveSuccess;
         }
     }
 
@@ -104,8 +106,8 @@ public class AdaptivePresentationController
         if (adaptiveSource != null)
         {
             adaptiveSource
-                .OnPolicyPresentationRequested
-                -= HandlePolicyPresentation;
+                .OnAdaptiveSuccessPresentationRequested
+                -= HandleAdaptiveSuccess;
         }
 
         cameraFollow?
@@ -113,16 +115,16 @@ public class AdaptivePresentationController
     }
 
 
-    private void HandlePolicyPresentation(
-        AdaptiveHabitType habit,
-        string reason)
+    private void HandleAdaptiveSuccess(
+        AdaptiveHabitType habit)
     {
-        // 이미 연출 중이면 중복 재생하지 않음
         if (presentationRoutine != null)
             return;
 
         string dialogue =
-            GetDialogue(habit);
+            GetDialogue(
+                habit
+            );
 
         presentationRoutine =
             StartCoroutine(
@@ -363,7 +365,7 @@ public class AdaptivePresentationController
                 return postPunishDialogue;
 
             default:
-                return "...";
+                return genericDialogue;
         }
     }
 }

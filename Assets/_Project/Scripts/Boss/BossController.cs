@@ -156,6 +156,75 @@ public class BossController : MonoBehaviour
 
     public bool CurrentAttackFromAdaptiveResponse =>
         currentAttackFromAdaptiveResponse;
+    private AdaptiveResponseAction
+        pendingAdaptiveSuccessResponse =
+            AdaptiveResponseAction.None;
+
+    private AdaptiveHabitType
+        pendingAdaptiveSuccessHabit =
+            AdaptiveHabitType.None;
+
+    private bool
+        adaptiveSuccessPresentedForCurrentAction;    
+    private void BeginAdaptiveSuccessTracking(
+        AdaptiveResponseAction response,
+        AdaptiveHabitType habit)
+    {
+        pendingAdaptiveSuccessResponse =
+            response;
+
+        pendingAdaptiveSuccessHabit =
+            habit;
+
+        adaptiveSuccessPresentedForCurrentAction =
+            false;
+    }
+
+    private void ClearAdaptiveSuccessTracking()
+    {
+        pendingAdaptiveSuccessResponse =
+            AdaptiveResponseAction.None;
+
+        pendingAdaptiveSuccessHabit =
+            AdaptiveHabitType.None;
+
+        adaptiveSuccessPresentedForCurrentAction =
+            false;
+    }
+
+    private void TriggerAdaptiveSuccess()
+    {
+        if (adaptiveSuccessPresentedForCurrentAction)
+            return;
+
+        adaptiveSuccessPresentedForCurrentAction =
+            true;
+
+        adaptiveSource?
+            .RequestAdaptiveSuccessPresentation(
+                pendingAdaptiveSuccessHabit,
+                pendingAdaptiveSuccessResponse
+            );
+    }
+
+    public void NotifyAdaptiveAttackHit()
+    {
+        if (!currentAttackIsAdaptive)
+            return;
+
+        TriggerAdaptiveSuccess();
+    }
+
+    public void NotifyAdaptiveParrySuccess()
+    {
+        if (pendingAdaptiveSuccessResponse !=
+            AdaptiveResponseAction.Parry)
+        {
+            return;
+        }
+
+        TriggerAdaptiveSuccess();
+    }    
     private void Update()
     {
         if (!battleStarted)
@@ -182,6 +251,7 @@ public class BossController : MonoBehaviour
 
             return;
         }
+
 
         if (stunTimer > 0f)
         {
@@ -221,6 +291,11 @@ public class BossController : MonoBehaviour
                 Time.deltaTime;
         }
 
+
+        // =====================================
+        // Front Step Log 종료
+        // =====================================
+
         if (frontStepLogPending &&
             !bossAction.IsFrontStepping &&
             repositionTimer <= 0f &&
@@ -245,11 +320,24 @@ public class BossController : MonoBehaviour
                 false;
         }
 
+
+        // =====================================
+        // Back Dodge Log 종료
+        // Adaptive Dodge 성공 판정
+        // =====================================
+
         if (backDodgeLogPending &&
             !bossAction.IsDodging &&
             repositionTimer <= 0f &&
             backDodgeResponseTimer <= 0f)
         {
+            bool adaptiveDodgeSucceeded =
+                pendingAdaptiveSuccessResponse ==
+                    AdaptiveResponseAction.BackDodge &&
+                CombatLogger.Instance != null &&
+                CombatLogger.Instance
+                    .CurrentBehaviorPlayerAttackObserved;
+
             CombatLogger.Instance?
                 .EndBossBehavior(
                     movement.DistanceToTarget
@@ -257,17 +345,34 @@ public class BossController : MonoBehaviour
 
             backDodgeLogPending = false;
 
+            if (adaptiveDodgeSucceeded)
+            {
+                TriggerAdaptiveSuccess();
+            }
+
             adaptiveSource?
                 .OpenFollowUpOpportunity(
                     BossBehaviorType.BackDodge
                 );
+
+            if (pendingAdaptiveSuccessResponse ==
+                AdaptiveResponseAction.BackDodge)
+            {
+                ClearAdaptiveSuccessTracking();
+            }
         }
+
 
         if (parryCooldownTimer > 0f)
         {
             parryCooldownTimer -=
                 Time.deltaTime;
         }
+
+
+        // =====================================
+        // Attack 종료
+        // =====================================
 
         if (wasAttacking &&
             !bossAction.IsAttacking &&
@@ -309,11 +414,18 @@ public class BossController : MonoBehaviour
 
             currentAttackIsAdaptive = false;
             currentAttackFromAdaptiveResponse = false;
+
+            ClearAdaptiveSuccessTracking();
         }
+
+
+        // =====================================
+        // Parry 종료
+        // =====================================
 
         if (wasParrying &&
             (bossParry == null ||
-             !bossParry.IsParrying) &&
+            !bossParry.IsParrying) &&
             stunTimer <= 0f)
         {
             CombatLogger.Instance?
@@ -321,10 +433,17 @@ public class BossController : MonoBehaviour
                     movement.DistanceToTarget
                 );
 
+            if (pendingAdaptiveSuccessResponse ==
+                AdaptiveResponseAction.Parry)
+            {
+                ClearAdaptiveSuccessTracking();
+            }
+
             ChangeState(
                 BossState.Idle
             );
         }
+
 
         if (wasDodging &&
             !bossAction.IsDodging)
@@ -338,6 +457,7 @@ public class BossController : MonoBehaviour
             StartFrontStepRecovery();
         }
 
+
         wasAttacking =
             bossAction.IsAttacking;
 
@@ -350,6 +470,7 @@ public class BossController : MonoBehaviour
         wasParrying =
             bossParry != null &&
             bossParry.IsParrying;
+
 
         UpdateState();
     }
@@ -548,9 +669,6 @@ public class BossController : MonoBehaviour
                 backDodgeTriggerDistance &&
             backDodgeCooldownTimer <= 0f;
 
-        // 기존 Adaptive Re-FrontStep과 동일하게
-        // 일반 FrontStep cooldown은 무시한다.
-        // 단, 거리 조건은 유지한다.
         bool canFrontStep =
             distance > 1.5f &&
             distance <=
@@ -589,9 +707,19 @@ public class BossController : MonoBehaviour
             return false;
         }
 
+        AdaptiveHabitType sourceHabit =
+            adaptiveSource.CurrentFollowUpHabit;
+
+
         switch (response)
         {
             case AdaptiveResponseAction.Parry:
+
+                BeginAdaptiveSuccessTracking(
+                    response,
+                    sourceHabit
+                );
+
                 StartParry();
 
                 adaptiveSource
@@ -602,7 +730,14 @@ public class BossController : MonoBehaviour
 
                 return true;
 
+
             case AdaptiveResponseAction.BackDodge:
+
+                BeginAdaptiveSuccessTracking(
+                    response,
+                    sourceHabit
+                );
+
                 ExecuteAdaptiveBackDodge(
                     distance
                 );
@@ -615,7 +750,9 @@ public class BossController : MonoBehaviour
 
                 return true;
 
+
             case AdaptiveResponseAction.FrontStep:
+
                 ExecuteAdaptiveFrontStep(
                     distance
                 );
@@ -628,7 +765,14 @@ public class BossController : MonoBehaviour
 
                 return true;
 
+
             case AdaptiveResponseAction.ChargeSlash:
+
+                BeginAdaptiveSuccessTracking(
+                    response,
+                    sourceHabit
+                );
+
                 if (StartSpecificAttack(
                         distance,
                         BossAttackType.ChargeSlash))
@@ -642,9 +786,17 @@ public class BossController : MonoBehaviour
                     return true;
                 }
 
+                ClearAdaptiveSuccessTracking();
                 break;
 
+
             case AdaptiveResponseAction.HeavySlash:
+
+                BeginAdaptiveSuccessTracking(
+                    response,
+                    sourceHabit
+                );
+
                 if (StartSpecificAttack(
                         distance,
                         BossAttackType.HeavySlash))
@@ -658,9 +810,17 @@ public class BossController : MonoBehaviour
                     return true;
                 }
 
+                ClearAdaptiveSuccessTracking();
                 break;
 
+
             case AdaptiveResponseAction.BasicSlash:
+
+                BeginAdaptiveSuccessTracking(
+                    response,
+                    sourceHabit
+                );
+
                 if (StartSpecificAttack(
                         distance,
                         BossAttackType.BasicSlash))
@@ -674,36 +834,12 @@ public class BossController : MonoBehaviour
                     return true;
                 }
 
+                ClearAdaptiveSuccessTracking();
                 break;
 
-            case AdaptiveResponseAction.Approach:
-                movement.Stop();
-                movement.FaceTarget();
-
-                currentPostAction =
-                    BossPostAction.Approach;
-
-                repositionTimer =
-                    repositionDuration;
-
-                ChangeState(
-                    BossState.Reposition
-                );
-
-                adaptiveSource
-                    .ConsumeFollowUpOpportunity(
-                        "ApproachPressure",
-                        response
-                    );
-
-                Debug.Log(
-                    "[Adaptive Response] " +
-                    "Approach Pressure"
-                );
-
-                return true;
 
             case AdaptiveResponseAction.Neutral:
+
                 movement.Stop();
                 movement.FaceTarget();
 
@@ -809,6 +945,8 @@ public class BossController : MonoBehaviour
     private void StartAttack(
         float distance)
     {
+        ClearAdaptiveSuccessTracking();
+
         currentAttackIsAdaptive = false;
         currentAttackFromAdaptiveResponse = false;
 

@@ -30,16 +30,48 @@ public enum AdaptiveResponseAction
     ChargeSlash,
     HeavySlash,
     BasicSlash,
-    Approach,
     Neutral
 }
 
 public class BossAdaptiveDecisionSource : MonoBehaviour
 {
     public event System.Action<
-            AdaptiveHabitType,
-            string
-        > OnPolicyPresentationRequested;
+            AdaptiveHabitType
+        > OnAdaptiveSuccessPresentationRequested;
+
+        public AdaptiveHabitType CurrentFollowUpHabit =>
+            followUpHabit;
+
+        public void RequestAdaptiveSuccessPresentation(
+            AdaptiveHabitType habit,
+            AdaptiveResponseAction response)
+        {
+            if (!adaptiveEnabled)
+                return;
+
+            string habitName =
+                habit == AdaptiveHabitType.None
+                    ? "Generic"
+                    : habit.ToString();
+
+            CombatLogger.Instance?
+                .RecordAdaptiveEvent(
+                    "ResponseSuccess",
+                    "AdaptiveSuccess",
+                    habitName,
+                    1f,
+                    response.ToString()
+                );
+
+            Debug.Log(
+                $"[Adaptive Success] " +
+                $"Habit={habitName} | " +
+                $"Response={response}"
+            );
+
+            OnAdaptiveSuccessPresentationRequested?
+                .Invoke(habit);
+        }
     private struct WeightedResponse
     {
         public AdaptiveResponseAction action;
@@ -140,9 +172,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
     [SerializeField, Min(0f)]
     private float chaseCommitBackDodgeWeight = 3f;
-
-    [SerializeField, Min(0f)]
-    private float approachPressureWeight = 0.75f;
 
     [SerializeField]
     private bool preventSameAdaptiveResponse = true;
@@ -846,7 +875,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
         bool isReactionOpportunity =
             followUpReaction !=
-                AdaptiveReactionType.None;
+            AdaptiveReactionType.None;
 
 
         // =====================================
@@ -941,13 +970,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
                     AddCandidate(
                         candidates,
-                        AdaptiveResponseAction.Approach,
-                        approachPressureWeight,
-                        true
-                    );
-
-                    AddCandidate(
-                        candidates,
                         AdaptiveResponseAction.HeavySlash,
                         secondaryAttackResponseWeight,
                         canHeavy
@@ -1038,13 +1060,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 AdaptiveResponseAction.FrontStep,
                 maxRetreatFrontStepChance,
                 canFrontStep
-            );
-
-            AddCandidate(
-                candidates,
-                AdaptiveResponseAction.Approach,
-                approachPressureWeight,
-                true
             );
         }
 
@@ -1144,8 +1159,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
 
         // =====================================
-        // 사용할 수 있는 Adaptive 행동이 없다.
-        // Opportunity를 종료하고 일반 AI로 fallback.
+        // 사용 가능한 Adaptive 행동 없음
         // =====================================
 
         if (candidates.Count == 0)
@@ -1446,6 +1460,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             $"{previous} → {policy} | " +
             $"Score={score:F2}"
         );
+
         CombatLogger.Instance?
             .RecordAdaptiveEvent(
                 $"Policy{reason}",
@@ -1453,11 +1468,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 policy.ToString(),
                 score
             );
-        OnPolicyPresentationRequested?
-            .Invoke(
-                policy,
-                reason
-            );    
     }
 
     private void ReleaseBackDodgePolicy()
@@ -1651,6 +1661,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
             $"{previous} → {policy} | " +
             $"Score={score:F2}"
         );
+
         CombatLogger.Instance?
             .RecordAdaptiveEvent(
                 $"Policy{reason}",
@@ -1658,11 +1669,6 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 policy.ToString(),
                 score
             );
-        OnPolicyPresentationRequested?
-            .Invoke(
-                policy,
-                reason
-            );             
     }
 
     private void ReleaseFrontStepPolicy()
@@ -1701,11 +1707,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
             postPunishPolicyActive = true;
             postPunishPolicyScore = score;
-            OnPolicyPresentationRequested?
-                .Invoke(
-                    AdaptiveHabitType.PostPunishCommit,
-                    "Learned"
-                );
+
             CombatLogger.Instance?
                 .RecordAdaptiveEvent(
                     "PolicyLearned",
@@ -1713,6 +1715,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                     "PostPunishCommit",
                     score
                 );
+
             Debug.Log(
                 $"[Adaptive Policy Learned] " +
                 $"Context=PostPunish | " +
@@ -1735,6 +1738,7 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                     "PostPunishCommit",
                     score
                 );
+
             postPunishPolicyActive = false;
             postPunishPolicyScore = 0f;
 
