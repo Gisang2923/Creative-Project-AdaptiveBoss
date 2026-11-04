@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 
+
 public enum AdaptiveHabitType
 {
     None,
@@ -35,6 +36,10 @@ public enum AdaptiveResponseAction
 
 public class BossAdaptiveDecisionSource : MonoBehaviour
 {
+    public event System.Action<
+            AdaptiveHabitType,
+            string
+        > OnPolicyPresentationRequested;
     private struct WeightedResponse
     {
         public AdaptiveResponseAction action;
@@ -1448,6 +1453,11 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 policy.ToString(),
                 score
             );
+        OnPolicyPresentationRequested?
+            .Invoke(
+                policy,
+                reason
+            );    
     }
 
     private void ReleaseBackDodgePolicy()
@@ -1648,6 +1658,11 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
                 policy.ToString(),
                 score
             );
+        OnPolicyPresentationRequested?
+            .Invoke(
+                policy,
+                reason
+            );             
     }
 
     private void ReleaseFrontStepPolicy()
@@ -1686,6 +1701,11 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
 
             postPunishPolicyActive = true;
             postPunishPolicyScore = score;
+            OnPolicyPresentationRequested?
+                .Invoke(
+                    AdaptiveHabitType.PostPunishCommit,
+                    "Learned"
+                );
             CombatLogger.Instance?
                 .RecordAdaptiveEvent(
                     "PolicyLearned",

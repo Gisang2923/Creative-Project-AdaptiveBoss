@@ -35,6 +35,14 @@ public class CameraBossFollow : MonoBehaviour
     private float fixedY;
     private float fixedZ;
 
+    private float adaptiveFocusWeight;
+
+    public void SetAdaptiveFocusWeight(
+        float weight)
+    {
+        adaptiveFocusWeight =
+            Mathf.Clamp01(weight);
+    }
     private void Awake()
     {
         fixedY =
@@ -89,6 +97,16 @@ public class CameraBossFollow : MonoBehaviour
             boss.position.x -
             bossOffset;
 
+        if (adaptiveFocusWeight > 0f)
+        {
+            targetX =
+                Mathf.Lerp(
+                    targetX,
+                    boss.position.x,
+                    adaptiveFocusWeight
+                );
+        }
+
         targetX =
             Mathf.Clamp(
                 targetX,
@@ -100,20 +118,32 @@ public class CameraBossFollow : MonoBehaviour
             targetX -
             transform.position.x;
 
-        // 아주 작은 움직임에는
-        // 카메라 반응 X
+        float currentDeadZone =
+            adaptiveFocusWeight > 0.01f
+                ? 0f
+                : deadZone;
+
         if (Mathf.Abs(difference) <
-            deadZone)
+            currentDeadZone)
         {
             return;
         }
+
+        float currentSmoothTime =
+            Mathf.Lerp(
+                followSmoothTime,
+                0.10f,
+                adaptiveFocusWeight
+            );
 
         float newX =
             Mathf.SmoothDamp(
                 transform.position.x,
                 targetX,
                 ref velocityX,
-                followSmoothTime
+                currentSmoothTime,
+                Mathf.Infinity,
+                Time.unscaledDeltaTime
             );
 
         transform.position =
