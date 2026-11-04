@@ -41,6 +41,13 @@ public class AdaptivePresentationController
     [SerializeField]
     private float returnDuration = 0.25f;
 
+    [SerializeField]
+    private Transform boss;
+
+    [Header("Dialogue Position")]
+    [SerializeField]
+    private Vector3 dialogueWorldOffset =
+        new Vector3(0f, 2.0f, 0f);
 
     [Header("Dialogue")]
     [SerializeField, TextArea]
@@ -88,7 +95,16 @@ public class AdaptivePresentationController
                 .SetActive(false);
         }
     }
+    private void LateUpdate()
+    {
+        if (dialogueText == null ||
+            !dialogueText.gameObject.activeSelf)
+        {
+            return;
+        }
 
+        UpdateDialoguePosition();
+    }
 
     private void OnEnable()
     {
@@ -367,5 +383,28 @@ public class AdaptivePresentationController
             default:
                 return genericDialogue;
         }
+    }
+    private void UpdateDialoguePosition()
+    {
+        if (dialogueText == null ||
+            boss == null ||
+            targetCamera == null)
+        {
+            return;
+        }
+
+        Vector3 worldPosition =
+            boss.position +
+            dialogueWorldOffset;
+
+        Vector3 screenPosition =
+            targetCamera.WorldToScreenPoint(
+                worldPosition
+            );
+
+        dialogueText
+            .rectTransform
+            .position =
+            screenPosition;
     }
 }

@@ -102,7 +102,7 @@ public class BossController : MonoBehaviour
     // Adaptive Retreat Response의 Re-FrontStep은
     // 다시 FrontStep Opportunity를 생성하지 않는다.
     private bool currentFrontStepIsAdaptiveFollowUp;
-
+    private bool currentBackDodgeIsAdaptiveFollowUp;
     [Header("Parry")]
     [SerializeField]
     private BossParry bossParry;
@@ -350,10 +350,16 @@ public class BossController : MonoBehaviour
                 TriggerAdaptiveSuccess();
             }
 
-            adaptiveSource?
-                .OpenFollowUpOpportunity(
-                    BossBehaviorType.BackDodge
-                );
+            if (!currentBackDodgeIsAdaptiveFollowUp)
+            {
+                adaptiveSource?
+                    .OpenFollowUpOpportunity(
+                        BossBehaviorType.BackDodge
+                    );
+            }
+
+            currentBackDodgeIsAdaptiveFollowUp =
+                false;
 
             if (pendingAdaptiveSuccessResponse ==
                 AdaptiveResponseAction.BackDodge)
@@ -877,6 +883,9 @@ public class BossController : MonoBehaviour
         movement.Stop();
         movement.FaceTarget();
 
+        currentBackDodgeIsAdaptiveFollowUp =
+            true;
+
         backDodgeResponseTimer =
             backDodgeResponseWindow;
 
@@ -1172,6 +1181,7 @@ public class BossController : MonoBehaviour
         movement.Stop();
         movement.FaceTarget();
 
+        currentBackDodgeIsAdaptiveFollowUp = false;
         backDodgeResponseTimer =
             backDodgeResponseWindow;
 
