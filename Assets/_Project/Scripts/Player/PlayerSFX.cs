@@ -8,7 +8,8 @@ public class PlayerSFX : MonoBehaviour
 
     [SerializeField]
     private AudioSource healingSource;
-
+    [SerializeField]
+    private AudioSource precisionSource;
     [Header("Normal Attack")]
     [SerializeField]
     private AudioClip slash1;
@@ -33,6 +34,19 @@ public class PlayerSFX : MonoBehaviour
 
     [SerializeField]
     private AudioClip healCompleted;
+    [Header("Precision")]
+    [SerializeField]
+    private AudioClip perfectDodge;
+
+    [SerializeField]
+    private AudioClip precisionFull;
+
+    [Header("Hit")]
+    [SerializeField]
+    private AudioClip hit;
+
+    [SerializeField]
+    private AudioClip strongHit;
 
     public void PlayNormalSlash(
         int comboStep)
@@ -132,6 +146,51 @@ public class PlayerSFX : MonoBehaviour
 
         sfxSource.PlayOneShot(
             healCompleted
+        );
+    }
+    public void PlayPerfectDodge()
+    {
+        if (precisionSource == null ||
+            perfectDodge == null)
+        {
+            return;
+        }
+
+        precisionSource.PlayOneShot(
+            perfectDodge,
+            1.1f
+        );
+    }
+
+    public void PlayPrecisionFull()
+    {
+        if (precisionSource == null ||
+            precisionFull == null)
+        {
+            return;
+        }
+
+        precisionSource.PlayOneShot(
+            precisionFull
+        );
+    }
+
+    public void PlayHit(
+        bool strong)
+    {
+        if (sfxSource == null)
+            return;
+
+        AudioClip clip =
+            strong
+                ? strongHit
+                : hit;
+
+        if (clip == null)
+            return;
+
+        sfxSource.PlayOneShot(
+            clip
         );
     }
 }

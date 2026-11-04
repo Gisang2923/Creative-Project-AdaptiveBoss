@@ -19,7 +19,13 @@ public class PlayerPrecisionStack : MonoBehaviour
     public bool CanUseEnhancedAttack =>
         IsFull;
 
+    private PlayerSFX playerSFX;
 
+    private void Awake()
+    {
+        playerSFX =
+            GetComponent<PlayerSFX>();
+    }
     // =====================================
     // Perfect Dodge / Perfect Parry 성공
     // =====================================
@@ -49,6 +55,9 @@ public class PlayerPrecisionStack : MonoBehaviour
 
         if (currentPoints >= maxPoints)
         {
+            playerSFX?
+                .PlayPrecisionFull();
+
             Debug.Log(
                 "[Precision Point] " +
                 "Enhanced Attack Ready"

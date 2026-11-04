@@ -1,9 +1,30 @@
+using System.Collections;
 using UnityEngine;
 
 public class BossSFX : MonoBehaviour
 {
+    public static BossSFX Instance
+    {
+        get;
+        private set;
+    }
+
     [SerializeField]
     private AudioSource audioSource;
+
+    private Coroutine duckRoutine;
+    private float defaultVolume;
+
+    private void Awake()
+    {
+        Instance = this;
+
+        if (audioSource != null)
+        {
+            defaultVolume =
+                audioSource.volume;
+        }
+    }
 
     [Header("Boss")]
     [SerializeField]
@@ -50,5 +71,50 @@ public class BossSFX : MonoBehaviour
         audioSource.PlayOneShot(
             clip
         );
+    }
+    public void Duck(
+        float duckVolume,
+        float duration)
+    {
+        if (audioSource == null)
+            return;
+
+        if (duckRoutine != null)
+        {
+            StopCoroutine(
+                duckRoutine
+            );
+        }
+
+        duckRoutine =
+            StartCoroutine(
+                DuckRoutine(
+                    duckVolume,
+                    duration
+                )
+            );
+    }
+
+    private IEnumerator DuckRoutine(
+        float duckVolume,
+        float duration)
+    {
+        audioSource.volume =
+            defaultVolume * duckVolume;
+
+        float elapsed = 0f;
+
+        while (elapsed < duration)
+        {
+            elapsed +=
+                Time.unscaledDeltaTime;
+
+            yield return null;
+        }
+
+        audioSource.volume =
+            defaultVolume;
+
+        duckRoutine = null;
     }
 }

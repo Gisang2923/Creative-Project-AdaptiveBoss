@@ -3,10 +3,6 @@ using UnityEngine;
 
 public class CameraShake : MonoBehaviour
 {
-    [Header("Default Test Settings")]
-    [SerializeField] private float testDuration = 0.12f;
-    [SerializeField] private float testStrength = 0.12f;
-
     private Vector3 originalLocalPosition;
     private Coroutine shakeRoutine;
     private Coroutine verticalShakeRoutine;

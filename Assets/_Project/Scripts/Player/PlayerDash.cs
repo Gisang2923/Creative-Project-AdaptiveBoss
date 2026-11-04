@@ -241,6 +241,13 @@ public class PlayerDash : MonoBehaviour
         perfectDodgeTriggered = true;
 
         precisionStack?.GainStack();
+        BossSFX.Instance?
+            .Duck(
+                0.3f,
+                0.18f
+            );
+        playerSFX?.PlayPerfectDodge();
+
         playerMovement?.ForceFacing(
             facingBeforeDash * -1
         );
@@ -293,6 +300,12 @@ public class PlayerDash : MonoBehaviour
         perfectDodgeTriggered = true;
 
         precisionStack?.GainStack();
+        BossSFX.Instance?
+            .Duck(
+                0.3f,
+                0.18f
+            );
+        playerSFX?.PlayPerfectDodge();
         playerMovement?.ForceFacing(
             facingBeforeDash *-1
         );

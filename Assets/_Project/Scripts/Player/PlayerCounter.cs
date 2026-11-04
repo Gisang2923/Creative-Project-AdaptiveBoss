@@ -286,7 +286,8 @@ public class PlayerCounter : MonoBehaviour
                         gameObject,
                         counterAttackData.attackId,
                         false,
-                        suppressHitVfx: true
+                        suppressHitVfx: true,
+                        suppressHitSfx: true
                     );
 
                 target.TakeDamage(

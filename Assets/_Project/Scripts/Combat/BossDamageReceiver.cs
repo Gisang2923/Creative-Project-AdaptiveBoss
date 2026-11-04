@@ -64,6 +64,41 @@ public class BossDamageReceiver : DamageReceiver
         base.TakeDamage(
             damageInfo
         );
+        base.TakeDamage(
+            damageInfo
+        );
+
+        // =====================================
+        // Player Hit SFX
+        // =====================================
+
+        if (!damageInfo.SuppressHitSfx)
+        {
+            PlayerSFX attackerSFX =
+                damageInfo.Attacker != null
+                    ? damageInfo.Attacker
+                        .GetComponent<PlayerSFX>()
+                    : null;
+
+            PlayerCombat attackerCombat =
+                damageInfo.Attacker != null
+                    ? damageInfo.Attacker
+                        .GetComponent<PlayerCombat>()
+                    : null;
+
+            bool isComboFinisher =
+                attackerCombat != null &&
+                attackerCombat.CurrentNormalComboStep == 3;
+
+            bool isStrongHit =
+                isComboFinisher ||
+                damageInfo.CausesBossStun;
+
+            attackerSFX?
+                .PlayHit(
+                    isStrongHit
+                );
+        }
         if (damageInfo.CameraShakeStrength > 0f)
         {
             CameraShake.Instance?.Shake(
