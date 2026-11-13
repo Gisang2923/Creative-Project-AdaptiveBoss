@@ -5,6 +5,7 @@ public class PlayerMovement : MonoBehaviour
 {
     [Header("Move")]
     [SerializeField] private float moveSpeed = 5f;
+    private float moveSpeedMultiplier = 1f;
 
     [Header("Jump")]
     [SerializeField] private float jumpForce = 8f;
@@ -206,6 +207,20 @@ public class PlayerMovement : MonoBehaviour
     {
         moveInput =
             context.ReadValue<Vector2>();
+    }
+    public void SetMoveSpeedMultiplier(
+        float multiplier)
+    {
+        moveSpeedMultiplier =
+            Mathf.Max(
+                0f,
+                multiplier
+            );
+
+        Debug.Log(
+            $"[Player Move] Multiplier = " +
+            $"{moveSpeedMultiplier}"
+        );
     }
 
     // 공격 전체를 잠그지 않고,
@@ -421,6 +436,7 @@ public class PlayerMovement : MonoBehaviour
             new Vector2(
                 moveInput.x *
                     moveSpeed *
+                    moveSpeedMultiplier *
                     moveMultiplier,
                 rb.linearVelocity.y
             );

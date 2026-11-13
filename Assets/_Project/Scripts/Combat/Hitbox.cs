@@ -158,7 +158,22 @@ public class Hitbox : MonoBehaviour
     {
         Vector2 hitDirection =
             (other.transform.position - owner.transform.position).normalized;
+        int finalDamage =
+            attackData.damage;
 
+        PlayerProgressionRuntime
+            playerProgression =
+                owner.GetComponentInParent<
+                    PlayerProgressionRuntime>();
+
+        if (playerProgression != null)
+        {
+            finalDamage =
+                playerProgression
+                    .ModifyOutgoingDamage(
+                        finalDamage
+                    );
+        }
         return new DamageInfo(
             attackData.damage,
             hitDirection,

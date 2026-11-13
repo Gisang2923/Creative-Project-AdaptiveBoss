@@ -9,7 +9,9 @@ public class PlayerPrecisionStack : MonoBehaviour
     [SerializeField] private int maxPoints = 5;
 
     private int currentPoints;
+    private bool precisionEnabled = true;
 
+    public bool PrecisionEnabled => precisionEnabled;
     public int CurrentPoints => currentPoints;
     public int MaxPoints => maxPoints;
 
@@ -17,7 +19,8 @@ public class PlayerPrecisionStack : MonoBehaviour
         currentPoints >= maxPoints;
 
     public bool CanUseEnhancedAttack =>
-        IsFull;
+            precisionEnabled &&
+            IsFull;
 
     private PlayerSFX playerSFX;
 
@@ -32,6 +35,8 @@ public class PlayerPrecisionStack : MonoBehaviour
 
     public void GainStack()
     {
+        if (!precisionEnabled)
+            return;
         if (currentPoints >= maxPoints)
             return;
 
@@ -72,6 +77,8 @@ public class PlayerPrecisionStack : MonoBehaviour
 
     public bool TryConsumeEnhancedAttack()
     {
+        if (!precisionEnabled)
+            return false;
         if (!CanUseEnhancedAttack)
             return false;
 
@@ -87,5 +94,34 @@ public class PlayerPrecisionStack : MonoBehaviour
         );
 
         return true;
+    }
+    public void SetPrecisionEnabled(
+        bool enabled)
+    {
+        if (precisionEnabled ==
+            enabled)
+        {
+            return;
+        }
+
+        precisionEnabled =
+            enabled;
+
+        if (!precisionEnabled &&
+            currentPoints != 0)
+        {
+            currentPoints = 0;
+
+            OnPrecisionChanged?
+                .Invoke(
+                    currentPoints,
+                    maxPoints
+                );
+        }
+
+        Debug.Log(
+            $"[Precision] Enabled = " +
+            $"{precisionEnabled}"
+        );
     }
 }

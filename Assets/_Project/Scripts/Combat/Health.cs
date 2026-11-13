@@ -48,4 +48,39 @@ public class Health : MonoBehaviour
 
         Debug.Log($"{gameObject.name} HP: {currentHealth}/{maxHealth}");
     }
+    public void SetMaxHealth(
+        int value,
+        bool refill = true)
+    {
+        maxHealth =
+            Mathf.Max(
+                1,
+                value
+            );
+
+        if (refill)
+        {
+            currentHealth =
+                maxHealth;
+        }
+        else
+        {
+            currentHealth =
+                Mathf.Min(
+                    currentHealth,
+                    maxHealth
+                );
+        }
+
+        OnHealthChanged?
+            .Invoke(
+                currentHealth,
+                maxHealth
+            );
+
+        Debug.Log(
+            $"{gameObject.name} Max HP: " +
+            $"{maxHealth}"
+        );
+    }
 }

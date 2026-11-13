@@ -285,7 +285,10 @@ public class PlayerDamageReceiver : DamageReceiver
             rb.linearVelocity =
                 Vector2.zero;
         }
-
+        GameProgression.Instance?
+            .RegisterDefeat();
+        GameFlowController.Instance?
+            .HandlePlayerDefeat();    
         CombatLogger.Instance?
             .SaveBattleLog(
                 "PlayerLose"

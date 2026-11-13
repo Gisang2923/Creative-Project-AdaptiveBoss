@@ -172,6 +172,10 @@ public class BossDamageReceiver : DamageReceiver
         if (bossAnimator != null)
             bossAnimator.PlayDeath();
 
+        GameProgression.Instance?
+            .RegisterVictory();
+        GameFlowController.Instance?
+            .HandleBossDefeat();    
         CombatLogger.Instance?
             .SaveBattleLog(
                 "PlayerWin"
