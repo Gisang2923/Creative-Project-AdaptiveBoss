@@ -64,7 +64,10 @@ public class PlayerMovement : MonoBehaviour
 
     public float HorizontalVelocity =>
         rb.linearVelocity.x;
+    
+    private bool inputLocked;
 
+    public bool InputLocked => inputLocked;
     private void Awake()
     {
         rb =
@@ -117,6 +120,16 @@ public class PlayerMovement : MonoBehaviour
 
     private void FixedUpdate()
     {
+        if (inputLocked)
+        {
+            rb.linearVelocity =
+                new Vector2(
+                    0f,
+                    rb.linearVelocity.y
+                );
+
+            return;
+        }
         if (damageReceiver != null &&
             (damageReceiver.IsStunned ||
              damageReceiver.IsDead))
@@ -205,6 +218,12 @@ public class PlayerMovement : MonoBehaviour
     public void OnMove(
         InputAction.CallbackContext context)
     {
+        if (inputLocked)
+        {
+            moveInput = Vector2.zero;
+            return;
+        }
+
         moveInput =
             context.ReadValue<Vector2>();
     }
@@ -359,6 +378,8 @@ public class PlayerMovement : MonoBehaviour
     public void OnJump(
         InputAction.CallbackContext context)
     {
+        if (inputLocked)
+            return;
         if (damageReceiver != null &&
             (damageReceiver.IsStunned ||
              damageReceiver.IsDead))
@@ -601,5 +622,26 @@ public class PlayerMovement : MonoBehaviour
                 0f,
                 rb.linearVelocity.y
             );
+    }
+    public void SetInputLocked(bool locked)
+    {
+        inputLocked = locked;
+
+        moveInput = Vector2.zero;
+        jumpBufferCounter = 0f;
+        jumpReleased = false;
+
+        if (rb != null)
+        {
+            rb.linearVelocity =
+                new Vector2(
+                    0f,
+                    rb.linearVelocity.y
+                );
+        }
+
+        Debug.Log(
+            $"[Player Movement] Input Locked = {inputLocked}"
+        );
     }
 }

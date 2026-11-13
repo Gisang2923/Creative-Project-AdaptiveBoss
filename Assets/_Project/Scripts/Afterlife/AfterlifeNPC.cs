@@ -3,21 +3,44 @@ using UnityEngine.InputSystem;
 
 public class AfterlifeNPC : MonoBehaviour
 {
-    [Header("Dialogue")]
-    [SerializeField]
-    private AfterlifeDialogueController dialogueController;
+    private enum NpcState
+    {
+        FirstDialogue,
+        Growth,
+        Farewell,
+        Finished
+    }
 
+    [Header("Systems")]
+    [SerializeField]
+    private AfterlifeDialogueController
+        dialogueController;
+
+    [SerializeField]
+    private AfterlifeGrowthUI
+        growthUI;
+
+    [Header("Dialogue")]
     [SerializeField]
     private string speakerName = "???";
 
     [SerializeField, TextArea(2, 4)]
-    private string[] dialogueLines;
+    private string[] firstDialogueLines;
+
+    [SerializeField, TextArea(2, 4)]
+    private string[] farewellDialogueLines;
 
     [Header("UI")]
     [SerializeField]
     private GameObject interactPrompt;
 
+    private PlayerMovement
+        currentPlayerMovement;
+
     private bool playerInRange;
+
+    private NpcState state =
+        NpcState.FirstDialogue;
 
     private void Start()
     {
@@ -25,8 +48,15 @@ public class AfterlifeNPC : MonoBehaviour
 
         if (dialogueController != null)
         {
-            dialogueController.OnDialogueEnded +=
+            dialogueController
+                .OnDialogueEnded +=
                 HandleDialogueEnded;
+        }
+
+        if (growthUI != null)
+        {
+            growthUI.OnGrowthClosed +=
+                HandleGrowthClosed;
         }
     }
 
@@ -34,8 +64,15 @@ public class AfterlifeNPC : MonoBehaviour
     {
         if (dialogueController != null)
         {
-            dialogueController.OnDialogueEnded -=
+            dialogueController
+                .OnDialogueEnded -=
                 HandleDialogueEnded;
+        }
+
+        if (growthUI != null)
+        {
+            growthUI.OnGrowthClosed -=
+                HandleGrowthClosed;
         }
     }
 
@@ -43,6 +80,18 @@ public class AfterlifeNPC : MonoBehaviour
     {
         if (!playerInRange)
             return;
+
+        if (state ==
+            NpcState.Growth)
+        {
+            return;
+        }
+
+        if (state ==
+            NpcState.Finished)
+        {
+            return;
+        }
 
         if (dialogueController == null)
             return;
@@ -53,39 +102,105 @@ public class AfterlifeNPC : MonoBehaviour
         if (Keyboard.current == null)
             return;
 
-        if (Keyboard.current.eKey.wasPressedThisFrame)
+        if (Keyboard.current
+            .eKey.wasPressedThisFrame)
         {
-            StartDialogue();
+            StartCurrentDialogue();
         }
     }
 
-    private void StartDialogue()
+    private void StartCurrentDialogue()
     {
         SetPrompt(false);
 
-        dialogueController.StartDialogue(
-            speakerName,
-            dialogueLines
-        );
+        currentPlayerMovement?
+            .SetInputLocked(true);
 
-        Debug.Log(
-            "[Afterlife NPC] Dialogue Start"
-        );
+        if (state ==
+            NpcState.FirstDialogue)
+        {
+            dialogueController.StartDialogue(
+                speakerName,
+                firstDialogueLines
+            );
+
+            return;
+        }
+
+        if (state ==
+            NpcState.Farewell)
+        {
+            dialogueController.StartDialogue(
+                speakerName,
+                farewellDialogueLines
+            );
+        }
+    }
+
+    private void HandleDialogueEnded()
+    {
+        if (state ==
+            NpcState.FirstDialogue)
+        {
+            GameProgression progression =
+                GameProgression.Instance;
+
+            progression?
+                .ClaimGrowthPoint();
+
+            state =
+                NpcState.Growth;
+
+            growthUI?.Open(
+                currentPlayerMovement
+            );
+
+            return;
+        }
+
+        if (state ==
+            NpcState.Farewell)
+        {
+            state =
+                NpcState.Finished;
+
+            SetPrompt(false);
+
+            GameFlowController.Instance?
+                .ReturnToBattle();
+        }
+    }
+
+    private void HandleGrowthClosed()
+    {
+        state =
+            NpcState.Farewell;
+
+        if (playerInRange)
+        {
+            SetPrompt(true);
+        }
     }
 
     private void OnTriggerEnter2D(
         Collider2D other)
     {
-        PlayerMovement playerMovement =
-            other.GetComponentInParent<PlayerMovement>();
+        PlayerMovement movement =
+            other.GetComponentInParent<
+                PlayerMovement>();
 
-        if (playerMovement == null)
+        if (movement == null)
             return;
+
+        currentPlayerMovement =
+            movement;
 
         playerInRange = true;
 
-        if (dialogueController == null ||
-            !dialogueController.IsOpen)
+        if (state ==
+            NpcState.FirstDialogue ||
+            state ==
+            NpcState.Farewell)
         {
             SetPrompt(true);
         }
@@ -94,32 +209,28 @@ public class AfterlifeNPC : MonoBehaviour
     private void OnTriggerExit2D(
         Collider2D other)
     {
-        PlayerMovement playerMovement =
-            other.GetComponentInParent<PlayerMovement>();
+        PlayerMovement movement =
+            other.GetComponentInParent<
+                PlayerMovement>();
 
-        if (playerMovement == null)
+        if (movement == null)
             return;
+
+        if (movement !=
+            currentPlayerMovement)
+        {
+            return;
+        }
 
         playerInRange = false;
 
         SetPrompt(false);
     }
 
-    private void HandleDialogueEnded()
+    private void SetPrompt(
+        bool visible)
     {
-        if (playerInRange)
-        {
-            SetPrompt(true);
-        }
-    }
-
-    private void SetPrompt(bool visible)
-    {
-        if (interactPrompt != null)
-        {
-            interactPrompt.SetActive(
-                visible
-            );
-        }
+        interactPrompt?
+            .SetActive(visible);
     }
 }

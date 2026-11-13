@@ -39,8 +39,14 @@ public class GameProgression : MonoBehaviour
     [Header("Mental Test Value")]
     [Tooltip("0.1 = 해당 능력치 90% 감소")]
     [SerializeField, Range(0.01f, 1f)]
+    
     private float suppressedStatMultiplier = 0.1f;
 
+    [SerializeField]
+    private int pendingGrowthPoints = 0;
+
+    public int PendingGrowthPoints =>
+        pendingGrowthPoints;
     public GamePhase CurrentPhase =>
         currentPhase;
 
@@ -106,9 +112,11 @@ public class GameProgression : MonoBehaviour
         }
 
         defeatCount++;
-        growthPoints++;
 
-        // 첫 조우 강제 사망
+        // 실제 GP를 바로 주지 않고
+        // 사후세계 NPC에게 받을 보상으로 저장
+        pendingGrowthPoints++;
+
         if (currentPhase ==
             GamePhase.FirstEncounter)
         {
@@ -127,6 +135,7 @@ public class GameProgression : MonoBehaviour
 
         Debug.Log(
             $"[Progression] Defeat | " +
+            $"Pending GP {pendingGrowthPoints} | " +
             $"GP {growthPoints} | " +
             $"ATK {attackLevel} | " +
             $"HP {healthLevel} | " +
@@ -134,7 +143,24 @@ public class GameProgression : MonoBehaviour
             $"Phase {currentPhase}"
         );
     }
+    public bool ClaimGrowthPoint()
+    {
+        if (pendingGrowthPoints <= 0)
+            return false;
 
+        pendingGrowthPoints--;
+        growthPoints++;
+
+        NotifyChanged();
+
+        Debug.Log(
+            $"[Progression] Growth Point Claimed | " +
+            $"GP {growthPoints} | " +
+            $"Pending {pendingGrowthPoints}"
+        );
+
+        return true;
+    }
     public void RegisterVictory()
     {
         if (currentPhase ==
@@ -310,7 +336,8 @@ public class GameProgression : MonoBehaviour
         healthLevel = 0;
         mentalLevel = 0;
         growthPoints = 0;
-
+        pendingGrowthPoints = 0;
+        
         defeatCount = 0;
         victoryCount = 0;
 

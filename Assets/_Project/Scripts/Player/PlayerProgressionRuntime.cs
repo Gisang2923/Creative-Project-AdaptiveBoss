@@ -1,8 +1,13 @@
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class PlayerProgressionRuntime :
     MonoBehaviour
 {
+    [Header("Scene")]
+    [SerializeField]
+    private string battleSceneName = "BossBattle";
+
     [Header("References")]
     [SerializeField]
     private Health health;
@@ -74,7 +79,12 @@ public class PlayerProgressionRuntime :
                 ApplyProgression;
         }
     }
-
+    private bool IsBattleScene()
+    {
+        return SceneManager
+            .GetActiveScene()
+            .name == battleSceneName;
+    }    
     private void BindProgression()
     {
         progression =
@@ -126,7 +136,23 @@ public class PlayerProgressionRuntime :
 
             return;
         }
+        if (!IsBattleScene())
+        {
+            // 사후공간 등 비전투 씬에서는
+            // Mental 전투 패널티를 적용하지 않는다.
+            playerMovement?
+                .SetMoveSpeedMultiplier(1f);
 
+            precisionStack?
+                .SetPrecisionEnabled(false);
+
+            Debug.Log(
+                "[Player Progression] " +
+                "Non-battle scene -> combat modifiers skipped."
+            );
+
+            return;
+        }
         ApplyHealth();
         ApplyMovement();
         ApplyPrecision();
