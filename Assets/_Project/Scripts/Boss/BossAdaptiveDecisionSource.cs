@@ -394,7 +394,45 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         hasFollowUpOpportunity &&
         followUpReaction !=
             AdaptiveReactionType.None;
+    private void Start()
+    {
+        ApplyGamePhase();
+    }
+    private void ApplyGamePhase()
+    {
+        GameProgression progression =
+            GameProgression.Instance;
 
+        if (progression == null)
+        {
+            adaptiveEnabled = false;
+
+            Debug.LogWarning(
+                "[Adaptive] " +
+                "GameProgression missing."
+            );
+
+            return;
+        }
+
+
+        adaptiveEnabled =
+            progression.IsAdaptivePhase;
+
+
+        if (!adaptiveEnabled)
+        {
+            ClearFollowUpOpportunity();
+            ClearPreparedReaction();
+        }
+
+
+        Debug.Log(
+            $"[Adaptive] " +
+            $"Enabled = {adaptiveEnabled} | " +
+            $"Phase = {progression.CurrentPhase}"
+        );
+    }
     private void Update()
     {
         if (!adaptiveEnabled)
