@@ -1771,6 +1771,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: Assembly-CSharp::AfterlifeNPC
   dialogueController: {fileID: 1594696788}
   growthUI: {fileID: 1594696789}
+  returnAttemptController: {fileID: 886816205}
   speakerName: "\uB300\uC801\uC790"
   firstDialogueLines:
   - "\uACB0\uAD6D \uC5EC\uAE30\uAE4C\uC9C0 \uC654\uAD6C\uB098."
@@ -1779,6 +1780,21 @@ MonoBehaviour:
   - "\uC774\uB984\uC740 \uC78A\uC740\uC9C0 \uC624\uB798\uB2E4"
   farewellDialogueLines:
   - "\uD589\uC6B4\uC744 \uBE48\uB2E4.. \uC80A\uC740 \uB300\uC801\uC790\uC5EC"
+  playerSpeakerName: "\uB098"
+  clearPlayerLines:
+  - "\uC65C... \uB2E4\uC2DC \uC5EC\uAE30\uB85C \uC628 \uAC70\uC8E0?"
+  - "\uBD84\uBA85 \uADF8\uC790\uB97C \uC4F0\uB7EC\uB728\uB838\uB294\uB370."
+  clearNpcLines:
+  - "\uC774\uB7F0 \uC801\uC740 \uC5C6\uC5C8\uB294\uB370..."
+  - "\uC5B4\uC9F8\uC11C \uC774\uB7EC\uB294 \uAC70\uC9C0?"
+  - "\uC7A0\uC2DC \uAE30\uB2E4\uB9AC\uAC8C."
+  - "\uB0B4\uAC00 \uC815\uC0C1\uC801\uC73C\uB85C \uB3CC\uC544\uAC08 \uC218 \uC788\uB3C4\uB85D
+    \uD574\uBCF4\uACA0\uB124."
+  returnFailedLines:
+  - "...\uC548 \uB418\uB294\uAD70."
+  - "\uC544\uBB34\uB798\uB3C4 \uB2E4\uC2DC \uD55C \uBC88 \uADF8\uB188\uC744 \uCC98\uB9AC\uD574\uC57C
+    \uD560 \uAC83 \uAC19\uC544."
+  - "\uADF8\uB300\uC5D0\uAC8C\uB294 \uC5B4\uB824\uC6B4 \uC77C\uC740 \uC544\uB2C8\uACA0\uC9C0?"
   interactPrompt: {fileID: 614930918}
 --- !u!61 &677738023
 BoxCollider2D:
@@ -2525,6 +2541,54 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 881930616}
   m_CullTransparentMesh: 1
+--- !u!1 &886816204
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 886816206}
+  - component: {fileID: 886816205}
+  m_Layer: 0
+  m_Name: ReturnAttemptPresentation
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &886816205
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 886816204}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 53560ff4b0e77b14baa6b5dd62e8b2d4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::AfterlifeReturnAttemptController
+  whiteFlash: {fileID: 1086170956}
+  chargeDuration: 0.8
+  holdDuration: 0.15
+  failureDuration: 0.45
+--- !u!4 &886816206
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 886816204}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: -0.54243, y: 3.46893, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!1 &913395338
 GameObject:
   m_ObjectHideFlags: 0
@@ -2880,6 +2944,7 @@ RectTransform:
   - {fileID: 881930617}
   - {fileID: 614930919}
   - {fileID: 2012678396}
+  - {fileID: 1086170959}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -2887,6 +2952,94 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
+--- !u!1 &1086170955
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1086170959}
+  - component: {fileID: 1086170958}
+  - component: {fileID: 1086170957}
+  - component: {fileID: 1086170956}
+  m_Layer: 5
+  m_Name: ReturnAttemptOverlay
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!225 &1086170956
+CanvasGroup:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1086170955}
+  m_Enabled: 1
+  m_Alpha: 0
+  m_Interactable: 0
+  m_BlocksRaycasts: 0
+  m_IgnoreParentGroups: 0
+--- !u!114 &1086170957
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1086170955}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 0
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 0}
+  m_Type: 0
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1086170958
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1086170955}
+  m_CullTransparentMesh: 1
+--- !u!224 &1086170959
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1086170955}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1042941813}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 0}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 0, y: 0}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1102114476
 GameObject:
   m_ObjectHideFlags: 0
@@ -4451,3 +4604,4 @@ SceneRoots:
   - {fileID: 677738025}
   - {fileID: 1042941813}
   - {fileID: 1102114478}
+  - {fileID: 886816206}

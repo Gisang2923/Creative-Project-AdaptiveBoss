@@ -171,17 +171,18 @@ public class GameProgression : MonoBehaviour
 
         victoryCount++;
 
-        // 1막 첫 승리
+        // 1막 첫 승리:
+        // 아직 Adaptive로 넘어가지 않는다.
         if (currentPhase ==
             GamePhase.Act1)
         {
             SetPhase(
-                GamePhase.Act2Adaptive
+                GamePhase.Act1Cleared
             );
         }
-        // Adaptive 보스 최종 승리
+        // 2막 최종 승리
         else if (currentPhase ==
-                 GamePhase.Act2Adaptive)
+                GamePhase.Act2Adaptive)
         {
             SetPhase(
                 GamePhase.Completed
@@ -295,6 +296,8 @@ public class GameProgression : MonoBehaviour
             currentPhase !=
                 GamePhase.FirstEncounter &&
             currentPhase !=
+                GamePhase.Act1Cleared &&
+            currentPhase !=
                 GamePhase.Completed;
     }
 
@@ -321,7 +324,29 @@ public class GameProgression : MonoBehaviour
         OnProgressionChanged?
             .Invoke();
     }
+    public bool IsAct1Cleared =>
+        currentPhase ==
+        GamePhase.Act1Cleared;
 
+    public void BeginAct2Adaptive()
+    {
+        if (currentPhase !=
+            GamePhase.Act1Cleared)
+        {
+            return;
+        }
+
+        SetPhase(
+            GamePhase.Act2Adaptive
+        );
+
+        NotifyChanged();
+
+        Debug.Log(
+            "[Progression] " +
+            "Act2 Adaptive Started"
+        );
+    }
 #if UNITY_EDITOR
 
     [ContextMenu(

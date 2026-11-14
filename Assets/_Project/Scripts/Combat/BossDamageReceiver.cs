@@ -1,4 +1,5 @@
 using UnityEngine;
+using System.Collections;
 
 public class BossDamageReceiver : DamageReceiver
 {
@@ -11,6 +12,12 @@ public class BossDamageReceiver : DamageReceiver
     [SerializeField] private HitFlash hitFlash;
     [SerializeField] private BossHitReaction hitReaction;
     [SerializeField] private HitVFXSpawner hitVfxSpawner;
+    [Header("Act1 Clear")]
+    [SerializeField]
+    private float deathEventFallbackDelay =
+        3f;
+
+    private bool act1ClearPending;
     private bool isDead;
 
     public bool IsDead => isDead;
@@ -154,6 +161,16 @@ public class BossDamageReceiver : DamageReceiver
 
         isDead = true;
 
+
+        GameProgression progression =
+            GameProgression.Instance;
+
+        bool wasAct1 =
+            progression != null &&
+            progression.CurrentPhase ==
+                GamePhase.Act1;
+
+
         if (bossAction != null)
             bossAction.ForceCancelAttack();
 
@@ -164,23 +181,106 @@ public class BossDamageReceiver : DamageReceiver
             bossMovement.Stop();
 
         if (rb != null)
+        {
             rb.linearVelocity =
                 Vector2.zero;
+        }
 
-        // Stop()이 BattleIdle을 재생할 수 있으므로
-        // Death는 마지막에 재생
         if (bossAnimator != null)
+        {
             bossAnimator.PlayDeath();
+        }
 
-        GameProgression.Instance?
+
+        progression?
             .RegisterVictory();
-        GameFlowController.Instance?
-            .HandleBossDefeat();    
+
+
+        // =====================================
+        // Act1 First Clear
+        // =====================================
+
+        if (wasAct1)
+        {
+            act1ClearPending = true;
+
+            StartCoroutine(
+                Act1ClearFallbackRoutine()
+            );
+        }
+        else
+        {
+            // Act2 최종 승리 등
+            GameFlowController.Instance?
+                .HandleBossDefeat();
+        }
+
+
         CombatLogger.Instance?
             .SaveBattleLog(
                 "PlayerWin"
             );
 
-        Debug.Log("Boss Dead");
+        Debug.Log(
+            $"[Boss] Dead | " +
+            $"Act1 Clear = {wasAct1}"
+        );
+    }
+    public void OnDeathAnimationEnd()
+    {
+        if (!act1ClearPending)
+            return;
+
+        act1ClearPending = false;
+
+        Debug.Log(
+            "[Boss] " +
+            "Act1 Death Animation End"
+        );
+
+        if (Act1ClearPresentationController
+            .Instance != null)
+        {
+            Act1ClearPresentationController
+                .Instance
+                .Play();
+
+            return;
+        }
+
+        Debug.LogWarning(
+            "[Boss] Act1ClearPresentation " +
+            "missing."
+        );
+
+        GameFlowController.Instance?
+            .CompleteAct1ClearPresentation();
+    }
+    private IEnumerator
+    Act1ClearFallbackRoutine()
+    {
+        float elapsed = 0f;
+
+        while (elapsed <
+            deathEventFallbackDelay)
+        {
+            if (!act1ClearPending)
+                yield break;
+
+            elapsed +=
+                Time.unscaledDeltaTime;
+
+            yield return null;
+        }
+
+        if (!act1ClearPending)
+            yield break;
+
+        Debug.LogWarning(
+            "[Boss] DeathAnimationEnd " +
+            "missing. Using fallback."
+        );
+
+        OnDeathAnimationEnd();
     }
 }

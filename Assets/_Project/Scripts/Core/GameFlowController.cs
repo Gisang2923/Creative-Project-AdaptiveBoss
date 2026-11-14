@@ -164,4 +164,20 @@ public class GameFlowController : MonoBehaviour
 
         transitionStarted = false;
     }
+    public void CompleteAct1ClearPresentation()
+    {
+        if (transitionStarted)
+            return;
+
+        transitionStarted = true;
+
+        Debug.Log(
+            "[Game Flow] " +
+            "Act1 Clear → Main Screen"
+        );
+
+        // 실제로는 정상 귀환에 실패하여
+        // AfterLife로 이동한다.
+        LoadAfterlife();
+    }
 }

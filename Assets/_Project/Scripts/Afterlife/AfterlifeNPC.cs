@@ -8,9 +8,14 @@ public class AfterlifeNPC : MonoBehaviour
         FirstDialogue,
         Growth,
         Farewell,
+
+        ClearConfusion,
+        ClearNpcResponse,
+        ReturnAttempt,
+        ReturnFailed,
+
         Finished
     }
-
     [Header("Systems")]
     [SerializeField]
     private AfterlifeDialogueController
@@ -19,7 +24,9 @@ public class AfterlifeNPC : MonoBehaviour
     [SerializeField]
     private AfterlifeGrowthUI
         growthUI;
-
+    [SerializeField]
+    private AfterlifeReturnAttemptController
+        returnAttemptController;
     [Header("Dialogue")]
     [SerializeField]
     private string speakerName = "???";
@@ -29,6 +36,35 @@ public class AfterlifeNPC : MonoBehaviour
 
     [SerializeField, TextArea(2, 4)]
     private string[] farewellDialogueLines;
+
+    [Header("Act1 Clear Event")]
+    [SerializeField]
+    private string playerSpeakerName =
+        "나";
+
+    [SerializeField, TextArea(2, 4)]
+    private string[] clearPlayerLines =
+    {
+        "왜... 다시 여기로 온 거죠?",
+        "분명 그자를 쓰러뜨렸는데."
+    };
+
+    [SerializeField, TextArea(2, 4)]
+    private string[] clearNpcLines =
+    {
+        "이런 적은 없었는데...",
+        "어째서 이러는 거지?",
+        "잠시 기다리게.",
+        "내가 정상적으로 돌아갈 수 있도록 해보겠네."
+    };
+
+    [SerializeField, TextArea(2, 4)]
+    private string[] returnFailedLines =
+    {
+        "...안 되는군.",
+        "아무래도 다시 한 번 그놈을 처리해야 할 것 같아.",
+        "그대에게는 어려운 일은 아니겠지?"
+    };
 
     [Header("UI")]
     [SerializeField]
@@ -44,6 +80,15 @@ public class AfterlifeNPC : MonoBehaviour
 
     private void Start()
     {
+        GameProgression progression =
+            GameProgression.Instance;
+
+        if (progression != null &&
+            progression.IsAct1Cleared)
+        {
+            state =
+                NpcState.ClearConfusion;
+        }
         SetPrompt(false);
 
         if (dialogueController != null)
@@ -82,7 +127,11 @@ public class AfterlifeNPC : MonoBehaviour
             return;
 
         if (state ==
-            NpcState.Growth)
+                NpcState.Growth ||
+            state ==
+                NpcState.ReturnAttempt ||
+            state ==
+                NpcState.Finished)
         {
             return;
         }
@@ -116,29 +165,119 @@ public class AfterlifeNPC : MonoBehaviour
         currentPlayerMovement?
             .SetInputLocked(true);
 
-        if (state ==
-            NpcState.FirstDialogue)
+        switch (state)
         {
-            dialogueController.StartDialogue(
-                speakerName,
-                firstDialogueLines
-            );
+            case NpcState.FirstDialogue:
 
-            return;
-        }
+                dialogueController
+                    .StartDialogue(
+                        speakerName,
+                        firstDialogueLines
+                    );
 
-        if (state ==
-            NpcState.Farewell)
-        {
-            dialogueController.StartDialogue(
-                speakerName,
-                farewellDialogueLines
-            );
+                break;
+
+
+            case NpcState.Farewell:
+
+                dialogueController
+                    .StartDialogue(
+                        speakerName,
+                        farewellDialogueLines
+                    );
+
+                break;
+
+
+            case NpcState.ClearConfusion:
+
+                dialogueController
+                    .StartDialogue(
+                        playerSpeakerName,
+                        clearPlayerLines
+                    );
+
+                break;
+
+
+            case NpcState.ClearNpcResponse:
+
+                dialogueController
+                    .StartDialogue(
+                        speakerName,
+                        clearNpcLines
+                    );
+
+                break;
+
+
+            case NpcState.ReturnFailed:
+
+                dialogueController
+                    .StartDialogue(
+                        speakerName,
+                        returnFailedLines
+                    );
+
+                break;
         }
     }
 
     private void HandleDialogueEnded()
     {
+        // =====================================
+        // Act1 Cleared Special Route
+        // =====================================
+
+        if (state ==
+            NpcState.ClearConfusion)
+        {
+            state =
+                NpcState.ClearNpcResponse;
+
+            StartCurrentDialogue();
+
+            return;
+        }
+
+
+        if (state ==
+            NpcState.ClearNpcResponse)
+        {
+            state =
+                NpcState.ReturnAttempt;
+
+            returnAttemptController?
+                .PlayAttempt(
+                    HandleReturnAttemptFailed
+                );
+
+            return;
+        }
+
+
+        if (state ==
+            NpcState.ReturnFailed)
+        {
+            state =
+                NpcState.Finished;
+
+            SetPrompt(false);
+
+            GameProgression.Instance?
+                .BeginAct2Adaptive();
+
+            GameFlowController.Instance?
+                .ReturnToBattle();
+
+            return;
+        }
+
+
+        // =====================================
+        // Normal Death Route
+        // =====================================
+
         if (state ==
             NpcState.FirstDialogue)
         {
@@ -158,6 +297,7 @@ public class AfterlifeNPC : MonoBehaviour
             return;
         }
 
+
         if (state ==
             NpcState.Farewell)
         {
@@ -170,7 +310,24 @@ public class AfterlifeNPC : MonoBehaviour
                 .ReturnToBattle();
         }
     }
+    private void HandleReturnAttemptFailed()
+    {
+        if (state !=
+            NpcState.ReturnAttempt)
+        {
+            return;
+        }
 
+        Debug.Log(
+            "[Afterlife] " +
+            "Return Attempt Failed"
+        );
+
+        state =
+            NpcState.ReturnFailed;
+
+        StartCurrentDialogue();
+    }
     private void HandleGrowthClosed()
     {
         state =
@@ -198,9 +355,11 @@ public class AfterlifeNPC : MonoBehaviour
         playerInRange = true;
 
         if (state ==
-            NpcState.FirstDialogue ||
+                NpcState.FirstDialogue ||
             state ==
-            NpcState.Farewell)
+                NpcState.Farewell ||
+            state ==
+                NpcState.ClearConfusion)
         {
             SetPrompt(true);
         }
