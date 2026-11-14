@@ -310,7 +310,7 @@ public class AfterlifeGrowthUI : MonoBehaviour
         if (pointText != null)
         {
             pointText.text =
-                $"POINT  {AvailablePoints()}";
+                $"스테이터스 포인트  {AvailablePoints()}";
         }
 
         if (attackValueText != null)
