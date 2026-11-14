@@ -174,4 +174,9 @@ public class PlayerAnimationEventReceiver : MonoBehaviour
         playerCounter?
             .OnParryImpactFrame();
     }
+    public void DeathAnimationEnd()
+    {
+        playerDamageReceiver?
+            .OnDeathAnimationEnd();
+    }
 }

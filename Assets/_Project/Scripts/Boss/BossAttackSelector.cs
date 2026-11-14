@@ -333,4 +333,21 @@ public class BossAttackSelector : MonoBehaviour
             distance <=
                 attack.maxRange;
     }
+    public BossAttack GetAttackByType(
+        BossAttackType attackType)
+    {
+        if (attacks == null)
+            return null;
+
+        foreach (BossAttack attack in attacks)
+        {
+            if (attack != null &&
+                attack.attackType == attackType)
+            {
+                return attack;
+            }
+        }
+
+        return null;
+    }
 }

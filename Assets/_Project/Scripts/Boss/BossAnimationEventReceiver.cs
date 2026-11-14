@@ -5,6 +5,7 @@ public class BossAnimationEventReceiver : MonoBehaviour
     [SerializeField] private BossParry bossParry;
     [SerializeField] private BossAction bossAction;
     [SerializeField] private BossController bossController;
+    [SerializeField] private BossBattleIntroController battleIntroController;
     public void BasicHit()
     {
         bossAction?.OnBasicHit();
@@ -47,5 +48,10 @@ public class BossAnimationEventReceiver : MonoBehaviour
     {
         bossAction?
             .OnChargeHit();
+    }
+    public void ReadyFearMoment()
+    {
+        battleIntroController?
+            .TriggerFearMoment();
     }
 }

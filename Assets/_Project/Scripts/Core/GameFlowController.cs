@@ -76,7 +76,20 @@ public class GameFlowController : MonoBehaviour
 
         LoadAfterlife();
     }
+    public void CompletePlayerDeathPresentation()
+    {
+        if (transitionStarted)
+            return;
 
+        transitionStarted = true;
+
+        Debug.Log(
+            "[Game Flow] " +
+            "Death Presentation Complete"
+        );
+
+        LoadAfterlife();
+    }
     // =====================================
     // Boss Defeat
     // =====================================

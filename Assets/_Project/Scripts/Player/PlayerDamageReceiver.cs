@@ -20,7 +20,9 @@ public class PlayerDamageReceiver : DamageReceiver
 
     private bool isKnockedDown;
     private bool isGettingUp;
-
+    [Header("Death Presentation")]
+    [SerializeField]
+    private SpriteRenderer deathSpriteRenderer;
     private PlayerMovement playerMovement;
 
     private Coroutine knockdownRoutine;
@@ -48,6 +50,12 @@ public class PlayerDamageReceiver : DamageReceiver
         if (hitVfxSpawner == null)
         {
             hitVfxSpawner = GetComponent<HitVFXSpawner>();
+        }
+        if (deathSpriteRenderer == null)
+        {
+            deathSpriteRenderer =
+                GetComponentInChildren<
+                    SpriteRenderer>();
         }
     }
     private void ApplyKnockback(DamageInfo damageInfo)
@@ -285,16 +293,39 @@ public class PlayerDamageReceiver : DamageReceiver
             rb.linearVelocity =
                 Vector2.zero;
         }
+
         GameProgression.Instance?
             .RegisterDefeat();
-        GameFlowController.Instance?
-            .HandlePlayerDefeat();    
+
         CombatLogger.Instance?
             .SaveBattleLog(
                 "PlayerLose"
             );
 
-        Debug.Log("Player Dead");
+        Debug.Log(
+            "[Player] Death Animation Start"
+        );
+    }
+    public void OnDeathAnimationEnd()
+    {
+        Debug.Log(
+            "[Player] Death Animation End"
+        );
+
+        if (PlayerDeathPresentationController
+            .Instance != null)
+        {
+            PlayerDeathPresentationController
+                .Instance
+                .Play(
+                    deathSpriteRenderer
+                );
+
+            return;
+        }
+
+        GameFlowController.Instance?
+            .HandlePlayerDefeat();
     }
 
 }
