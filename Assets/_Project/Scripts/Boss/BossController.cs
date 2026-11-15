@@ -1441,6 +1441,8 @@ public class BossController : MonoBehaviour
 
         bossAction?
             .ForceCancelAttack();
+        adaptiveAfterimage?
+            .StopTrail();    
         currentAttackIsAdaptive = false;
         currentAttackFromAdaptiveResponse = false;
         adaptiveSource?.ClearPreparedReaction();
@@ -1546,6 +1548,8 @@ public class BossController : MonoBehaviour
 
     public void SetDead()
     {
+        adaptiveAfterimage?
+            .StopTrail();  
         bossParry?
             .ForceCancelParry();
 

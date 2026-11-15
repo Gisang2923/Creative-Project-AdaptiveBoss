@@ -1,5 +1,4 @@
 using System.Collections;
-using TMPro;
 using UnityEngine;
 
 public class AdaptivePresentationController
@@ -7,8 +6,7 @@ public class AdaptivePresentationController
 {
     [Header("References")]
     [SerializeField]
-    private BossAdaptiveDecisionSource
-        adaptiveSource;
+    private BossAdaptiveDecisionSource adaptiveSource;
 
     [SerializeField]
     private CameraBossFollow cameraFollow;
@@ -17,7 +15,7 @@ public class AdaptivePresentationController
     private Camera targetCamera;
 
     [SerializeField]
-    private TMP_Text dialogueText;
+    private CharacterSpeechBubble bossBubble;
 
 
     [Header("Slow Motion")]
@@ -41,41 +39,36 @@ public class AdaptivePresentationController
     [SerializeField]
     private float returnDuration = 0.25f;
 
-    [SerializeField]
-    private Transform boss;
-
-    [Header("Dialogue Position")]
-    [SerializeField]
-    private Vector3 dialogueWorldOffset =
-        new Vector3(0f, 2.0f, 0f);
 
     [Header("Dialogue")]
     [SerializeField, TextArea]
     private string chaseDialogue =
-        "You keep chasing me.";
+        "또 따라오는군.";
 
     [SerializeField, TextArea]
     private string chaseCommitDialogue =
-        "Still coming after me?";
+        "끝까지 오는군.";
 
     [SerializeField, TextArea]
     private string retreatDialogue =
-        "You keep backing away.";
+        "또 물러나는군.";
 
     [SerializeField, TextArea]
     private string attackDialogue =
-        "So you always strike first.";
+        "또 먼저 움직이는군.";
 
     [SerializeField, TextArea]
     private string counterDialogue =
-        "Waiting for that timing again?";
+        "또 그 타이밍인가.";
 
     [SerializeField, TextArea]
     private string postPunishDialogue =
-        "You never miss an opening.";
+        "역시 빈틈을 노리는군.";
+
     [SerializeField, TextArea]
     private string genericDialogue =
-        "Predictable.";
+        "역시.";
+
 
     private Coroutine presentationRoutine;
 
@@ -88,23 +81,10 @@ public class AdaptivePresentationController
                 Camera.main;
         }
 
-        if (dialogueText != null)
-        {
-            dialogueText
-                .gameObject
-                .SetActive(false);
-        }
+        bossBubble?
+            .HideImmediate();
     }
-    private void LateUpdate()
-    {
-        if (dialogueText == null ||
-            !dialogueText.gameObject.activeSelf)
-        {
-            return;
-        }
 
-        UpdateDialoguePosition();
-    }
 
     private void OnEnable()
     {
@@ -128,6 +108,9 @@ public class AdaptivePresentationController
 
         cameraFollow?
             .SetAdaptiveFocusWeight(0f);
+
+        bossBubble?
+            .Hide();
     }
 
 
@@ -138,9 +121,7 @@ public class AdaptivePresentationController
             return;
 
         string dialogue =
-            GetDialogue(
-                habit
-            );
+            GetDialogue(habit);
 
         presentationRoutine =
             StartCoroutine(
@@ -154,8 +135,7 @@ public class AdaptivePresentationController
     private IEnumerator PresentationRoutine(
         string dialogue)
     {
-        // HitStop 중에 Policy가 발생했다면
-        // HitStop을 강제로 풀지 않고 끝날 때까지 기다림
+        // 기존 HitStop이 끝날 때까지 기다림
         while (Time.timeScale <= 0.01f)
         {
             yield return null;
@@ -179,18 +159,11 @@ public class AdaptivePresentationController
 
 
         // =====================================
-        // Dialogue ON
+        // Boss Speech Bubble
         // =====================================
 
-        if (dialogueText != null)
-        {
-            dialogueText.text =
-                dialogue;
-
-            dialogueText
-                .gameObject
-                .SetActive(true);
-        }
+        bossBubble?
+            .Show(dialogue);
 
 
         // =====================================
@@ -205,7 +178,7 @@ public class AdaptivePresentationController
 
 
         // =====================================
-        // Zoom In + Boss Focus
+        // Zoom + Boss Focus
         // =====================================
 
         float elapsed = 0f;
@@ -334,21 +307,9 @@ public class AdaptivePresentationController
         }
 
 
-        // =====================================
-        // Dialogue OFF
-        // =====================================
+        bossBubble?
+            .Hide();
 
-        if (dialogueText != null)
-        {
-            dialogueText
-                .gameObject
-                .SetActive(false);
-        }
-
-
-        // =====================================
-        // Normal Speed
-        // =====================================
 
         Time.timeScale =
             previousTimeScale;
@@ -383,28 +344,5 @@ public class AdaptivePresentationController
             default:
                 return genericDialogue;
         }
-    }
-    private void UpdateDialoguePosition()
-    {
-        if (dialogueText == null ||
-            boss == null ||
-            targetCamera == null)
-        {
-            return;
-        }
-
-        Vector3 worldPosition =
-            boss.position +
-            dialogueWorldOffset;
-
-        Vector3 screenPosition =
-            targetCamera.WorldToScreenPoint(
-                worldPosition
-            );
-
-        dialogueText
-            .rectTransform
-            .position =
-            screenPosition;
     }
 }

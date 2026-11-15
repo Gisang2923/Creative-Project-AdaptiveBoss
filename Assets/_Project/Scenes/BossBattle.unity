@@ -155,8 +155,8 @@ MonoBehaviour:
   titleText: {fileID: 1126773332}
   messageText: {fileID: 65862377}
   confirmButton: {fileID: 1862070430}
-  playerMovement: {fileID: 0}
-  playerInput: {fileID: 0}
+  playerMovement: {fileID: 800044310}
+  playerInput: {fileID: 800044311}
   clearTitle: "\uD074\uB9AC\uC5B4\uD588\uC2B5\uB2C8\uB2E4."
   clearMessage: "\uC7A0\uC2DC \uD6C4 \uBA54\uC778 \uD654\uBA74\uC73C\uB85C \uB3CC\uC544\uAC11\uB2C8\uB2E4..."
 --- !u!114 &47288449
@@ -593,15 +593,13 @@ MonoBehaviour:
   adaptiveSource: {fileID: 402595768}
   cameraFollow: {fileID: 2060518840}
   targetCamera: {fileID: 519420031}
-  dialogueText: {fileID: 946525656}
+  bossBubble: {fileID: 931609173}
   slowTimeScale: 0.3
   bossFocusWeight: 0.7
   zoomAmount: 0.5
   zoomInDuration: 0.2
   holdDuration: 0.5
   returnDuration: 0.25
-  boss: {fileID: 402595756}
-  dialogueWorldOffset: {x: 0, y: 2, z: 0}
   chaseDialogue: You keep chasing me
   chaseCommitDialogue: Still coming after me?
   retreatDialogue: You keep backing away.
@@ -1153,7 +1151,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe54fb2faef0c2e4a9a2124833e8eb0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
-  maxHealth: 10
+  maxHealth: 100
 --- !u!4 &402595756
 Transform:
   m_ObjectHideFlags: 0

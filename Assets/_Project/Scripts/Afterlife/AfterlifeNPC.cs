@@ -6,6 +6,10 @@ public class AfterlifeNPC : MonoBehaviour
     private enum NpcState
     {
         FirstDialogue,
+
+        MenuReady,
+        MenuOpen,
+
         Growth,
         Farewell,
 
@@ -27,6 +31,11 @@ public class AfterlifeNPC : MonoBehaviour
     [SerializeField]
     private AfterlifeReturnAttemptController
         returnAttemptController;
+    [SerializeField]
+    private AfterlifeActionMenu
+        actionMenu;    
+
+
     [Header("Dialogue")]
     [SerializeField]
     private string speakerName = "???";
@@ -103,6 +112,14 @@ public class AfterlifeNPC : MonoBehaviour
             growthUI.OnGrowthClosed +=
                 HandleGrowthClosed;
         }
+        if (actionMenu != null)
+        {
+            actionMenu.OnStatusSelected +=
+                HandleStatusSelected;
+
+            actionMenu.OnReturnSelected +=
+                HandleReturnSelected;
+        }
     }
 
     private void OnDestroy()
@@ -119,6 +136,14 @@ public class AfterlifeNPC : MonoBehaviour
             growthUI.OnGrowthClosed -=
                 HandleGrowthClosed;
         }
+        if (actionMenu != null)
+        {
+            actionMenu.OnStatusSelected -=
+                HandleStatusSelected;
+
+            actionMenu.OnReturnSelected -=
+                HandleReturnSelected;
+        }
     }
 
     private void Update()
@@ -126,8 +151,13 @@ public class AfterlifeNPC : MonoBehaviour
         if (!playerInRange)
             return;
 
+
+        // UI / 연출 진행 중에는
+        // NPC 상호작용 차단
         if (state ==
                 NpcState.Growth ||
+            state ==
+                NpcState.MenuOpen ||
             state ==
                 NpcState.ReturnAttempt ||
             state ==
@@ -136,26 +166,41 @@ public class AfterlifeNPC : MonoBehaviour
             return;
         }
 
-        if (state ==
-            NpcState.Finished)
-        {
-            return;
-        }
 
         if (dialogueController == null)
             return;
 
+
         if (dialogueController.IsOpen)
             return;
+
 
         if (Keyboard.current == null)
             return;
 
-        if (Keyboard.current
-            .eKey.wasPressedThisFrame)
+
+        if (!Keyboard.current
+            .eKey
+            .wasPressedThisFrame)
         {
-            StartCurrentDialogue();
+            return;
         }
+
+
+        // =====================================
+        // 첫 대화 이후부터는
+        // NPC 상호작용 = Action Menu
+        // =====================================
+
+        if (state ==
+            NpcState.MenuReady)
+        {
+            OpenActionMenu();
+            return;
+        }
+
+
+        StartCurrentDialogue();
     }
 
     private void StartCurrentDialogue()
@@ -281,18 +326,17 @@ public class AfterlifeNPC : MonoBehaviour
         if (state ==
             NpcState.FirstDialogue)
         {
-            GameProgression progression =
-                GameProgression.Instance;
-
-            progression?
+            GameProgression.Instance?
                 .ClaimGrowthPoint();
 
-            state =
-                NpcState.Growth;
 
-            growthUI?.Open(
-                currentPlayerMovement
+            Debug.Log(
+                "[Afterlife] " +
+                "First Dialogue Complete"
             );
+
+
+            EnterMenuReady();
 
             return;
         }
@@ -309,6 +353,81 @@ public class AfterlifeNPC : MonoBehaviour
             GameFlowController.Instance?
                 .ReturnToBattle();
         }
+    }
+    private void EnterMenuReady()
+    {
+        state =
+            NpcState.MenuReady;
+
+
+        // 다시 사후세계를 돌아다닐 수 있음
+        currentPlayerMovement?
+            .SetInputLocked(false);
+
+
+        if (playerInRange)
+        {
+            SetPrompt(true);
+        }
+
+
+        Debug.Log(
+            "[Afterlife] Menu Ready"
+        );
+    }
+    private void OpenActionMenu()
+    {
+        if (actionMenu == null)
+        {
+            Debug.LogWarning(
+                "[Afterlife] " +
+                "ActionMenu is missing."
+            );
+
+            return;
+        }
+
+
+        SetPrompt(false);
+
+
+        state =
+            NpcState.MenuOpen;
+
+
+        actionMenu.Open(
+            currentPlayerMovement
+        );
+
+
+        Debug.Log(
+            "[Afterlife] " +
+            "Action Menu Open"
+        );
+    }
+    private void HandleStatusSelected()
+    {
+        if (state !=
+            NpcState.MenuOpen)
+        {
+            return;
+        }
+
+
+        state =
+            NpcState.Growth;
+
+
+        growthUI?
+            .Open(
+                currentPlayerMovement
+            );
+
+
+        Debug.Log(
+            "[Afterlife] " +
+            "Status Selected"
+        );
     }
     private void HandleReturnAttemptFailed()
     {
@@ -330,15 +449,35 @@ public class AfterlifeNPC : MonoBehaviour
     }
     private void HandleGrowthClosed()
     {
+        Debug.Log(
+            "[Afterlife] " +
+            "Growth UI Closed"
+        );
+
+
+        EnterMenuReady();
+    }
+    private void HandleReturnSelected()
+    {
+        if (state !=
+            NpcState.MenuOpen)
+        {
+            return;
+        }
+
+
         state =
             NpcState.Farewell;
 
-        if (playerInRange)
-        {
-            SetPrompt(true);
-        }
-    }
 
+        StartCurrentDialogue();
+
+
+        Debug.Log(
+            "[Afterlife] " +
+            "Return Selected"
+        );
+    }
     private void OnTriggerEnter2D(
         Collider2D other)
     {
@@ -357,7 +496,7 @@ public class AfterlifeNPC : MonoBehaviour
         if (state ==
                 NpcState.FirstDialogue ||
             state ==
-                NpcState.Farewell ||
+                NpcState.MenuReady ||
             state ==
                 NpcState.ClearConfusion)
         {

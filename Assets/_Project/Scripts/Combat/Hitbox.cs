@@ -175,7 +175,7 @@ public class Hitbox : MonoBehaviour
                     );
         }
         return new DamageInfo(
-            attackData.damage,
+            finalDamage,
             hitDirection,
             attackData.knockbackForce,
             owner,
