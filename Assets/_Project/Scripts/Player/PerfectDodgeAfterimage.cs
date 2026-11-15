@@ -105,8 +105,6 @@ public class PerfectDodgeAfterimage : MonoBehaviour
                 sourceRenderer.transform.rotation
             );
 
-        ghostIndex++;
-
         // 현재 플레이어 방향 그대로 복사
         ghost.transform.localScale =
             sourceRenderer.transform.lossyScale;

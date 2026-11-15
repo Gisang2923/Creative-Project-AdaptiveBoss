@@ -126,6 +126,10 @@ public class BossController : MonoBehaviour
     [SerializeField]
     private int precisionStunHitLimit = 3;
 
+    [Header("Adaptive Presentation")]
+    [SerializeField]
+    private BossAdaptiveAfterimage adaptiveAfterimage;
+
     private PrecisionStunPhase precisionStunPhase =
         PrecisionStunPhase.None;
 
@@ -451,9 +455,11 @@ public class BossController : MonoBehaviour
         }
 
 
-        if (wasDodging &&
-            !bossAction.IsDodging)
+        if (wasDodging && !bossAction.IsDodging)
         {
+            adaptiveAfterimage?
+                .StopTrail();
+
             StartBackDodgeRecovery();
         }
 
@@ -886,8 +892,18 @@ public class BossController : MonoBehaviour
         currentBackDodgeIsAdaptiveFollowUp =
             true;
 
+
+        // =====================================
+        // Adaptive Dodge Visual
+        // =====================================
+
+        adaptiveAfterimage?
+            .StartTrail();
+
+
         backDodgeResponseTimer =
             backDodgeResponseWindow;
+
 
         CombatLogger.Instance?
             .BeginBossBehavior(
@@ -895,16 +911,22 @@ public class BossController : MonoBehaviour
                 distance
             );
 
+
         backDodgeLogPending = true;
 
-        bossAction.ExecuteBackDodge();
+
+        bossAction
+            .ExecuteBackDodge();
+
 
         backDodgeCooldownTimer =
             backDodgeCooldown;
 
+
         ChangeState(
             BossState.BackDodge
         );
+
 
         Debug.Log(
             "[Adaptive Response] " +

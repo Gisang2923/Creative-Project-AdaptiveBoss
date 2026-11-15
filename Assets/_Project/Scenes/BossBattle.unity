@@ -1132,6 +1132,7 @@ GameObject:
   - component: {fileID: 402595769}
   - component: {fileID: 402595770}
   - component: {fileID: 402595772}
+  - component: {fileID: 402595773}
   - component: {fileID: 402595771}
   m_Layer: 8
   m_Name: Boss
@@ -1152,7 +1153,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe54fb2faef0c2e4a9a2124833e8eb0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
-  maxHealth: 100
+  maxHealth: 10
 --- !u!4 &402595756
 Transform:
   m_ObjectHideFlags: 0
@@ -1301,6 +1302,7 @@ MonoBehaviour:
   bossAnimator: {fileID: 402595765}
   precisionStunDuration: 2.5
   precisionStunHitLimit: 3
+  adaptiveAfterimage: {fileID: 402595773}
 --- !u!114 &402595761
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1702,6 +1704,25 @@ MonoBehaviour:
   charge: {fileID: 8300000, guid: 5a78de9a9c1e70749a8633a595d5e356, type: 3}
   heavyHit: {fileID: 8300000, guid: 3a12134df2580aa4b9fc591bc2407fdd, type: 3}
   counter: {fileID: 8300000, guid: 64d249092cde4ea47882f8b70be10dd4, type: 3}
+--- !u!114 &402595773
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 402595753}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f7ff79a4e23f7ea418988fc1528a864d, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossAdaptiveAfterimage
+  sourceRenderer: {fileID: 1266593680}
+  ghostPrefab: {fileID: 4312338118171726269, guid: 45b8159d3ab68f845876655448f137bf, type: 3}
+  spawnInterval: 0.055
+  ghostLifeTime: 0.22
+  ghostAlpha: 0.45
+  sortingOrderOffset: -1
+  ghostColor: {r: 0.055, g: 0.22, b: 0.45, a: 1}
 --- !u!1 &427258031
 GameObject:
   m_ObjectHideFlags: 0
@@ -6241,6 +6262,10 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 1365710324629248952, guid: 5f0aa6f9b4583124daa837e802efc158, type: 3}
+      propertyPath: maxHealth
+      value: 10000
+      objectReference: {fileID: 0}
     - target: {fileID: 4072001731018833294, guid: 5f0aa6f9b4583124daa837e802efc158, type: 3}
       propertyPath: deathSpriteRenderer
       value: 
