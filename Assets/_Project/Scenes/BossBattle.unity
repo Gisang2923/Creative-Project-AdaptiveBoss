@@ -2960,9 +2960,10 @@ MonoBehaviour:
   playerMovement: {fileID: 800044310}
   playerBubble: {fileID: 1708894664}
   fearVolume: {fileID: 608967535}
-  fearFadeDuration: 0.15
+  fearFadeDuration: 0.1
   initialHoldDuration: 1
   readyDuration: 2.11
+  mentalReactionDuration: 1.2
   firstLineDuration: 1.5
   beforeReadyDelay: 0.4
   afterFearDelay: 0.2
@@ -5262,6 +5263,8 @@ MonoBehaviour:
   victoryCount: 0
   suppressedStatMultiplier: 0.1
   pendingGrowthPoints: 0
+  firstRecoveryLineShown: 0
+  lastPresentedMentalLevel: 0
 --- !u!4 &1654378709
 Transform:
   m_ObjectHideFlags: 0

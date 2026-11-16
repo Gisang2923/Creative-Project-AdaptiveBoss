@@ -52,6 +52,9 @@ public class BossBattleIntroController : MonoBehaviour
     [SerializeField]
     private float readyDuration = 2.11f;
 
+    [SerializeField]
+    private float mentalReactionDuration = 1.2f;
+
 
     [Header("First Encounter")]
     [SerializeField]
@@ -148,25 +151,92 @@ public class BossBattleIntroController : MonoBehaviour
             initialHoldDuration
         );
 
+
+        // =====================================
+        // Mental Growth Reaction
+        // =====================================
+
+        GameProgression progression =
+            GameProgression.Instance;
+
+        if (progression != null &&
+            playerBubble != null &&
+            progression
+                .TryConsumeMentalBattleReaction(
+                    out int mentalLevel,
+                    out bool isFirstRecovery
+                ))
+        {
+            string reactionLine =
+                GetMentalReactionLine(
+                    mentalLevel,
+                    isFirstRecovery
+                );
+
+            if (!string.IsNullOrEmpty(
+                    reactionLine))
+            {
+                yield return playerBubble
+                    .ShowForSeconds(
+                        reactionLine,
+                        mentalReactionDuration
+                    );
+            }
+        }
+
+
         PlayReady();
 
         yield return new WaitForSeconds(
             readyDuration
         );
 
+
         if (bossHurtbox != null)
         {
             bossHurtbox.SetActive(true);
         }
 
+
         bossController?
             .StartBattle();
+
 
         Debug.Log(
             "[INTRO] Normal Battle Start"
         );
     }
+    private string GetMentalReactionLine(
+        int mentalLevel,
+        bool isFirstRecovery)
+    {
+        // 첫 강제 사망 이후
+        // 두 번째 조우 전용 독백
+        if (isFirstRecovery)
+        {
+            return
+                "움직여... 이번엔 움직일 수 있어.";
+        }
 
+
+        switch (mentalLevel)
+        {
+            case 2:
+                return
+                    "호흡이... 조금씩 돌아오고 있어.";
+
+            case 3:
+                return
+                    "몸이... 더는 굳지 않아.";
+
+            case 4:
+                return
+                    "선명해... 이제 두렵지 않아.";
+
+            default:
+                return null;
+        }
+    }
 
     // =====================================
     // First Encounter

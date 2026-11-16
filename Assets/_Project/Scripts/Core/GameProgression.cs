@@ -45,6 +45,12 @@ public class GameProgression : MonoBehaviour
     [SerializeField]
     private int pendingGrowthPoints = 0;
 
+    [Header("Presentation State")]
+    [SerializeField]
+    private bool firstRecoveryLineShown = false;
+
+    [SerializeField]
+    private int lastPresentedMentalLevel = 0;
     public int PendingGrowthPoints =>
         pendingGrowthPoints;
     public GamePhase CurrentPhase =>
@@ -83,7 +89,10 @@ public class GameProgression : MonoBehaviour
     public bool PrecisionUnlocked =>
         mentalLevel >= MaxMentalLevel &&
         currentPhase != GamePhase.FirstEncounter;
-
+    public bool AreAllStatsMax =>
+        attackLevel >= MaxAttackLevel &&
+        healthLevel >= MaxHealthLevel &&
+        mentalLevel >= MaxMentalLevel;
     public event Action OnProgressionChanged;
     public event Action<GamePhase> OnPhaseChanged;
 
@@ -288,7 +297,52 @@ public class GameProgression : MonoBehaviour
             ? suppressedStatMultiplier
             : 1f;
     }
+    public bool TryConsumeMentalBattleReaction(
+        out int level,
+        out bool isFirstRecovery)
+    {
+        level = mentalLevel;
+        isFirstRecovery = false;
 
+        if (currentPhase ==
+            GamePhase.FirstEncounter)
+        {
+            return false;
+        }
+
+        if (mentalLevel <= 0)
+            return false;
+
+
+        // 첫 강제 사망 이후
+        // 첫 정상 전투 진입
+        if (!firstRecoveryLineShown)
+        {
+            firstRecoveryLineShown = true;
+
+            lastPresentedMentalLevel =
+                mentalLevel;
+
+            isFirstRecovery = true;
+
+            return true;
+        }
+
+
+        // 이전 전투 이후
+        // Mental이 실제로 증가했을 때만 출력
+        if (mentalLevel <=
+            lastPresentedMentalLevel)
+        {
+            return false;
+        }
+
+
+        lastPresentedMentalLevel =
+            mentalLevel;
+
+        return true;
+    }
     private bool CanSpendPoint()
     {
         return
@@ -362,10 +416,12 @@ public class GameProgression : MonoBehaviour
         mentalLevel = 0;
         growthPoints = 0;
         pendingGrowthPoints = 0;
-        
+
         defeatCount = 0;
         victoryCount = 0;
 
+        firstRecoveryLineShown = false;
+        lastPresentedMentalLevel = 0;
         NotifyChanged();
 
         OnPhaseChanged?

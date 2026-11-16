@@ -23,7 +23,14 @@ public class AfterlifeReturnAttemptController
     private float failureDuration =
         0.45f;
 
+    [Header("Return Timing")]
+    [SerializeField]
+    private float returnFadeDuration =
+        0.9f;
 
+    [SerializeField]
+    private float returnHoldDuration =
+        0.35f;
     private bool isPlaying;
 
 
@@ -49,7 +56,18 @@ public class AfterlifeReturnAttemptController
         );
     }
 
+    public void PlayReturn(
+        Action onComplete)
+    {
+        if (isPlaying)
+            return;
 
+        StartCoroutine(
+            ReturnRoutine(
+                onComplete
+            )
+        );
+    }
     private IEnumerator AttemptRoutine(
         Action onFailed)
     {
@@ -107,7 +125,31 @@ public class AfterlifeReturnAttemptController
             .Invoke();
     }
 
+    private IEnumerator ReturnRoutine(
+        Action onComplete)
+    {
+        isPlaying = true;
 
+        float startAlpha =
+            whiteFlash != null
+                ? whiteFlash.alpha
+                : 0f;
+
+        yield return Fade(
+            startAlpha,
+            1f,
+            returnFadeDuration
+        );
+
+        yield return WaitRealtime(
+            returnHoldDuration
+        );
+
+        isPlaying = false;
+
+        onComplete?
+            .Invoke();
+    }
     private IEnumerator Fade(
         float from,
         float to,

@@ -11,6 +11,7 @@ public class AfterlifeNPC : MonoBehaviour
         MenuOpen,
 
         Growth,
+        MaxStats,
         Farewell,
 
         ClearConfusion,
@@ -46,6 +47,11 @@ public class AfterlifeNPC : MonoBehaviour
     [SerializeField, TextArea(2, 4)]
     private string[] farewellDialogueLines;
 
+    [SerializeField, TextArea(2, 4)]
+    private string[] maxStatsLines =
+    {
+        "더 올릴 능력치가 없다."
+    };
     [Header("Act1 Clear Event")]
     [SerializeField]
     private string playerSpeakerName =
@@ -222,6 +228,15 @@ public class AfterlifeNPC : MonoBehaviour
 
                 break;
 
+            case NpcState.MaxStats:
+
+                dialogueController
+                    .StartDialogue(
+                        speakerName,
+                        maxStatsLines
+                    );
+
+                break;
 
             case NpcState.Farewell:
 
@@ -304,21 +319,21 @@ public class AfterlifeNPC : MonoBehaviour
         if (state ==
             NpcState.ReturnFailed)
         {
-            state =
-                NpcState.Finished;
-
-            SetPrompt(false);
-
             GameProgression.Instance?
                 .BeginAct2Adaptive();
 
-            GameFlowController.Instance?
-                .ReturnToBattle();
+            EnterMenuReady();
 
             return;
         }
 
+        if (state ==
+            NpcState.MaxStats)
+        {
+            EnterMenuReady();
 
+            return;
+        }
         // =====================================
         // Normal Death Route
         // =====================================
@@ -350,8 +365,19 @@ public class AfterlifeNPC : MonoBehaviour
 
             SetPrompt(false);
 
-            GameFlowController.Instance?
-                .ReturnToBattle();
+            if (returnAttemptController != null)
+            {
+                returnAttemptController
+                    .PlayReturn(
+                        HandleReturnPresentationComplete
+                    );
+            }
+            else
+            {
+                HandleReturnPresentationComplete();
+            }
+
+            return;
         }
     }
     private void EnterMenuReady()
@@ -414,6 +440,27 @@ public class AfterlifeNPC : MonoBehaviour
         }
 
 
+        GameProgression progression =
+            GameProgression.Instance;
+
+
+        if (progression != null &&
+            progression.AreAllStatsMax)
+        {
+            state =
+                NpcState.MaxStats;
+
+            StartCurrentDialogue();
+
+            Debug.Log(
+                "[Afterlife] " +
+                "All Stats Max"
+            );
+
+            return;
+        }
+
+
         state =
             NpcState.Growth;
 
@@ -456,6 +503,11 @@ public class AfterlifeNPC : MonoBehaviour
 
 
         EnterMenuReady();
+    }
+    private void HandleReturnPresentationComplete()
+    {
+        GameFlowController.Instance?
+            .ReturnToBattle();
     }
     private void HandleReturnSelected()
     {
