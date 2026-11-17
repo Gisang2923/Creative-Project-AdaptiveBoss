@@ -51,6 +51,8 @@ public class GameProgression : MonoBehaviour
 
     [SerializeField]
     private int lastPresentedMentalLevel = 0;
+    [SerializeField]
+    private bool act2IntroShown = false;
     public int PendingGrowthPoints =>
         pendingGrowthPoints;
     public GamePhase CurrentPhase =>
@@ -343,6 +345,21 @@ public class GameProgression : MonoBehaviour
 
         return true;
     }
+    public bool TryConsumeAct2Intro()
+    {
+        if (currentPhase !=
+            GamePhase.Act2Adaptive)
+        {
+            return false;
+        }
+
+        if (act2IntroShown)
+            return false;
+
+        act2IntroShown = true;
+
+        return true;
+    }
     private bool CanSpendPoint()
     {
         return
@@ -422,6 +439,7 @@ public class GameProgression : MonoBehaviour
 
         firstRecoveryLineShown = false;
         lastPresentedMentalLevel = 0;
+        act2IntroShown = false;
         NotifyChanged();
 
         OnPhaseChanged?

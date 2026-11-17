@@ -157,8 +157,20 @@ MonoBehaviour:
   confirmButton: {fileID: 1862070430}
   playerMovement: {fileID: 800044310}
   playerInput: {fileID: 800044311}
+  playerBubble: {fileID: 1708894664}
+  bossIdentity: {fileID: 402595774}
+  cameraFollow: {fileID: 2060518840}
+  targetCamera: {fileID: 0}
+  bossFocusWeight: 0.9
+  zoomAmount: 1
+  zoomInDuration: 0.35
+  bossRevealHoldDuration: 0.65
+  returnDuration: 0.35
+  revealDialogue: "...\uC778\uAC04\uC778 \uAC74\uAC00?"
+  revealDialogueDuration: 1.5
   clearTitle: "\uD074\uB9AC\uC5B4\uD588\uC2B5\uB2C8\uB2E4."
-  clearMessage: "\uC7A0\uC2DC \uD6C4 \uBA54\uC778 \uD654\uBA74\uC73C\uB85C \uB3CC\uC544\uAC11\uB2C8\uB2E4..."
+  clearMessage: "\uC7A0\uC2DC\uD6C4 \uC774 \uC138\uC0C1\uC744 \uBC97\uC5B4\uB0A9\uB2C8\uB2E4..."
+  beforeClearDelay: 0.5
 --- !u!114 &47288449
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1132,6 +1144,7 @@ GameObject:
   - component: {fileID: 402595772}
   - component: {fileID: 402595773}
   - component: {fileID: 402595771}
+  - component: {fileID: 402595774}
   m_Layer: 8
   m_Name: Boss
   m_TagString: Untagged
@@ -1151,7 +1164,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe54fb2faef0c2e4a9a2124833e8eb0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
-  maxHealth: 100
+  maxHealth: 1000
 --- !u!4 &402595756
 Transform:
   m_ObjectHideFlags: 0
@@ -1721,6 +1734,21 @@ MonoBehaviour:
   ghostAlpha: 0.45
   sortingOrderOffset: -1
   ghostColor: {r: 0.055, g: 0.22, b: 0.45, a: 1}
+--- !u!114 &402595774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 402595753}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 08755439157dd28449ab6396b62a4c42, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::BossIdentityPresentationController
+  bossRenderer: {fileID: 1266593680}
+  normalMaterial: {fileID: 2100000, guid: bdb9236ebc9bb63439b5c4e50c814316, type: 2}
+  silhouetteMaterial: {fileID: 2100000, guid: 57a01952f0e852545ae0b7293da26262, type: 2}
 --- !u!1 &427258031
 GameObject:
   m_ObjectHideFlags: 0
@@ -6271,6 +6299,26 @@ PrefabInstance:
       propertyPath: deathSpriteRenderer
       value: 
       objectReference: {fileID: 822000434}
+    - target: {fileID: 4495742903877539019, guid: 5f0aa6f9b4583124daa837e802efc158, type: 3}
+      propertyPath: 'attackLevelMultipliers.Array.data[1]'
+      value: 1.2
+      objectReference: {fileID: 0}
+    - target: {fileID: 4495742903877539019, guid: 5f0aa6f9b4583124daa837e802efc158, type: 3}
+      propertyPath: 'attackLevelMultipliers.Array.data[2]'
+      value: 1.4
+      objectReference: {fileID: 0}
+    - target: {fileID: 4495742903877539019, guid: 5f0aa6f9b4583124daa837e802efc158, type: 3}
+      propertyPath: 'attackLevelMultipliers.Array.data[3]'
+      value: 1.6
+      objectReference: {fileID: 0}
+    - target: {fileID: 4495742903877539019, guid: 5f0aa6f9b4583124daa837e802efc158, type: 3}
+      propertyPath: 'attackLevelMultipliers.Array.data[4]'
+      value: 1.8
+      objectReference: {fileID: 0}
+    - target: {fileID: 4495742903877539019, guid: 5f0aa6f9b4583124daa837e802efc158, type: 3}
+      propertyPath: 'attackLevelMultipliers.Array.data[5]'
+      value: 2
+      objectReference: {fileID: 0}
     - target: {fileID: 6706988073275753392, guid: 5f0aa6f9b4583124daa837e802efc158, type: 3}
       propertyPath: m_LocalPosition.x
       value: -2

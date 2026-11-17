@@ -25,6 +25,8 @@ public class BossBattleIntroController : MonoBehaviour
 
     [SerializeField]
     private BossAttackSelector attackSelector;
+    [SerializeField]
+    private CharacterSpeechBubble bossBubble;
 
     [Header("Player")]
     [SerializeField]
@@ -55,7 +57,16 @@ public class BossBattleIntroController : MonoBehaviour
     [SerializeField]
     private float mentalReactionDuration = 1.2f;
 
+    [Header("Act2 First Intro")]
+    [SerializeField]
+    private float act2IntroHoldDuration = 0.6f;
 
+    [SerializeField]
+    private float act2BossLineDuration = 1.4f;
+
+    [SerializeField, TextArea]
+    private string act2BossLine =
+        "또 왔군.";
     [Header("First Encounter")]
     [SerializeField]
     private float firstLineDuration = 1.5f;
@@ -147,19 +158,73 @@ public class BossBattleIntroController : MonoBehaviour
 
     private IEnumerator NormalIntroRoutine()
     {
+        GameProgression progression =
+            GameProgression.Instance;
+
+
+        // =====================================
+        // Act2 First Encounter Check
+        // =====================================
+
+        bool isFirstAct2Intro =
+            progression != null &&
+            progression.TryConsumeAct2Intro();
+
+
+        if (isFirstAct2Intro)
+        {
+            LockPlayer();
+
+            Debug.Log(
+                "[ACT2 INTRO] First Adaptive Encounter"
+            );
+        }
+
+
+        // =====================================
+        // Initial Hold
+        // =====================================
+
         yield return new WaitForSeconds(
             initialHoldDuration
         );
 
 
         // =====================================
-        // Mental Growth Reaction
+        // Act2 First Intro
         // =====================================
 
-        GameProgression progression =
-            GameProgression.Instance;
+        if (isFirstAct2Intro)
+        {
+            yield return new WaitForSeconds(
+                act2IntroHoldDuration
+            );
 
-        if (progression != null &&
+
+            if (bossBubble != null)
+            {
+                yield return bossBubble
+                    .ShowForSeconds(
+                        act2BossLine,
+                        act2BossLineDuration
+                    );
+            }
+
+
+            yield return new WaitForSeconds(
+                0.2f
+            );
+        }
+
+
+        // =====================================
+        // Mental Growth Reaction
+        //
+        // Act2 첫 등장에서는 생략
+        // =====================================
+
+        if (!isFirstAct2Intro &&
+            progression != null &&
             playerBubble != null &&
             progression
                 .TryConsumeMentalBattleReaction(
@@ -173,6 +238,7 @@ public class BossBattleIntroController : MonoBehaviour
                     isFirstRecovery
                 );
 
+
             if (!string.IsNullOrEmpty(
                     reactionLine))
             {
@@ -185,16 +251,31 @@ public class BossBattleIntroController : MonoBehaviour
         }
 
 
+        // =====================================
+        // Boss Ready
+        // =====================================
+
         PlayReady();
+
 
         yield return new WaitForSeconds(
             readyDuration
         );
 
 
+        // =====================================
+        // Battle Start
+        // =====================================
+
         if (bossHurtbox != null)
         {
             bossHurtbox.SetActive(true);
+        }
+
+
+        if (isFirstAct2Intro)
+        {
+            UnlockPlayer();
         }
 
 
@@ -462,6 +543,18 @@ public class BossBattleIntroController : MonoBehaviour
         Debug.Log(
             "[FIRST ENCOUNTER] " +
             "Player Input Locked"
+        );
+    }
+    private void UnlockPlayer()
+    {
+        playerMovement?
+            .SetInputLocked(false);
+
+        playerInput?
+            .ActivateInput();
+
+        Debug.Log(
+            "[INTRO] Player Input Unlocked"
         );
     }
 }

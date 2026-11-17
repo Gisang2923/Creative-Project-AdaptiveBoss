@@ -27,17 +27,17 @@ public class PlayerProgressionRuntime :
 
     [Header("Attack Level Multipliers")]
     [Tooltip(
-        "Lv.0~5. 아직 공격력 성장 배율 미확정"
+        "Attack Lv.0~5 Damage Multiplier"
     )]
     [SerializeField]
     private float[] attackLevelMultipliers =
     {
-        1f,
-        1f,
-        1f,
-        1f,
-        1f,
-        1f
+        1.0f,
+        1.2f,
+        1.4f,
+        1.6f,
+        1.8f,
+        2.0f
     };
 
     private GameProgression progression;
