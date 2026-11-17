@@ -53,6 +53,10 @@ public class GameProgression : MonoBehaviour
     private int lastPresentedMentalLevel = 0;
     [SerializeField]
     private bool act2IntroShown = false;
+    [SerializeField]
+    private bool act2FirstDefeatDialoguePending = false;
+    [SerializeField]
+    private bool act2FirstDefeatDialogueShown = false;
     public int PendingGrowthPoints =>
         pendingGrowthPoints;
     public GamePhase CurrentPhase =>
@@ -83,6 +87,11 @@ public class GameProgression : MonoBehaviour
     public bool IsAdaptivePhase =>
         currentPhase ==
         GamePhase.Act2Adaptive;
+
+    public bool HasPendingAct2FirstDefeatDialogue =>
+        currentPhase == GamePhase.Act2Adaptive &&
+        act2FirstDefeatDialoguePending &&
+        !act2FirstDefeatDialogueShown;
 
     public bool IsCompleted =>
         currentPhase ==
@@ -127,6 +136,13 @@ public class GameProgression : MonoBehaviour
         // 실제 GP를 바로 주지 않고
         // 사후세계 NPC에게 받을 보상으로 저장
         pendingGrowthPoints++;
+
+        if (currentPhase == GamePhase.Act2Adaptive &&
+            !act2FirstDefeatDialoguePending &&
+            !act2FirstDefeatDialogueShown)
+        {
+            act2FirstDefeatDialoguePending = true;
+        }
 
         if (currentPhase ==
             GamePhase.FirstEncounter)
@@ -360,6 +376,14 @@ public class GameProgression : MonoBehaviour
 
         return true;
     }
+    public void CompleteAct2FirstDefeatDialogue()
+    {
+        if (!HasPendingAct2FirstDefeatDialogue)
+            return;
+
+        act2FirstDefeatDialoguePending = false;
+        act2FirstDefeatDialogueShown = true;
+    }
     private bool CanSpendPoint()
     {
         return
@@ -440,6 +464,8 @@ public class GameProgression : MonoBehaviour
         firstRecoveryLineShown = false;
         lastPresentedMentalLevel = 0;
         act2IntroShown = false;
+        act2FirstDefeatDialoguePending = false;
+        act2FirstDefeatDialogueShown = false;
         NotifyChanged();
 
         OnPhaseChanged?

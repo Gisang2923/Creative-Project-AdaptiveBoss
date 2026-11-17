@@ -19,6 +19,9 @@ public class AfterlifeNPC : MonoBehaviour
         ReturnAttempt,
         ReturnFailed,
 
+        Act2DiscoveryPlayer,
+        Act2DiscoveryNpc,
+
         Finished
     }
     [Header("Systems")]
@@ -81,6 +84,22 @@ public class AfterlifeNPC : MonoBehaviour
         "그대에게는 어려운 일은 아니겠지?"
     };
 
+    private static readonly string[] act2DiscoveryPlayerLines =
+    {
+        "저 사람... 이상해요.",
+        "제가 어떻게 움직일지 알고 있는 것 같아요.",
+        "쫓아가면 먼저 빠지고...",
+        "제가 공격하려는 순간도 기다리고 있어요."
+    };
+
+    private static readonly string[] act2DiscoveryNpcLines =
+    {
+        "...잠깐.",
+        "자네가 쫓아가면 먼저 물러난다고?",
+        "...그 움직임을 알고 있네.",
+        "나도 그렇게 싸웠으니까."
+    };
+
     [Header("UI")]
     [SerializeField]
     private GameObject interactPrompt;
@@ -103,6 +122,12 @@ public class AfterlifeNPC : MonoBehaviour
         {
             state =
                 NpcState.ClearConfusion;
+        }
+        else if (progression != null &&
+                 progression.HasPendingAct2FirstDefeatDialogue)
+        {
+            state =
+                NpcState.Act2DiscoveryPlayer;
         }
         SetPrompt(false);
 
@@ -280,11 +305,59 @@ public class AfterlifeNPC : MonoBehaviour
                     );
 
                 break;
+
+            case NpcState.Act2DiscoveryPlayer:
+
+                dialogueController
+                    .StartDialogue(
+                        playerSpeakerName,
+                        act2DiscoveryPlayerLines
+                    );
+
+                break;
+
+            case NpcState.Act2DiscoveryNpc:
+
+                dialogueController
+                    .StartDialogue(
+                        speakerName,
+                        act2DiscoveryNpcLines
+                    );
+
+                break;
         }
     }
 
     private void HandleDialogueEnded()
     {
+        if (state ==
+            NpcState.Act2DiscoveryPlayer)
+        {
+            state =
+                NpcState.Act2DiscoveryNpc;
+
+            StartCurrentDialogue();
+
+            return;
+        }
+
+        if (state ==
+            NpcState.Act2DiscoveryNpc)
+        {
+            GameProgression progression =
+                GameProgression.Instance;
+
+            progression?
+                .CompleteAct2FirstDefeatDialogue();
+
+            progression?
+                .ClaimGrowthPoint();
+
+            EnterMenuReady();
+
+            return;
+        }
+
         // =====================================
         // Act1 Cleared Special Route
         // =====================================
@@ -550,7 +623,9 @@ public class AfterlifeNPC : MonoBehaviour
             state ==
                 NpcState.MenuReady ||
             state ==
-                NpcState.ClearConfusion)
+                NpcState.ClearConfusion ||
+            state ==
+                NpcState.Act2DiscoveryPlayer)
         {
             SetPrompt(true);
         }
