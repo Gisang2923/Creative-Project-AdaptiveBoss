@@ -36,6 +36,8 @@ public class BossBattleIntroController : MonoBehaviour
     [SerializeField]
     private PlayerMovement playerMovement;
 
+    private PlayerAnimator playerAnimator;
+
     [SerializeField]
     private CharacterSpeechBubble playerBubble;
 
@@ -118,6 +120,12 @@ public class BossBattleIntroController : MonoBehaviour
             fearVolume.weight = 0f;
         }
 
+        if (playerMovement != null)
+        {
+            playerAnimator =
+                playerMovement.GetComponent<PlayerAnimator>();
+        }
+
         if (bossSFX == null &&
             bossController != null)
         {
@@ -131,6 +139,11 @@ public class BossBattleIntroController : MonoBehaviour
     private void Start()
     {
         StartIntro();
+    }
+
+    private void OnDisable()
+    {
+        playerAnimator?.ResumePresentationAnimation();
     }
 
 
@@ -494,6 +507,8 @@ public class BossBattleIntroController : MonoBehaviour
                     BossAttackType.ChargeSlash
                 );
 
+        playerAnimator?.ResumePresentationAnimation();
+
         if (executionAttack == null)
         {
             Debug.LogError(
@@ -548,6 +563,7 @@ public class BossBattleIntroController : MonoBehaviour
         }
 
         fearTriggered = true;
+        playerAnimator?.FreezePresentationAnimation();
 
         Debug.Log(
             "[FIRST ENCOUNTER] Fear"

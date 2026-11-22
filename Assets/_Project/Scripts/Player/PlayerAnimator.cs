@@ -76,6 +76,8 @@ public class PlayerAnimator : MonoBehaviour
     private bool isPerfectDodging;
     public bool IsPerfectDodging => isPerfectDodging;
     private int currentState = -1;
+    private float presentationPreviousSpeed;
+    private bool presentationFrozen;
 
     private void Awake()
     {
@@ -92,13 +94,21 @@ public class PlayerAnimator : MonoBehaviour
         UpdateMovementAnimation();
     }
 
+    private void OnDisable()
+    {
+        ResumePresentationAnimation();
+    }
+
     private void UpdateMovementAnimation()
     {
         if (damageReceiver != null && damageReceiver.IsDead)
         {
+            ResumePresentationAnimation();
             PlayState(Death);
             return;
         }
+        if (presentationFrozen)
+            return;
         if (damageReceiver != null &&
             damageReceiver.IsKnockedDown)
         {
@@ -248,6 +258,28 @@ public class PlayerAnimator : MonoBehaviour
             0f
         );
     }
+
+    public void FreezePresentationAnimation()
+    {
+        if (animator == null || presentationFrozen)
+            return;
+
+        presentationPreviousSpeed = animator.speed;
+        animator.speed = 0f;
+        presentationFrozen = true;
+    }
+
+    public void ResumePresentationAnimation()
+    {
+        if (!presentationFrozen)
+            return;
+
+        if (animator != null)
+            animator.speed = presentationPreviousSpeed;
+
+        presentationFrozen = false;
+    }
+
     public void PlayPerfectDodge()
     {
         isPerfectDodging = true;
