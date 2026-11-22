@@ -33,6 +33,9 @@ public class AfterlifeNPC : MonoBehaviour
 
         Act2DiscoveryPlayer,
         Act2DiscoveryNpc,
+        Act2TruthNpcIntro,
+        Act2TruthPlayer,
+        Act2TruthNpcConclusion,
 
         Finished
     }
@@ -125,6 +128,35 @@ public class AfterlifeNPC : MonoBehaviour
         "나도 그렇게 싸웠으니까."
     };
 
+    [Header("Act2 Truth Discovery Event")]
+    [SerializeField, TextArea(2, 4)]
+    private string[] act2TruthNpcIntroLines =
+    {
+        "...잠깐.",
+        "이제 알 것 같군.",
+        "저자는 처음부터 저렇게 싸웠던 게 아니야.",
+        "우리에게서 배운 거였어."
+    };
+
+    [SerializeField, TextArea(2, 4)]
+    private string[] act2TruthPlayerLines =
+    {
+        "우리에게서요?"
+    };
+
+    [SerializeField, TextArea(2, 4)]
+    private string[] act2TruthNpcConclusionLines =
+    {
+        "그래.",
+        "우리가 죽을 때마다,",
+        "그자에게 무언가를 남기고 있었던 거야.",
+        "내 움직임도,",
+        "그리고 지금은 자네의 움직임도.",
+        "강해지는 것만으로는 부족하겠군.",
+        "놈이 알고 있는 자네와",
+        "다른 사람이 되게."
+    };
+
     [Header("UI")]
     [SerializeField]
     private GameObject interactPrompt;
@@ -153,6 +185,12 @@ public class AfterlifeNPC : MonoBehaviour
         {
             state =
                 NpcState.Act2DiscoveryPlayer;
+        }
+        else if (progression != null &&
+                 progression.HasPendingAct2TruthDialogue)
+        {
+            state =
+                NpcState.Act2TruthNpcIntro;
         }
         else if (progression == null ||
                  !progression.HasMetAfterlifeNpc)
@@ -378,6 +416,36 @@ public class AfterlifeNPC : MonoBehaviour
                     );
 
                 break;
+
+            case NpcState.Act2TruthNpcIntro:
+
+                dialogueController
+                    .StartDialogue(
+                        speakerName,
+                        act2TruthNpcIntroLines
+                    );
+
+                break;
+
+            case NpcState.Act2TruthPlayer:
+
+                dialogueController
+                    .StartDialogue(
+                        playerSpeakerName,
+                        act2TruthPlayerLines
+                    );
+
+                break;
+
+            case NpcState.Act2TruthNpcConclusion:
+
+                dialogueController
+                    .StartDialogue(
+                        speakerName,
+                        act2TruthNpcConclusionLines
+                    );
+
+                break;
         }
     }
 
@@ -405,6 +473,45 @@ public class AfterlifeNPC : MonoBehaviour
 
             progression?
                 .MarkAfterlifeNpcMet();
+
+            progression?
+                .ClaimGrowthPoint();
+
+            EnterMenuReady();
+
+            return;
+        }
+
+        if (state ==
+            NpcState.Act2TruthNpcIntro)
+        {
+            state =
+                NpcState.Act2TruthPlayer;
+
+            StartCurrentDialogue();
+
+            return;
+        }
+
+        if (state ==
+            NpcState.Act2TruthPlayer)
+        {
+            state =
+                NpcState.Act2TruthNpcConclusion;
+
+            StartCurrentDialogue();
+
+            return;
+        }
+
+        if (state ==
+            NpcState.Act2TruthNpcConclusion)
+        {
+            GameProgression progression =
+                GameProgression.Instance;
+
+            progression?
+                .CompleteAct2TruthDialogue();
 
             progression?
                 .ClaimGrowthPoint();
@@ -735,7 +842,9 @@ public class AfterlifeNPC : MonoBehaviour
             state ==
                 NpcState.ClearConfusion ||
             state ==
-                NpcState.Act2DiscoveryPlayer)
+                NpcState.Act2DiscoveryPlayer ||
+            state ==
+                NpcState.Act2TruthNpcIntro)
         {
             SetPrompt(true);
         }

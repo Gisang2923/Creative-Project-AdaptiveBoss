@@ -36,6 +36,9 @@ public class GameProgression : MonoBehaviour
     private int defeatCount = 0;
 
     [SerializeField]
+    private int act2DefeatCount = 0;
+
+    [SerializeField]
     private int victoryCount = 0;
 
     [SerializeField]
@@ -53,6 +56,10 @@ public class GameProgression : MonoBehaviour
     private bool act2FirstDefeatDialoguePending = false;
     [SerializeField]
     private bool act2FirstDefeatDialogueShown = false;
+    [SerializeField]
+    private bool act2TruthDialoguePending = false;
+    [SerializeField]
+    private bool act2TruthDialogueShown = false;
     [SerializeField]
     private bool afterlifeNpcMet = false;
     public int PendingGrowthPoints =>
@@ -75,6 +82,9 @@ public class GameProgression : MonoBehaviour
     public int DefeatCount =>
         defeatCount;
 
+    public int Act2DefeatCount =>
+        act2DefeatCount;
+
     public int VictoryCount =>
         victoryCount;
 
@@ -90,6 +100,11 @@ public class GameProgression : MonoBehaviour
         currentPhase == GamePhase.Act2Adaptive &&
         act2FirstDefeatDialoguePending &&
         !act2FirstDefeatDialogueShown;
+
+    public bool HasPendingAct2TruthDialogue =>
+        currentPhase == GamePhase.Act2Adaptive &&
+        act2TruthDialoguePending &&
+        !act2TruthDialogueShown;
 
     public bool HasMetAfterlifeNpc =>
         afterlifeNpcMet;
@@ -143,11 +158,22 @@ public class GameProgression : MonoBehaviour
             fearRecoveryPending = true;
         }
 
-        if (currentPhase == GamePhase.Act2Adaptive &&
-            !act2FirstDefeatDialoguePending &&
-            !act2FirstDefeatDialogueShown)
+        if (currentPhase == GamePhase.Act2Adaptive)
         {
-            act2FirstDefeatDialoguePending = true;
+            act2DefeatCount++;
+
+            if (act2DefeatCount == 1 &&
+                !act2FirstDefeatDialoguePending &&
+                !act2FirstDefeatDialogueShown)
+            {
+                act2FirstDefeatDialoguePending = true;
+            }
+            else if (act2DefeatCount == 2 &&
+                     !act2TruthDialoguePending &&
+                     !act2TruthDialogueShown)
+            {
+                act2TruthDialoguePending = true;
+            }
         }
 
         if (currentPhase ==
@@ -344,6 +370,14 @@ public class GameProgression : MonoBehaviour
         act2FirstDefeatDialoguePending = false;
         act2FirstDefeatDialogueShown = true;
     }
+    public void CompleteAct2TruthDialogue()
+    {
+        if (!HasPendingAct2TruthDialogue)
+            return;
+
+        act2TruthDialoguePending = false;
+        act2TruthDialogueShown = true;
+    }
     public void MarkAfterlifeNpcMet()
     {
         afterlifeNpcMet = true;
@@ -424,6 +458,7 @@ public class GameProgression : MonoBehaviour
         pendingGrowthPoints = 0;
 
         defeatCount = 0;
+        act2DefeatCount = 0;
         victoryCount = 0;
 
         firstRecoveryLineShown = false;
@@ -431,6 +466,8 @@ public class GameProgression : MonoBehaviour
         act2IntroShown = false;
         act2FirstDefeatDialoguePending = false;
         act2FirstDefeatDialogueShown = false;
+        act2TruthDialoguePending = false;
+        act2TruthDialogueShown = false;
         afterlifeNpcMet = false;
         NotifyChanged();
 
