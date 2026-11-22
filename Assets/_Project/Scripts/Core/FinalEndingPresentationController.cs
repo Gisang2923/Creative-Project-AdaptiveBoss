@@ -159,10 +159,18 @@ public class FinalEndingPresentationController : MonoBehaviour
         "경의를 표하지."
     };
 
-    [Header("Epilogue Pause")]
+    [Header("Combat UI")]
     [SerializeField] private GameObject combatUiRoot;
-    [SerializeField, Min(0f)] private float controlReturnDelay = 0.8f;
-    [SerializeField, Min(0f)] private float epilogueFreeMoveDuration = 12f;
+    [SerializeField, HideInInspector, Min(0f)] private float controlReturnDelay = 0.8f;
+    [SerializeField, HideInInspector, Min(0f)] private float epilogueFreeMoveDuration = 12f;
+
+    [Header("Player Silhouette")]
+    [SerializeField] private SpriteRenderer playerVisualRenderer;
+    [SerializeField, Min(0f)] private float playerSilhouetteDelay = 3f;
+    [SerializeField, Min(0f)] private float playerSilhouetteDuration = 1.5f;
+    [SerializeField, Min(0f)] private float silhouetteHoldDuration = 1f;
+
+    [Header("Ending Fade")]
     [SerializeField] private CanvasGroup endingFade;
     [SerializeField, Min(0f)] private float endingFadeDuration = 1.5f;
 
@@ -175,6 +183,7 @@ public class FinalEndingPresentationController : MonoBehaviour
     private bool dialogueSubscribed;
     private bool finalBlowStarted;
     private int promptShownFrame;
+    private Color playerOriginalColor;
 
     public bool AwaitingFinalBlow { get; private set; }
 
@@ -192,6 +201,15 @@ public class FinalEndingPresentationController : MonoBehaviour
             playerDash = playerMovement.GetComponent<PlayerDash>();
             playerHeal = playerMovement.GetComponent<PlayerHeal>();
             playerAnimator = playerMovement.GetComponent<PlayerAnimator>();
+
+            if (playerVisualRenderer == null)
+            {
+                Transform visual = playerMovement.transform
+                    .Find("FacingRoot/Visual");
+
+                if (visual != null)
+                    playerVisualRenderer = visual.GetComponent<SpriteRenderer>();
+            }
         }
 
         if (finalBlowPromptRoot != null)
@@ -403,18 +421,48 @@ public class FinalEndingPresentationController : MonoBehaviour
         if (combatUiRoot != null)
             combatUiRoot.SetActive(false);
 
-        yield return WaitUnscaled(controlReturnDelay);
-
         playerAnimator?.ClearFinalStrikePresentation();
-        playerMovement?.SetInputLocked(false);
-        playerInput?.ActivateInput();
 
-        yield return WaitUnscaled(epilogueFreeMoveDuration);
-
-        playerMovement?.SetInputLocked(true);
-        playerInput?.DeactivateInput();
+        yield return WaitUnscaled(playerSilhouetteDelay);
+        yield return FadePlayerToSilhouette();
+        yield return WaitUnscaled(silhouetteHoldDuration);
 
         yield return FadeToBlack();
+    }
+
+    private IEnumerator FadePlayerToSilhouette()
+    {
+        if (playerVisualRenderer == null)
+        {
+            Debug.LogWarning("[Final Ending] Player Visual SpriteRenderer is missing.");
+            yield break;
+        }
+
+        playerOriginalColor = playerVisualRenderer.color;
+        Color targetColor = new Color(0f, 0f, 0f, playerOriginalColor.a);
+
+        float elapsed = 0f;
+        while (playerVisualRenderer != null &&
+               elapsed < playerSilhouetteDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            float t = Mathf.SmoothStep(
+                0f,
+                1f,
+                Mathf.Clamp01(elapsed / playerSilhouetteDuration)
+            );
+
+            playerVisualRenderer.color = Color.Lerp(
+                playerOriginalColor,
+                targetColor,
+                t
+            );
+
+            yield return null;
+        }
+
+        if (playerVisualRenderer != null)
+            playerVisualRenderer.color = targetColor;
     }
 
     private IEnumerator FadeToBlack()
