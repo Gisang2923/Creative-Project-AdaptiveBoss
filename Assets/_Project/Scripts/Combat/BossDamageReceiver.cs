@@ -21,6 +21,7 @@ public class BossDamageReceiver : DamageReceiver
     private bool act1ClearPending;
     private bool isDead;
     private bool finalEndingActive;
+    private bool finalDeathAnimationEnded;
 
     public bool IsDead => isDead;
 
@@ -249,8 +250,46 @@ public class BossDamageReceiver : DamageReceiver
             $"Act1 Clear = {wasAct1}"
         );
     }
+    public bool CompleteFinalDeath()
+    {
+        GameProgression progression =
+            GameProgression.Instance;
+
+        if (!finalEndingActive || isDead ||
+            progression == null ||
+            progression.CurrentPhase != GamePhase.Act2Adaptive)
+            return false;
+
+        isDead = true;
+        finalDeathAnimationEnded = false;
+
+        bossAction?.ForceCancelAttack();
+        bossController?.SetDead();
+        bossMovement?.Stop();
+
+        if (rb != null)
+            rb.linearVelocity = Vector2.zero;
+
+        bossAnimator?.PlayDeath();
+        progression.RegisterVictory();
+
+        CombatLogger.Instance?
+            .SaveBattleLog("PlayerWin");
+
+        return true;
+    }
+
+    public bool FinalDeathAnimationEnded =>
+        finalDeathAnimationEnded;
+
     public void OnDeathAnimationEnd()
     {
+        if (finalEndingActive && isDead)
+        {
+            finalDeathAnimationEnded = true;
+            return;
+        }
+
         if (!act1ClearPending)
             return;
 

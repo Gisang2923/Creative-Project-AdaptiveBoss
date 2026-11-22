@@ -32,6 +32,7 @@ public class FinalEndingPresentationController : MonoBehaviour
 
     [Header("Battle References")]
     [SerializeField] private BossAnimator bossAnimator;
+    [SerializeField] private BossDamageReceiver bossDamageReceiver;
     [SerializeField] private AdaptivePresentationController adaptivePresentation;
     [SerializeField] private PlayerMovement playerMovement;
     [SerializeField] private PlayerInput playerInput;
@@ -144,17 +145,44 @@ public class FinalEndingPresentationController : MonoBehaviour
     [SerializeField] private string finalBlowPromptText =
         "[E] 최후의 일격";
 
+    [Header("Final Blow")]
+    [SerializeField, Min(0f)] private float finalStrikeImpactDelay = 0.35f;
+    [SerializeField, Min(0f)] private float bossDeathDelayAfterStrike = 0.4f;
+    [SerializeField, Min(0f)] private float bossDeathAnimationFallbackDuration = 3f;
+    [SerializeField] private string finalDeathSpeakerName = "보스";
+    [SerializeField, TextArea(2, 5)] private string[] finalDeathLines =
+    {
+        "그 맹세를…",
+        "끝까지 포기하지 않는가.",
+        "참으로 가련하군.",
+        "그럼에도 끝을 선택한 젊은 대적자여.",
+        "경의를 표하지."
+    };
+
+    [Header("Epilogue Pause")]
+    [SerializeField] private GameObject combatUiRoot;
+    [SerializeField, Min(0f)] private float controlReturnDelay = 0.8f;
+    [SerializeField, Min(0f)] private float epilogueFreeMoveDuration = 12f;
+    [SerializeField] private CanvasGroup endingFade;
+    [SerializeField, Min(0f)] private float endingFadeDuration = 1.5f;
+
+    private PlayerAnimator playerAnimator;
     private PlayerCombat playerCombat;
     private PlayerDash playerDash;
     private PlayerHeal playerHeal;
     private bool finaleStarted;
     private bool dialogueEnded;
     private bool dialogueSubscribed;
+    private bool finalBlowStarted;
+    private int promptShownFrame;
 
     public bool AwaitingFinalBlow { get; private set; }
 
     private void Awake()
     {
+        if (bossDamageReceiver == null && bossAnimator != null)
+            bossDamageReceiver = bossAnimator.GetComponent<BossDamageReceiver>();
+
         if (playerMovement != null)
         {
             if (playerInput == null)
@@ -163,15 +191,40 @@ public class FinalEndingPresentationController : MonoBehaviour
             playerCombat = playerMovement.GetComponent<PlayerCombat>();
             playerDash = playerMovement.GetComponent<PlayerDash>();
             playerHeal = playerMovement.GetComponent<PlayerHeal>();
+            playerAnimator = playerMovement.GetComponent<PlayerAnimator>();
         }
 
         if (finalBlowPromptRoot != null)
             finalBlowPromptRoot.SetActive(false);
+
+        if (endingFade != null)
+        {
+            endingFade.alpha = 0f;
+            endingFade.blocksRaycasts = false;
+        }
+    }
+
+    private void Update()
+    {
+        if (!AwaitingFinalBlow || finalBlowStarted ||
+            Time.frameCount <= promptShownFrame ||
+            Keyboard.current == null ||
+            !Keyboard.current.eKey.wasPressedThisFrame)
+            return;
+
+        finalBlowStarted = true;
+        AwaitingFinalBlow = false;
+
+        if (finalBlowPromptRoot != null)
+            finalBlowPromptRoot.SetActive(false);
+
+        StartCoroutine(FinalBlowRoutine());
     }
 
     private void OnDisable()
     {
         UnsubscribeDialogue();
+        playerAnimator?.ClearFinalStrikePresentation();
 
         if (finaleStarted)
         {
@@ -283,6 +336,109 @@ public class FinalEndingPresentationController : MonoBehaviour
             Debug.LogError("[Final Ending] Final Blow prompt is missing.");
 
         AwaitingFinalBlow = true;
+        promptShownFrame = Time.frameCount;
+    }
+
+    private IEnumerator FinalBlowRoutine()
+    {
+        if (playerMovement != null && bossAnimator != null)
+        {
+            playerMovement.ForceFacing(
+                bossAnimator.transform.position.x -
+                playerMovement.transform.position.x
+            );
+        }
+
+        if (playerAnimator == null)
+            Debug.LogWarning("[Final Ending] PlayerAnimator is missing.");
+        else if (!playerAnimator.TryPlayFinalStrike())
+            Debug.LogWarning("[Final Ending] FinalStrike missing; using LightAtk.");
+
+        yield return WaitUnscaled(finalStrikeImpactDelay);
+
+        if (dialogueController != null &&
+            finalDeathLines != null &&
+            finalDeathLines.Length > 0)
+        {
+            if (dialogueController.IsOpen)
+            {
+                Debug.LogError("[Final Ending] Final death dialogue is already open.");
+                yield break;
+            }
+
+            dialogueEnded = false;
+            dialogueController.OnDialogueEnded += HandleDialogueEnded;
+            dialogueSubscribed = true;
+            dialogueController.StartDialogue(
+                finalDeathSpeakerName,
+                finalDeathLines
+            );
+
+            while (!dialogueEnded)
+                yield return null;
+
+            UnsubscribeDialogue();
+        }
+
+        yield return WaitUnscaled(bossDeathDelayAfterStrike);
+
+        if (bossDamageReceiver == null ||
+            !bossDamageReceiver.CompleteFinalDeath())
+        {
+            Debug.LogError("[Final Ending] Boss final death could not complete.");
+            yield break;
+        }
+
+        float elapsed = 0f;
+        while (!bossDamageReceiver.FinalDeathAnimationEnded &&
+               elapsed < bossDeathAnimationFallbackDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            yield return null;
+        }
+
+        if (!bossDamageReceiver.FinalDeathAnimationEnded)
+            Debug.LogWarning("[Final Ending] Death animation event was missing.");
+
+        if (combatUiRoot != null)
+            combatUiRoot.SetActive(false);
+
+        yield return WaitUnscaled(controlReturnDelay);
+
+        playerAnimator?.ClearFinalStrikePresentation();
+        playerMovement?.SetInputLocked(false);
+        playerInput?.ActivateInput();
+
+        yield return WaitUnscaled(epilogueFreeMoveDuration);
+
+        playerMovement?.SetInputLocked(true);
+        playerInput?.DeactivateInput();
+
+        yield return FadeToBlack();
+    }
+
+    private IEnumerator FadeToBlack()
+    {
+        if (endingFade == null)
+        {
+            Debug.LogWarning("[Final Ending] Ending fade is missing.");
+            yield break;
+        }
+
+        endingFade.alpha = 0f;
+        endingFade.blocksRaycasts = true;
+
+        float elapsed = 0f;
+        while (elapsed < endingFadeDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            endingFade.alpha = Mathf.Clamp01(
+                elapsed / endingFadeDuration
+            );
+            yield return null;
+        }
+
+        endingFade.alpha = 1f;
     }
 
     private IEnumerator WaitUnscaled(float duration)

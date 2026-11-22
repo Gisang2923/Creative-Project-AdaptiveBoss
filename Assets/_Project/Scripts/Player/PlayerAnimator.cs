@@ -52,6 +52,8 @@ public class PlayerAnimator : MonoBehaviour
     Animator.StringToHash("Hurt");
     private static readonly int Death =
     Animator.StringToHash("Death");
+    private static readonly int FinalStrike =
+        Animator.StringToHash("Base Layer.FinalStrike");
     private static readonly int DashAttack =
     Animator.StringToHash("DashAttack");
     private static readonly int EnhancedDashAttackPrepare =
@@ -78,6 +80,7 @@ public class PlayerAnimator : MonoBehaviour
     private int currentState = -1;
     private float presentationPreviousSpeed;
     private bool presentationFrozen;
+    private bool finalStrikePresentation;
 
     private void Awake()
     {
@@ -97,6 +100,7 @@ public class PlayerAnimator : MonoBehaviour
     private void OnDisable()
     {
         ResumePresentationAnimation();
+        ClearFinalStrikePresentation();
     }
 
     private void UpdateMovementAnimation()
@@ -104,10 +108,11 @@ public class PlayerAnimator : MonoBehaviour
         if (damageReceiver != null && damageReceiver.IsDead)
         {
             ResumePresentationAnimation();
+            ClearFinalStrikePresentation();
             PlayState(Death);
             return;
         }
-        if (presentationFrozen)
+        if (presentationFrozen || finalStrikePresentation)
             return;
         if (damageReceiver != null &&
             damageReceiver.IsKnockedDown)
@@ -278,6 +283,36 @@ public class PlayerAnimator : MonoBehaviour
             animator.speed = presentationPreviousSpeed;
 
         presentationFrozen = false;
+    }
+
+    public bool TryPlayFinalStrike()
+    {
+        if (animator == null)
+            return false;
+
+        ResumePresentationAnimation();
+
+        bool hasFinalStrike =
+            animator.HasState(0, FinalStrike);
+
+        int stateHash = hasFinalStrike
+            ? FinalStrike
+            : LightAttack;
+
+        finalStrikePresentation = true;
+        currentState = stateHash;
+        animator.Play(stateHash, 0, 0f);
+
+        return hasFinalStrike;
+    }
+
+    public void ClearFinalStrikePresentation()
+    {
+        if (!finalStrikePresentation)
+            return;
+
+        finalStrikePresentation = false;
+        currentState = -1;
     }
 
     public void PlayPerfectDodge()
