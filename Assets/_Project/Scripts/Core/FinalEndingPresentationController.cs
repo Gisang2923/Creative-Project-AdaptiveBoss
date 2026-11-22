@@ -207,7 +207,10 @@ public class FinalEndingPresentationController : MonoBehaviour
             );
         }
 
-        battleBgmSource?.Stop();
+        if (battleBgmSource != null)
+        {
+            battleBgmSource.Stop();
+        }
 
         if (finalBlowPromptRoot != null)
             finalBlowPromptRoot.SetActive(false);
