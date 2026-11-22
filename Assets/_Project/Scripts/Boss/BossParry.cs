@@ -183,7 +183,9 @@ public class BossParry : MonoBehaviour
     }
     public void OnCounterHitboxOn()
     {
-        if (counterHitbox == null || counterAttackData == null)
+        if (!isParrying ||
+            counterHitbox == null ||
+            counterAttackData == null)
             return;
 
         counterHitbox.Activate(counterAttackData);

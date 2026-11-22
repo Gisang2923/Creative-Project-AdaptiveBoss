@@ -55,6 +55,14 @@ public class HitStopManager : MonoBehaviour
             );
     }
 
+    public void RestoreNormalSpeedAfterCurrentStop()
+    {
+        if (hitStopRoutine != null)
+            restoreTimeScale = 1f;
+        else
+            Time.timeScale = 1f;
+    }
+
     private IEnumerator HitStopRoutine()
     {
         Time.timeScale = 0f;

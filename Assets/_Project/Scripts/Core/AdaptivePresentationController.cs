@@ -71,6 +71,8 @@ public class AdaptivePresentationController
 
 
     private Coroutine presentationRoutine;
+    private float presentationStartCameraSize;
+    private bool cameraSizeCaptured;
 
 
     private void Awake()
@@ -113,6 +115,22 @@ public class AdaptivePresentationController
             .Hide();
     }
 
+    public void StopForFinale()
+    {
+        if (presentationRoutine != null)
+        {
+            StopCoroutine(presentationRoutine);
+            presentationRoutine = null;
+        }
+
+        if (cameraSizeCaptured && targetCamera != null)
+            targetCamera.orthographicSize =
+                presentationStartCameraSize;
+
+        cameraSizeCaptured = false;
+        enabled = false;
+    }
+
 
     private void HandleAdaptiveSuccess(
         AdaptiveHabitType habit)
@@ -149,6 +167,9 @@ public class AdaptivePresentationController
             targetCamera != null
                 ? targetCamera.orthographicSize
                 : 6f;
+
+        presentationStartCameraSize = startCameraSize;
+        cameraSizeCaptured = true;
 
         float targetCameraSize =
             Mathf.Max(
@@ -314,6 +335,7 @@ public class AdaptivePresentationController
         Time.timeScale =
             previousTimeScale;
 
+        cameraSizeCaptured = false;
         presentationRoutine = null;
     }
 

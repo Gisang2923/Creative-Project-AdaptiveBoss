@@ -2174,6 +2174,9 @@ MonoBehaviour:
   - "\uB098\uB294 \uADF8\uC640 \uB9C8\uC9C0\uB9C9\uAE4C\uC9C0 \uB300\uC801\uD588\uB358
     \uC790,"
   - "\uC774\uB984\uC740 \uC78A\uC740\uC9C0 \uC624\uB798\uB2E4"
+  act1RecoveryDialogueLines:
+  - "\uB2E4\uC2DC \uB3CC\uC544\uC654\uAD70."
+  act1RecoveryDialogueByStage: []
   farewellDialogueLines:
   - "\uD589\uC6B4\uC744 \uBE48\uB2E4.. \uC80A\uC740 \uB300\uC801\uC790\uC5EC"
   maxStatsLines:
@@ -2197,6 +2200,40 @@ MonoBehaviour:
   - "\uC544\uBB34\uB798\uB3C4 \uB2E4\uC2DC \uD55C \uBC88 \uADF8\uB188\uC744 \uCC98\uB9AC\uD574\uC57C
     \uD560 \uAC83 \uAC19\uC544."
   - "\uADF8\uB300\uC5D0\uAC8C\uB294 \uC5B4\uB824\uC6B4 \uC77C\uC740 \uC544\uB2C8\uACA0\uC9C0?"
+  act2DiscoveryPlayerLines:
+  - "\uC800 \uC0AC\uB78C... \uC774\uC0C1\uD574\uC694."
+  - "\uC81C\uAC00 \uC5B4\uB5BB\uAC8C \uC6C0\uC9C1\uC77C\uC9C0 \uC54C\uACE0 \uC788\uB294
+    \uAC83 \uAC19\uC544\uC694."
+  - "\uCAD3\uC544\uAC00\uBA74 \uBA3C\uC800 \uBE60\uC9C0\uACE0..."
+  - "\uC81C\uAC00 \uACF5\uACA9\uD558\uB824\uB294 \uC21C\uAC04\uB3C4 \uAE30\uB2E4\uB9AC\uACE0
+    \uC788\uC5B4\uC694."
+  act2DiscoveryNpcLines:
+  - "...\uC7A0\uAE50."
+  - "\uC790\uB124\uAC00 \uCAD3\uC544\uAC00\uBA74 \uBA3C\uC800 \uBB3C\uB7EC\uB09C\uB2E4\uACE0?"
+  - "...\uADF8 \uC6C0\uC9C1\uC784\uC744 \uC54C\uACE0 \uC788\uB124."
+  - "\uB098\uB3C4 \uADF8\uB807\uAC8C \uC2F8\uC6E0\uC73C\uB2C8\uAE4C."
+  act2TruthNpcIntroLines:
+  - "...\uC7A0\uAE50."
+  - "\uC774\uC81C \uC54C \uAC83 \uAC19\uAD70."
+  - "\uC800\uC790\uB294 \uCC98\uC74C\uBD80\uD130 \uC800\uB807\uAC8C \uC2F8\uC6E0\uB358
+    \uAC8C \uC544\uB2C8\uC57C."
+  - "\uC6B0\uB9AC\uC5D0\uAC8C\uC11C \uBC30\uC6B4 \uAC70\uC600\uC5B4."
+  act2TruthPlayerLines:
+  - "\uC6B0\uB9AC\uC5D0\uAC8C\uC11C\uC694?"
+  act2TruthNpcConclusionLines:
+  - "\uADF8\uB798."
+  - "\uC6B0\uB9AC\uAC00 \uC8FD\uC744 \uB54C\uB9C8\uB2E4,"
+  - "\uADF8\uC790\uC5D0\uAC8C \uBB34\uC5B8\uAC00\uB97C \uB0A8\uAE30\uACE0 \uC788\uC5C8\uB358
+    \uAC70\uC57C."
+  - "\uB0B4 \uC6C0\uC9C1\uC784\uB3C4,"
+  - "\uADF8\uB9AC\uACE0 \uC9C0\uAE08\uC740 \uC790\uB124\uC758 \uC6C0\uC9C1\uC784\uB3C4."
+  - "\uAC15\uD574\uC9C0\uB294 \uAC83\uB9CC\uC73C\uB85C\uB294 \uBD80\uC871\uD558\uACA0\uAD70."
+  - "\uB188\uC774 \uC54C\uACE0 \uC788\uB294 \uC790\uB124\uC640"
+  - "\uB2E4\uB978 \uC0AC\uB78C\uC774 \uB418\uAC8C."
+  act2RepeatDefeatLines:
+  - "\uC774\uBC88\uC5D0\uB3C4... \uC2E4\uD328\uC778\uAC00."
+  - "\uC790\uB124\uAC00 \uC54C\uB358 \uC790\uB124\uC758 \uC6C0\uC9C1\uC784\uC744
+    \uBC84\uB824."
   interactPrompt: {fileID: 614930918}
 --- !u!61 &677738023
 BoxCollider2D:
@@ -4545,13 +4582,10 @@ MonoBehaviour:
   pointText: {fileID: 913395340}
   attackValueText: {fileID: 736745419}
   healthValueText: {fileID: 165522449}
-  mentalValueText: {fileID: 773338616}
   attackMinusButton: {fileID: 194417516}
   attackPlusButton: {fileID: 168867547}
   healthMinusButton: {fileID: 95538434}
   healthPlusButton: {fileID: 162885384}
-  mentalMinusButton: {fileID: 1164553282}
-  mentalPlusButton: {fileID: 1002833531}
   closeButton: {fileID: 1835488325}
 --- !u!1 &1696320181
 GameObject:

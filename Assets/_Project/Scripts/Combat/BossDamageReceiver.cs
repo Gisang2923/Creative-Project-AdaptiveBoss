@@ -12,6 +12,7 @@ public class BossDamageReceiver : DamageReceiver
     [SerializeField] private HitFlash hitFlash;
     [SerializeField] private BossHitReaction hitReaction;
     [SerializeField] private HitVFXSpawner hitVfxSpawner;
+    [SerializeField] private FinalEndingPresentationController finalEndingController;
     [Header("Act1 Clear")]
     [SerializeField]
     private float deathEventFallbackDelay =
@@ -19,6 +20,7 @@ public class BossDamageReceiver : DamageReceiver
 
     private bool act1ClearPending;
     private bool isDead;
+    private bool finalEndingActive;
 
     public bool IsDead => isDead;
 
@@ -59,13 +61,22 @@ public class BossDamageReceiver : DamageReceiver
     public override void TakeDamage(
         DamageInfo damageInfo)
     {
-        if (isDead)
+        if (isDead || finalEndingActive)
             return;
 
 
         bool wasPrecisionStunned =
             bossController != null &&
             bossController.IsPrecisionStunned;
+
+        PlayerCombat attackerCombat =
+            damageInfo.Attacker != null
+                ? damageInfo.Attacker.GetComponent<PlayerCombat>()
+                : null;
+
+        bool isComboFinisher =
+            attackerCombat != null &&
+            attackerCombat.CurrentNormalComboStep == 3;
 
 
         base.TakeDamage(
@@ -83,16 +94,6 @@ public class BossDamageReceiver : DamageReceiver
                     ? damageInfo.Attacker
                         .GetComponent<PlayerSFX>()
                     : null;
-
-            PlayerCombat attackerCombat =
-                damageInfo.Attacker != null
-                    ? damageInfo.Attacker
-                        .GetComponent<PlayerCombat>()
-                    : null;
-
-            bool isComboFinisher =
-                attackerCombat != null &&
-                attackerCombat.CurrentNormalComboStep == 3;
 
             bool isStrongHit =
                 isComboFinisher ||
@@ -122,7 +123,7 @@ public class BossDamageReceiver : DamageReceiver
             );
         }
         // 데미지 처리 중 사망했다면 종료
-        if (isDead)
+        if (isDead || finalEndingActive)
             return;
 
 
@@ -156,14 +157,36 @@ public class BossDamageReceiver : DamageReceiver
 
     private void HandleDeath()
     {
-        if (isDead)
+        if (isDead || finalEndingActive)
             return;
-
-        isDead = true;
-
 
         GameProgression progression =
             GameProgression.Instance;
+
+        if (progression != null &&
+            progression.CurrentPhase == GamePhase.Act2Adaptive)
+        {
+            finalEndingActive = true;
+
+            bossAction?.ForceCancelAttack();
+            bossController?.SetDead();
+            bossMovement?.Stop();
+
+            if (rb != null)
+                rb.linearVelocity =
+                    new Vector2(0f, rb.linearVelocity.y);
+
+            if (finalEndingController != null)
+                finalEndingController.BeginFinale();
+            else
+                Debug.LogError(
+                    "[Final Ending] Controller is missing."
+                );
+
+            return;
+        }
+
+        isDead = true;
 
         bool wasAct1 =
             progression != null &&

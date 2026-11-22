@@ -51,6 +51,8 @@ public class BossAnimator : MonoBehaviour
         Animator.StringToHash("BossCounterHit");
     private static readonly int Death =
         Animator.StringToHash("Death");
+    private static readonly int FinalKneel =
+        Animator.StringToHash("Base Layer.FinalKneel");
 
     private static readonly int Parry =
         Animator.StringToHash("Parry");
@@ -77,6 +79,17 @@ public class BossAnimator : MonoBehaviour
     public void PlayDeath()
     {
         PlayAction(Death);
+    }
+    public bool TryPlayFinalKneel()
+    {
+        if (animator == null ||
+            !animator.HasState(0, FinalKneel))
+            return false;
+
+        animator.SetBool(IsMoving, false);
+        currentState = FinalKneel;
+        animator.Play(FinalKneel, 0, 0f);
+        return true;
     }
     public void PlayHit()
     {
