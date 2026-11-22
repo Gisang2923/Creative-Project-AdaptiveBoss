@@ -37,9 +37,6 @@ public class BossBattleIntroController : MonoBehaviour
     private PlayerMovement playerMovement;
 
     [SerializeField]
-    private PlayerAnimator playerAnimator;
-
-    [SerializeField]
     private CharacterSpeechBubble playerBubble;
 
 
@@ -121,12 +118,6 @@ public class BossBattleIntroController : MonoBehaviour
             fearVolume.weight = 0f;
         }
 
-        if (playerAnimator == null && playerMovement != null)
-        {
-            playerAnimator =
-                playerMovement.GetComponent<PlayerAnimator>();
-        }
-
         if (bossSFX == null &&
             bossController != null)
         {
@@ -158,8 +149,6 @@ public class BossBattleIntroController : MonoBehaviour
         {
             LockPlayer();
             FaceBoss();
-            playerAnimator?.PlayFearFrozen();
-
             StartCoroutine(
                 FirstEncounterRoutine()
             );
