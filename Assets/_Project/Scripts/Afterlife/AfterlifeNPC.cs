@@ -36,6 +36,7 @@ public class AfterlifeNPC : MonoBehaviour
         Act2TruthNpcIntro,
         Act2TruthPlayer,
         Act2TruthNpcConclusion,
+        Act2RepeatDefeat,
 
         Finished
     }
@@ -157,6 +158,14 @@ public class AfterlifeNPC : MonoBehaviour
         "다른 사람이 되게."
     };
 
+    [Header("Act2 Repeat Defeat")]
+    [SerializeField, TextArea(2, 4)]
+    private string[] act2RepeatDefeatLines =
+    {
+        "다시 왔군.",
+        "아직 놈이 알고 있는 방식대로 움직이고 있는 건가."
+    };
+
     [Header("UI")]
     [SerializeField]
     private GameObject interactPrompt;
@@ -192,17 +201,26 @@ public class AfterlifeNPC : MonoBehaviour
             state =
                 NpcState.Act2TruthNpcIntro;
         }
+        else if (progression != null &&
+                 progression.CurrentPhase == GamePhase.Act1 &&
+                 progression.PendingGrowthPoints > 0 &&
+                 progression.HasMetAfterlifeNpc)
+        {
+            state =
+                NpcState.Act1RecoveryDialogue;
+        }
+        else if (progression != null &&
+                 progression.CurrentPhase == GamePhase.Act2Adaptive &&
+                 progression.PendingGrowthPoints > 0)
+        {
+            state =
+                NpcState.Act2RepeatDefeat;
+        }
         else if (progression == null ||
                  !progression.HasMetAfterlifeNpc)
         {
             state =
                 NpcState.FirstDialogue;
-        }
-        else if (progression.CurrentPhase == GamePhase.Act1 &&
-                 progression.PendingGrowthPoints > 0)
-        {
-            state =
-                NpcState.Act1RecoveryDialogue;
         }
         else
         {
@@ -446,6 +464,16 @@ public class AfterlifeNPC : MonoBehaviour
                     );
 
                 break;
+
+            case NpcState.Act2RepeatDefeat:
+
+                dialogueController
+                    .StartDialogue(
+                        speakerName,
+                        act2RepeatDefeatLines
+                    );
+
+                break;
         }
     }
 
@@ -514,6 +542,17 @@ public class AfterlifeNPC : MonoBehaviour
                 .CompleteAct2TruthDialogue();
 
             progression?
+                .ClaimGrowthPoint();
+
+            EnterMenuReady();
+
+            return;
+        }
+
+        if (state ==
+            NpcState.Act2RepeatDefeat)
+        {
+            GameProgression.Instance?
                 .ClaimGrowthPoint();
 
             EnterMenuReady();
@@ -844,7 +883,9 @@ public class AfterlifeNPC : MonoBehaviour
             state ==
                 NpcState.Act2DiscoveryPlayer ||
             state ==
-                NpcState.Act2TruthNpcIntro)
+                NpcState.Act2TruthNpcIntro ||
+            state ==
+                NpcState.Act2RepeatDefeat)
         {
             SetPrompt(true);
         }
