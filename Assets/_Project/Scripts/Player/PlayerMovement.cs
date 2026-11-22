@@ -631,6 +631,15 @@ public class PlayerMovement : MonoBehaviour
         jumpBufferCounter = 0f;
         jumpReleased = false;
 
+        if (locked)
+        {
+            isDashAttacking = false;
+            dashAttackMoveSpeed = 0f;
+            isNormalAttackMoving = false;
+            normalAttackMoveSpeed = 0f;
+            normalAttackMoveTimer = 0f;
+        }
+
         if (rb != null)
         {
             rb.linearVelocity =

@@ -7,7 +7,8 @@ public class GameProgression : MonoBehaviour
 
     public const int MaxAttackLevel = 5;
     public const int MaxHealthLevel = 5;
-    public const int MaxMentalLevel = 4;
+    public const int MaxFearRecoveryStage = 8;
+    public const int PrecisionUnlockStage = 4;
 
     [Header("Game Phase")]
     [SerializeField]
@@ -21,10 +22,11 @@ public class GameProgression : MonoBehaviour
     [SerializeField, Range(0, MaxHealthLevel)]
     private int healthLevel = 0;
 
-    // 0 = 첫 조우 전용 상태
-    // 첫 강제 사망 후 자동으로 Lv.1
-    [SerializeField, Range(0, MaxMentalLevel)]
-    private int mentalLevel = 0;
+    [SerializeField, Range(0, MaxFearRecoveryStage)]
+    private int fearRecoveryStage = 0;
+
+    [SerializeField]
+    private bool fearRecoveryPending = false;
 
     [SerializeField]
     private int growthPoints = 0;
@@ -36,12 +38,6 @@ public class GameProgression : MonoBehaviour
     [SerializeField]
     private int victoryCount = 0;
 
-    [Header("Mental Test Value")]
-    [Tooltip("0.1 = 해당 능력치 90% 감소")]
-    [SerializeField, Range(0.01f, 1f)]
-    
-    private float suppressedStatMultiplier = 0.1f;
-
     [SerializeField]
     private int pendingGrowthPoints = 0;
 
@@ -50,13 +46,15 @@ public class GameProgression : MonoBehaviour
     private bool firstRecoveryLineShown = false;
 
     [SerializeField]
-    private int lastPresentedMentalLevel = 0;
+    private int lastPresentedFearRecoveryStage = 0;
     [SerializeField]
     private bool act2IntroShown = false;
     [SerializeField]
     private bool act2FirstDefeatDialoguePending = false;
     [SerializeField]
     private bool act2FirstDefeatDialogueShown = false;
+    [SerializeField]
+    private bool afterlifeNpcMet = false;
     public int PendingGrowthPoints =>
         pendingGrowthPoints;
     public GamePhase CurrentPhase =>
@@ -68,8 +66,8 @@ public class GameProgression : MonoBehaviour
     public int HealthLevel =>
         healthLevel;
 
-    public int MentalLevel =>
-        mentalLevel;
+    public int FearRecoveryStage =>
+        fearRecoveryStage;
 
     public int GrowthPoints =>
         growthPoints;
@@ -93,17 +91,19 @@ public class GameProgression : MonoBehaviour
         act2FirstDefeatDialoguePending &&
         !act2FirstDefeatDialogueShown;
 
+    public bool HasMetAfterlifeNpc =>
+        afterlifeNpcMet;
+
     public bool IsCompleted =>
         currentPhase ==
         GamePhase.Completed;
 
     public bool PrecisionUnlocked =>
-        mentalLevel >= MaxMentalLevel &&
+        fearRecoveryStage >= PrecisionUnlockStage &&
         currentPhase != GamePhase.FirstEncounter;
     public bool AreAllStatsMax =>
         attackLevel >= MaxAttackLevel &&
-        healthLevel >= MaxHealthLevel &&
-        mentalLevel >= MaxMentalLevel;
+        healthLevel >= MaxHealthLevel;
     public event Action OnProgressionChanged;
     public event Action<GamePhase> OnPhaseChanged;
 
@@ -137,6 +137,12 @@ public class GameProgression : MonoBehaviour
         // 사후세계 NPC에게 받을 보상으로 저장
         pendingGrowthPoints++;
 
+        if (currentPhase == GamePhase.FirstEncounter ||
+            currentPhase == GamePhase.Act1)
+        {
+            fearRecoveryPending = true;
+        }
+
         if (currentPhase == GamePhase.Act2Adaptive &&
             !act2FirstDefeatDialoguePending &&
             !act2FirstDefeatDialogueShown)
@@ -147,12 +153,6 @@ public class GameProgression : MonoBehaviour
         if (currentPhase ==
             GamePhase.FirstEncounter)
         {
-            mentalLevel =
-                Mathf.Max(
-                    1,
-                    mentalLevel
-                );
-
             SetPhase(
                 GamePhase.Act1
             );
@@ -166,7 +166,7 @@ public class GameProgression : MonoBehaviour
             $"GP {growthPoints} | " +
             $"ATK {attackLevel} | " +
             $"HP {healthLevel} | " +
-            $"MENTAL {mentalLevel} | " +
+            $"FEAR RECOVERY {fearRecoveryStage} | " +
             $"Phase {currentPhase}"
         );
     }
@@ -257,78 +257,38 @@ public class GameProgression : MonoBehaviour
         return true;
     }
 
-    public bool TryUpgradeMental()
+    public bool AdvanceFearRecovery()
     {
-        if (!CanSpendPoint() ||
-            mentalLevel <= 0 ||
-            mentalLevel >= MaxMentalLevel)
+        if (currentPhase != GamePhase.Act1 ||
+            !fearRecoveryPending)
         {
             return false;
         }
 
-        growthPoints--;
-        mentalLevel++;
+        fearRecoveryPending = false;
 
+        if (fearRecoveryStage >= MaxFearRecoveryStage)
+            return false;
+
+        fearRecoveryStage++;
         NotifyChanged();
-
         return true;
     }
 
-    public float GetMentalMoveMultiplier()
-    {
-        if (currentPhase ==
-            GamePhase.FirstEncounter)
-        {
-            return 0f;
-        }
-
-        // Mental Lv.1만 이동속도 감소
-        return mentalLevel <= 1
-            ? suppressedStatMultiplier
-            : 1f;
-    }
-
-    public float GetMentalHealthMultiplier()
-    {
-        if (currentPhase ==
-            GamePhase.FirstEncounter)
-        {
-            return 0f;
-        }
-
-        // Mental Lv.1~2 체력 감소
-        return mentalLevel <= 2
-            ? suppressedStatMultiplier
-            : 1f;
-    }
-
-    public float GetMentalAttackMultiplier()
-    {
-        if (currentPhase ==
-            GamePhase.FirstEncounter)
-        {
-            return 0f;
-        }
-
-        // Mental Lv.1~3 공격력 감소
-        return mentalLevel <= 3
-            ? suppressedStatMultiplier
-            : 1f;
-    }
-    public bool TryConsumeMentalBattleReaction(
+    public bool TryConsumeFearRecoveryBattleReaction(
         out int level,
         out bool isFirstRecovery)
     {
-        level = mentalLevel;
+        level = fearRecoveryStage;
         isFirstRecovery = false;
 
-        if (currentPhase ==
-            GamePhase.FirstEncounter)
+        if (currentPhase !=
+            GamePhase.Act1)
         {
             return false;
         }
 
-        if (mentalLevel <= 0)
+        if (fearRecoveryStage <= 0)
             return false;
 
 
@@ -338,8 +298,8 @@ public class GameProgression : MonoBehaviour
         {
             firstRecoveryLineShown = true;
 
-            lastPresentedMentalLevel =
-                mentalLevel;
+            lastPresentedFearRecoveryStage =
+                fearRecoveryStage;
 
             isFirstRecovery = true;
 
@@ -348,16 +308,16 @@ public class GameProgression : MonoBehaviour
 
 
         // 이전 전투 이후
-        // Mental이 실제로 증가했을 때만 출력
-        if (mentalLevel <=
-            lastPresentedMentalLevel)
+        // 회복 단계가 실제로 증가했을 때만 출력
+        if (fearRecoveryStage <=
+            lastPresentedFearRecoveryStage)
         {
             return false;
         }
 
 
-        lastPresentedMentalLevel =
-            mentalLevel;
+        lastPresentedFearRecoveryStage =
+            fearRecoveryStage;
 
         return true;
     }
@@ -383,6 +343,10 @@ public class GameProgression : MonoBehaviour
 
         act2FirstDefeatDialoguePending = false;
         act2FirstDefeatDialogueShown = true;
+    }
+    public void MarkAfterlifeNpcMet()
+    {
+        afterlifeNpcMet = true;
     }
     private bool CanSpendPoint()
     {
@@ -454,7 +418,8 @@ public class GameProgression : MonoBehaviour
 
         attackLevel = 0;
         healthLevel = 0;
-        mentalLevel = 0;
+        fearRecoveryStage = 0;
+        fearRecoveryPending = false;
         growthPoints = 0;
         pendingGrowthPoints = 0;
 
@@ -462,10 +427,11 @@ public class GameProgression : MonoBehaviour
         victoryCount = 0;
 
         firstRecoveryLineShown = false;
-        lastPresentedMentalLevel = 0;
+        lastPresentedFearRecoveryStage = 0;
         act2IntroShown = false;
         act2FirstDefeatDialoguePending = false;
         act2FirstDefeatDialogueShown = false;
+        afterlifeNpcMet = false;
         NotifyChanged();
 
         OnPhaseChanged?

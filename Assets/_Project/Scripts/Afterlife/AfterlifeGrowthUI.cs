@@ -27,9 +27,6 @@ public class AfterlifeGrowthUI : MonoBehaviour
     [SerializeField]
     private TMP_Text healthValueText;
 
-    [SerializeField]
-    private TMP_Text mentalValueText;
-
     [Header("Attack")]
     [SerializeField]
     private Button attackMinusButton;
@@ -44,13 +41,6 @@ public class AfterlifeGrowthUI : MonoBehaviour
     [SerializeField]
     private Button healthPlusButton;
 
-    [Header("Mental")]
-    [SerializeField]
-    private Button mentalMinusButton;
-
-    [SerializeField]
-    private Button mentalPlusButton;
-
     [Header("Close")]
     [SerializeField]
     private Button closeButton;
@@ -64,7 +54,6 @@ public class AfterlifeGrowthUI : MonoBehaviour
     // 이번 UI에서만 임시로 찍은 값
     private int pendingAttack;
     private int pendingHealth;
-    private int pendingMental;
 
     public bool IsOpen =>
         statusPanel != null &&
@@ -90,14 +79,6 @@ public class AfterlifeGrowthUI : MonoBehaviour
 
         healthMinusButton?.onClick.AddListener(
             RemoveHealth
-        );
-
-        mentalPlusButton?.onClick.AddListener(
-            AddMental
-        );
-
-        mentalMinusButton?.onClick.AddListener(
-            RemoveMental
         );
 
         closeButton?.onClick.AddListener(
@@ -163,7 +144,6 @@ public class AfterlifeGrowthUI : MonoBehaviour
 
         pendingAttack = 0;
         pendingHealth = 0;
-        pendingMental = 0;
 
         playerMovement?
             .SetInputLocked(true);
@@ -186,8 +166,7 @@ public class AfterlifeGrowthUI : MonoBehaviour
             0,
             progression.GrowthPoints -
             pendingAttack -
-            pendingHealth -
-            pendingMental
+            pendingHealth
         );
     }
 
@@ -257,39 +236,6 @@ public class AfterlifeGrowthUI : MonoBehaviour
         RefreshUI();
     }
 
-    private void AddMental()
-    {
-        if (progression == null)
-            return;
-
-        int previewLevel =
-            progression.MentalLevel +
-            pendingMental;
-
-        if (previewLevel >=
-            GameProgression.MaxMentalLevel)
-        {
-            return;
-        }
-
-        if (AvailablePoints() <= 0)
-            return;
-
-        pendingMental++;
-
-        RefreshUI();
-    }
-
-    private void RemoveMental()
-    {
-        if (pendingMental <= 0)
-            return;
-
-        pendingMental--;
-
-        RefreshUI();
-    }
-
     private void RefreshUI()
     {
         if (progression == null)
@@ -302,10 +248,6 @@ public class AfterlifeGrowthUI : MonoBehaviour
         int healthPreview =
             progression.HealthLevel +
             pendingHealth;
-
-        int mentalPreview =
-            progression.MentalLevel +
-            pendingMental;
 
         if (pointText != null)
         {
@@ -323,12 +265,6 @@ public class AfterlifeGrowthUI : MonoBehaviour
         {
             healthValueText.text =
                 $"{healthPreview}";
-        }
-
-        if (mentalValueText != null)
-        {
-            mentalValueText.text =
-                $"{mentalPreview}";
         }
 
         bool hasPoint =
@@ -350,14 +286,6 @@ public class AfterlifeGrowthUI : MonoBehaviour
                 GameProgression.MaxHealthLevel;
         }
 
-        if (mentalPlusButton != null)
-        {
-            mentalPlusButton.interactable =
-                hasPoint &&
-                mentalPreview <
-                GameProgression.MaxMentalLevel;
-        }
-
         // 이전에 확정한 레벨은 감소 불가.
         // 이번 UI에서 올린 것만 되돌릴 수 있다.
         if (attackMinusButton != null)
@@ -372,11 +300,6 @@ public class AfterlifeGrowthUI : MonoBehaviour
                 pendingHealth > 0;
         }
 
-        if (mentalMinusButton != null)
-        {
-            mentalMinusButton.interactable =
-                pendingMental > 0;
-        }
     }
 
     private void ConfirmAndClose()
@@ -398,16 +321,8 @@ public class AfterlifeGrowthUI : MonoBehaviour
             progression.TryUpgradeHealth();
         }
 
-        for (int i = 0;
-             i < pendingMental;
-             i++)
-        {
-            progression.TryUpgradeMental();
-        }
-
         pendingAttack = 0;
         pendingHealth = 0;
-        pendingMental = 0;
 
         statusPanel?.SetActive(false);
 

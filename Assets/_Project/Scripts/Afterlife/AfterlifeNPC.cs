@@ -1,11 +1,23 @@
+using System;
 using UnityEngine;
 using UnityEngine.InputSystem;
 
 public class AfterlifeNPC : MonoBehaviour
 {
+    [Serializable]
+    private class Act1RecoveryDialogueEntry
+    {
+        [Range(1, GameProgression.MaxFearRecoveryStage)]
+        public int stage = 1;
+
+        [TextArea(2, 4)]
+        public string[] lines = Array.Empty<string>();
+    }
+
     private enum NpcState
     {
         FirstDialogue,
+        Act1RecoveryDialogue,
 
         MenuReady,
         MenuOpen,
@@ -48,6 +60,16 @@ public class AfterlifeNPC : MonoBehaviour
     private string[] firstDialogueLines;
 
     [SerializeField, TextArea(2, 4)]
+    private string[] act1RecoveryDialogueLines =
+    {
+        "다시 돌아왔군."
+    };
+
+    [SerializeField]
+    private Act1RecoveryDialogueEntry[] act1RecoveryDialogueByStage =
+        Array.Empty<Act1RecoveryDialogueEntry>();
+
+    [SerializeField, TextArea(2, 4)]
     private string[] farewellDialogueLines;
 
     [SerializeField, TextArea(2, 4)]
@@ -84,7 +106,9 @@ public class AfterlifeNPC : MonoBehaviour
         "그대에게는 어려운 일은 아니겠지?"
     };
 
-    private static readonly string[] act2DiscoveryPlayerLines =
+    [Header("Act2 First Defeat Event")]
+    [SerializeField, TextArea(2, 4)]
+    private string[] act2DiscoveryPlayerLines =
     {
         "저 사람... 이상해요.",
         "제가 어떻게 움직일지 알고 있는 것 같아요.",
@@ -92,7 +116,8 @@ public class AfterlifeNPC : MonoBehaviour
         "제가 공격하려는 순간도 기다리고 있어요."
     };
 
-    private static readonly string[] act2DiscoveryNpcLines =
+    [SerializeField, TextArea(2, 4)]
+    private string[] act2DiscoveryNpcLines =
     {
         "...잠깐.",
         "자네가 쫓아가면 먼저 물러난다고?",
@@ -128,6 +153,24 @@ public class AfterlifeNPC : MonoBehaviour
         {
             state =
                 NpcState.Act2DiscoveryPlayer;
+        }
+        else if (progression == null ||
+                 !progression.HasMetAfterlifeNpc)
+        {
+            state =
+                NpcState.FirstDialogue;
+        }
+        else if (progression.CurrentPhase == GamePhase.Act1 &&
+                 progression.PendingGrowthPoints > 0)
+        {
+            state =
+                NpcState.Act1RecoveryDialogue;
+        }
+        else
+        {
+            progression.ClaimGrowthPoint();
+            state =
+                NpcState.MenuReady;
         }
         SetPrompt(false);
 
@@ -253,6 +296,16 @@ public class AfterlifeNPC : MonoBehaviour
 
                 break;
 
+            case NpcState.Act1RecoveryDialogue:
+
+                dialogueController
+                    .StartDialogue(
+                        speakerName,
+                        GetAct1RecoveryDialogueLines()
+                    );
+
+                break;
+
             case NpcState.MaxStats:
 
                 dialogueController
@@ -351,6 +404,9 @@ public class AfterlifeNPC : MonoBehaviour
                 .CompleteAct2FirstDefeatDialogue();
 
             progression?
+                .MarkAfterlifeNpcMet();
+
+            progression?
                 .ClaimGrowthPoint();
 
             EnterMenuReady();
@@ -395,6 +451,9 @@ public class AfterlifeNPC : MonoBehaviour
             GameProgression.Instance?
                 .BeginAct2Adaptive();
 
+            GameProgression.Instance?
+                .MarkAfterlifeNpcMet();
+
             EnterMenuReady();
 
             return;
@@ -415,16 +474,22 @@ public class AfterlifeNPC : MonoBehaviour
             NpcState.FirstDialogue)
         {
             GameProgression.Instance?
-                .ClaimGrowthPoint();
-
+                .MarkAfterlifeNpcMet();
 
             Debug.Log(
                 "[Afterlife] " +
                 "First Dialogue Complete"
             );
 
+            CompleteAct1DeathVisit();
 
-            EnterMenuReady();
+            return;
+        }
+
+        if (state ==
+            NpcState.Act1RecoveryDialogue)
+        {
+            CompleteAct1DeathVisit();
 
             return;
         }
@@ -452,6 +517,49 @@ public class AfterlifeNPC : MonoBehaviour
 
             return;
         }
+    }
+    private void CompleteAct1DeathVisit()
+    {
+        GameProgression progression =
+            GameProgression.Instance;
+
+        if (progression != null &&
+            progression.ClaimGrowthPoint())
+        {
+            progression.AdvanceFearRecovery();
+        }
+
+        EnterMenuReady();
+    }
+    private string[] GetAct1RecoveryDialogueLines()
+    {
+        GameProgression progression =
+            GameProgression.Instance;
+
+        if (progression == null ||
+            act1RecoveryDialogueByStage == null)
+        {
+            return act1RecoveryDialogueLines;
+        }
+
+        int nextStage = Mathf.Min(
+            progression.FearRecoveryStage + 1,
+            GameProgression.MaxFearRecoveryStage
+        );
+
+        foreach (Act1RecoveryDialogueEntry entry in
+                 act1RecoveryDialogueByStage)
+        {
+            if (entry != null &&
+                entry.stage == nextStage &&
+                entry.lines != null &&
+                entry.lines.Length > 0)
+            {
+                return entry.lines;
+            }
+        }
+
+        return act1RecoveryDialogueLines;
     }
     private void EnterMenuReady()
     {
@@ -621,6 +729,8 @@ public class AfterlifeNPC : MonoBehaviour
         if (state ==
                 NpcState.FirstDialogue ||
             state ==
+                NpcState.Act1RecoveryDialogue ||
+            state ==
                 NpcState.MenuReady ||
             state ==
                 NpcState.ClearConfusion ||
@@ -655,7 +765,11 @@ public class AfterlifeNPC : MonoBehaviour
     private void SetPrompt(
         bool visible)
     {
-        interactPrompt?
-            .SetActive(visible);
+        if (interactPrompt == null)
+            return;
+
+        interactPrompt.SetActive(
+            visible
+        );
     }
 }

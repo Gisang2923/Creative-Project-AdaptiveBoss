@@ -1164,7 +1164,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: fe54fb2faef0c2e4a9a2124833e8eb0d, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Health
-  maxHealth: 1000
+  maxHealth: 10
 --- !u!4 &402595756
 Transform:
   m_ObjectHideFlags: 0
@@ -2984,6 +2984,7 @@ MonoBehaviour:
   bossHurtbox: {fileID: 214384418}
   bossAction: {fileID: 402595758}
   attackSelector: {fileID: 402595761}
+  bossBubble: {fileID: 931609173}
   playerInput: {fileID: 800044311}
   playerMovement: {fileID: 800044310}
   playerBubble: {fileID: 1708894664}
@@ -2992,6 +2993,9 @@ MonoBehaviour:
   initialHoldDuration: 1
   readyDuration: 2.11
   mentalReactionDuration: 1.2
+  act2IntroHoldDuration: 0.6
+  act2BossLineDuration: 1.4
+  act2BossLine: "\uB610 \uC654\uAD70."
   firstLineDuration: 1.5
   beforeReadyDelay: 0.4
   afterFearDelay: 0.2
@@ -5293,6 +5297,10 @@ MonoBehaviour:
   pendingGrowthPoints: 0
   firstRecoveryLineShown: 0
   lastPresentedMentalLevel: 0
+  act2IntroShown: 0
+  act2FirstDefeatDialoguePending: 0
+  act2FirstDefeatDialogueShown: 0
+  afterlifeNpcMet: 0
 --- !u!4 &1654378709
 Transform:
   m_ObjectHideFlags: 0

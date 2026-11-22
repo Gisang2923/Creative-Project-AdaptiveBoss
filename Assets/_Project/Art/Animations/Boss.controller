@@ -423,7 +423,7 @@ AnimatorState:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: Death 0
+  m_Name: Death
   m_Speed: 1
   m_CycleOffset: 0
   m_Transitions: []
@@ -465,10 +465,7 @@ AnimatorStateMachine:
     m_Position: {x: 640, y: -60, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 6387803124022572553}
-    m_Position: {x: 640, y: 70, z: 0}
-  - serializedVersion: 1
-    m_State: {fileID: 8229214970275132066}
-    m_Position: {x: 420, y: 150, z: 0}
+    m_Position: {x: 650, y: 70, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 4545603237506453801}
     m_Position: {x: 420, y: 240, z: 0}
@@ -516,10 +513,10 @@ AnimatorStateMachine:
     m_Position: {x: 430, y: -120, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 822764193298373054}
-    m_Position: {x: 452.76328, y: 523.47485, z: 0}
+    m_Position: {x: 410, y: 470, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -1474037073962384609}
-    m_Position: {x: 690, y: 520, z: 0}
+    m_Position: {x: 640, y: 470, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -3742059082104678629}
     m_Position: {x: 420, y: 380, z: 0}
@@ -528,10 +525,10 @@ AnimatorStateMachine:
     m_Position: {x: 420, y: -10, z: 0}
   - serializedVersion: 1
     m_State: {fileID: -9108278027184304219}
-    m_Position: {x: 670, y: 180, z: 0}
+    m_Position: {x: 650, y: 170, z: 0}
   - serializedVersion: 1
     m_State: {fileID: 2379575001632085702}
-    m_Position: {x: 705, y: 245, z: 0}
+    m_Position: {x: 420, y: 160, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
@@ -745,32 +742,6 @@ AnimatorState:
   m_CycleOffsetParameterActive: 0
   m_TimeParameterActive: 0
   m_Motion: {fileID: 7400000, guid: d335fc972f367a648bfde566d3d53246, type: 2}
-  m_Tag: 
-  m_SpeedParameter: 
-  m_MirrorParameter: 
-  m_CycleOffsetParameter: 
-  m_TimeParameter: 
---- !u!1102 &8229214970275132066
-AnimatorState:
-  serializedVersion: 6
-  m_ObjectHideFlags: 1
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: Death
-  m_Speed: 1
-  m_CycleOffset: 0
-  m_Transitions: []
-  m_StateMachineBehaviours: []
-  m_Position: {x: 50, y: 50, z: 0}
-  m_IKOnFeet: 0
-  m_WriteDefaultValues: 1
-  m_Mirror: 0
-  m_SpeedParameterActive: 0
-  m_MirrorParameterActive: 0
-  m_CycleOffsetParameterActive: 0
-  m_TimeParameterActive: 0
-  m_Motion: {fileID: 4348485665485846014, guid: f32cefafa87bf994ea9eb2a5ef9494b4, type: 3}
   m_Tag: 
   m_SpeedParameter: 
   m_MirrorParameter: 

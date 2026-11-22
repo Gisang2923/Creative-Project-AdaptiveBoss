@@ -138,8 +138,7 @@ public class PlayerProgressionRuntime :
         }
         if (!IsBattleScene())
         {
-            // 사후공간 등 비전투 씬에서는
-            // Mental 전투 패널티를 적용하지 않는다.
+            // 사후공간 등 비전투 씬에서는 전투 성장치를 적용하지 않는다.
             playerMovement?
                 .SetMoveSpeedMultiplier(1f);
 
@@ -161,7 +160,7 @@ public class PlayerProgressionRuntime :
             $"[Player Progression Applied] " +
             $"ATK Lv.{progression.AttackLevel} | " +
             $"HP Lv.{progression.HealthLevel} | " +
-            $"MENTAL Lv.{progression.MentalLevel}"
+            $"FEAR Stage {progression.FearRecoveryStage}"
         );
     }
 
@@ -179,18 +178,8 @@ public class PlayerProgressionRuntime :
                 1
             );
 
-        int finalMaxHealth =
-            Mathf.Max(
-                1,
-                Mathf.RoundToInt(
-                    baseMaxHealth *
-                    progression
-                        .GetMentalHealthMultiplier()
-                )
-            );
-
         health.SetMaxHealth(
-            finalMaxHealth,
+            baseMaxHealth,
             true
         );
     }
@@ -198,10 +187,7 @@ public class PlayerProgressionRuntime :
     private void ApplyMovement()
     {
         playerMovement?
-            .SetMoveSpeedMultiplier(
-                progression
-                    .GetMentalMoveMultiplier()
-            );
+            .SetMoveSpeedMultiplier(1f);
     }
 
     private void ApplyPrecision()
@@ -233,16 +219,11 @@ public class PlayerProgressionRuntime :
                 progression.AttackLevel
             );
 
-        float mentalMultiplier =
-            progression
-                .GetMentalAttackMultiplier();
-
         return Mathf.Max(
             1,
             Mathf.RoundToInt(
                 baseDamage *
-                attackLevelMultiplier *
-                mentalMultiplier
+                attackLevelMultiplier
             )
         );
     }

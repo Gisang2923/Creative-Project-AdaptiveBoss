@@ -2,6 +2,7 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
+using UnityEngine.Serialization;
 
 public class BossBattleIntroController : MonoBehaviour
 {
@@ -36,6 +37,9 @@ public class BossBattleIntroController : MonoBehaviour
     private PlayerMovement playerMovement;
 
     [SerializeField]
+    private PlayerAnimator playerAnimator;
+
+    [SerializeField]
     private CharacterSpeechBubble playerBubble;
 
 
@@ -46,6 +50,14 @@ public class BossBattleIntroController : MonoBehaviour
     [SerializeField]
     private float fearFadeDuration = 0.15f;
 
+    [SerializeField]
+    private float[] fearWeightsByStage =
+    {
+        1.00f, 0.92f, 0.82f,
+        0.70f, 0.58f, 0.45f,
+        0.32f, 0.16f, 0.00f
+    };
+
 
     [Header("Normal Intro")]
     [SerializeField]
@@ -55,7 +67,8 @@ public class BossBattleIntroController : MonoBehaviour
     private float readyDuration = 2.11f;
 
     [SerializeField]
-    private float mentalReactionDuration = 1.2f;
+    [FormerlySerializedAs("mentalReactionDuration")]
+    private float fearRecoveryReactionDuration = 1.2f;
 
     [Header("Act2 First Intro")]
     [SerializeField]
@@ -108,6 +121,12 @@ public class BossBattleIntroController : MonoBehaviour
             fearVolume.weight = 0f;
         }
 
+        if (playerAnimator == null && playerMovement != null)
+        {
+            playerAnimator =
+                playerMovement.GetComponent<PlayerAnimator>();
+        }
+
         if (bossSFX == null &&
             bossController != null)
         {
@@ -138,6 +157,8 @@ public class BossBattleIntroController : MonoBehaviour
         if (firstEncounter)
         {
             LockPlayer();
+            FaceBoss();
+            playerAnimator?.PlayFearFrozen();
 
             StartCoroutine(
                 FirstEncounterRoutine()
@@ -145,6 +166,8 @@ public class BossBattleIntroController : MonoBehaviour
 
             return;
         }
+
+        ApplyFearRecoveryWeight();
 
         StartCoroutine(
             NormalIntroRoutine()
@@ -218,7 +241,7 @@ public class BossBattleIntroController : MonoBehaviour
 
 
         // =====================================
-        // Mental Growth Reaction
+        // Fear Recovery Reaction
         //
         // Act2 첫 등장에서는 생략
         // =====================================
@@ -227,14 +250,14 @@ public class BossBattleIntroController : MonoBehaviour
             progression != null &&
             playerBubble != null &&
             progression
-                .TryConsumeMentalBattleReaction(
-                    out int mentalLevel,
+                .TryConsumeFearRecoveryBattleReaction(
+                    out int fearRecoveryStage,
                     out bool isFirstRecovery
                 ))
         {
             string reactionLine =
-                GetMentalReactionLine(
-                    mentalLevel,
+                GetFearRecoveryReactionLine(
+                    fearRecoveryStage,
                     isFirstRecovery
                 );
 
@@ -245,7 +268,7 @@ public class BossBattleIntroController : MonoBehaviour
                 yield return playerBubble
                     .ShowForSeconds(
                         reactionLine,
-                        mentalReactionDuration
+                        fearRecoveryReactionDuration
                     );
             }
         }
@@ -287,8 +310,8 @@ public class BossBattleIntroController : MonoBehaviour
             "[INTRO] Normal Battle Start"
         );
     }
-    private string GetMentalReactionLine(
-        int mentalLevel,
+    private string GetFearRecoveryReactionLine(
+        int fearRecoveryStage,
         bool isFirstRecovery)
     {
         // 첫 강제 사망 이후
@@ -300,7 +323,7 @@ public class BossBattleIntroController : MonoBehaviour
         }
 
 
-        switch (mentalLevel)
+        switch (fearRecoveryStage)
         {
             case 2:
                 return
@@ -312,11 +335,62 @@ public class BossBattleIntroController : MonoBehaviour
 
             case 4:
                 return
-                    "선명해... 이제 두렵지 않아.";
+                    "조금씩... 선명해지고 있어.";
 
             default:
                 return null;
         }
+    }
+
+    private void ApplyFearRecoveryWeight()
+    {
+        if (fearVolume == null)
+            return;
+
+        GameProgression progression =
+            GameProgression.Instance;
+
+        if (progression == null ||
+            progression.CurrentPhase != GamePhase.Act1)
+        {
+            fearVolume.weight = 0f;
+            return;
+        }
+
+        int stage = Mathf.Clamp(
+            progression.FearRecoveryStage,
+            0,
+            GameProgression.MaxFearRecoveryStage
+        );
+
+        if (fearWeightsByStage == null ||
+            fearWeightsByStage.Length <= stage)
+        {
+            Debug.LogWarning(
+                "[Fear] Stage weight is not configured."
+            );
+            fearVolume.weight = stage ==
+                GameProgression.MaxFearRecoveryStage ? 0f : 1f;
+            return;
+        }
+
+        fearVolume.weight = Mathf.Clamp01(
+            fearWeightsByStage[stage]
+        );
+    }
+
+    private void FaceBoss()
+    {
+        if (playerMovement == null ||
+            bossController == null)
+        {
+            return;
+        }
+
+        playerMovement.ForceFacing(
+            bossController.transform.position.x -
+            playerMovement.transform.position.x
+        );
     }
 
     // =====================================

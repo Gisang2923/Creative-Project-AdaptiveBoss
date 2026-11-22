@@ -52,6 +52,8 @@ public class PlayerAnimator : MonoBehaviour
     Animator.StringToHash("Hurt");
     private static readonly int Death =
     Animator.StringToHash("Death");
+    private static readonly int FearFrozen =
+    Animator.StringToHash("FearFrozen");
     private static readonly int DashAttack =
     Animator.StringToHash("DashAttack");
     private static readonly int EnhancedDashAttackPrepare =
@@ -74,6 +76,7 @@ public class PlayerAnimator : MonoBehaviour
     private static readonly int PerfectDodgeHash =
     Animator.StringToHash("PerfectDodge");
     private bool isPerfectDodging;
+    private bool presentationOverride;
     public bool IsPerfectDodging => isPerfectDodging;
     private int currentState = -1;
 
@@ -99,6 +102,8 @@ public class PlayerAnimator : MonoBehaviour
             PlayState(Death);
             return;
         }
+        if (presentationOverride)
+            return;
         if (damageReceiver != null &&
             damageReceiver.IsKnockedDown)
         {
@@ -248,6 +253,22 @@ public class PlayerAnimator : MonoBehaviour
             0f
         );
     }
+    public void PlayFearFrozen()
+    {
+        if (animator == null)
+            return;
+
+        presentationOverride = true;
+        currentState = FearFrozen;
+        animator.Play(FearFrozen, 0, 0f);
+    }
+
+    public void ClearPresentationOverride()
+    {
+        presentationOverride = false;
+        currentState = -1;
+    }
+
     public void PlayPerfectDodge()
     {
         isPerfectDodging = true;
