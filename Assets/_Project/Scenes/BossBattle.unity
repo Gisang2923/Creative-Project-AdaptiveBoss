@@ -482,143 +482,6 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
---- !u!1 &119774462
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 119774463}
-  - component: {fileID: 119774465}
-  - component: {fileID: 119774464}
-  m_Layer: 5
-  m_Name: DialogueText
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &119774463
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 119774462}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1155443143}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 200, y: 50}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &119774464
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 119774462}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_text: New Text
-  m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
-  m_fontMaterial: {fileID: 0}
-  m_fontMaterials: []
-  m_fontColor32:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
-  m_enableVertexGradient: 0
-  m_colorMode: 3
-  m_fontColorGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
-  m_fontColorGradientPreset: {fileID: 0}
-  m_spriteAsset: {fileID: 0}
-  m_tintAllSprites: 0
-  m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
-  m_overrideHtmlColors: 0
-  m_faceColor:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
-  m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
-  m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
-  m_textAlignment: 65535
-  m_characterSpacing: 0
-  m_characterHorizontalScale: 1
-  m_wordSpacing: 0
-  m_lineSpacing: 0
-  m_lineSpacingMax: 0
-  m_paragraphSpacing: 0
-  m_charWidthMaxAdj: 0
-  m_TextWrappingMode: 1
-  m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
-  m_linkedTextComponent: {fileID: 0}
-  parentLinkedComponent: {fileID: 0}
-  m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
-  m_enableExtraPadding: 0
-  checkPaddingRequired: 0
-  m_isRichText: 1
-  m_EmojiFallbackSupport: 1
-  m_parseCtrlCharacters: 1
-  m_isOrthographic: 1
-  m_isCullingEnabled: 0
-  m_horizontalMapping: 0
-  m_verticalMapping: 0
-  m_uvLineOffset: 0
-  m_geometrySortingOrder: 0
-  m_IsTextObjectScaleStatic: 0
-  m_VertexBufferAutoSizeReduction: 0
-  m_useMaxVisibleDescender: 1
-  m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
-  m_isUsingLegacyAnimationComponent: 0
-  m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
-  m_baseMaterial: {fileID: 0}
-  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!222 &119774465
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 119774462}
-  m_CullTransparentMesh: 1
 --- !u!1 &167254699
 GameObject:
   m_ObjectHideFlags: 0
@@ -710,6 +573,143 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &181760105
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 181760108}
+  - component: {fileID: 181760107}
+  - component: {fileID: 181760106}
+  m_Layer: 5
+  m_Name: DialogueText
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!114 &181760106
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 181760105}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: New Text
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 0fde3fa71cc426e40bf538c15ca17b84, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 36
+  m_fontSizeBase: 36
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 1
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &181760107
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 181760105}
+  m_CullTransparentMesh: 1
+--- !u!224 &181760108
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 181760105}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1536201627}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: -240}
+  m_SizeDelta: {x: -140, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &199636549
 GameObject:
   m_ObjectHideFlags: 0
@@ -740,11 +740,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::FinalEndingPresentationController
   bossAnimator: {fileID: 402595765}
+  bossDamageReceiver: {fileID: 402595764}
   adaptivePresentation: {fileID: 208444662}
   playerMovement: {fileID: 800044310}
   playerInput: {fileID: 800044311}
   battleBgmSource: {fileID: 0}
-  dialogueController: {fileID: 0}
+  dialogueController: {fileID: 2117135112}
   finalKneelDelay: 0.2
   finalDialogueBeats:
   - speakerName: "\uBCF4\uC2A4"
@@ -754,7 +755,7 @@ MonoBehaviour:
     pauseAfter: 1
   - speakerName: "\uB098"
     lines:
-    - "\u2026\uBB50\uAC00 \uB9D0\uC774\uC9C0?"
+    - "\u2026\u2026"
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uBCF4\uC2A4"
@@ -764,14 +765,13 @@ MonoBehaviour:
     pauseAfter: 0
   - speakerName: "\uB098"
     lines:
-    - "\uB05D?"
     - "\uB2F9\uC2E0\uC744 \uC4F0\uB7EC\uB728\uB9AC\uBA74 \uB05D\uB098\uB294 \uAC70
       \uC544\uB2CC\uAC00."
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uBCF4\uC2A4"
     lines:
-    - "\uB098\uB3C4 \uADF8\uB807\uAC8C \uC0DD\uAC01\uD588\uC5B4."
+    - "\uB098\uB3C4 \uADF8\uB807\uAC8C \uC0DD\uAC01\uD588\uB2E4."
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uB098"
@@ -781,160 +781,34 @@ MonoBehaviour:
     pauseAfter: 0
   - speakerName: "\uBCF4\uC2A4"
     lines:
-    - "\uB098\uB3C4 \uC790\uB124\uC640 \uAC19\uC558\uC73C\uB2C8\uAE4C."
+    - "\uB098\uB3C4 \uCC98\uC74C\uBD80\uD130 \uC774\uACF3\uC5D0 \uC788\uB358 \uAC74
+      \uC544\uB2C8\uC57C. \uC790\uB124\uCC98\uB7FC \uC774\uACF3\uC5D0 \uB4E4\uC5B4\uC654\uACE0,
+      \uC55E\uC744 \uB9C9\uB294 \uC790\uC640 \uC2F8\uC6E0\uB2E4. \uC4F0\uB7EC\uC9C0\uACE0
+      \uB2E4\uC2DC \uB3CC\uC544\uC624\uAE30\uB97C \uBA87 \uBC88\uC774\uACE0 \uBC18\uBCF5\uD588\uC9C0."
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uB098"
     lines:
-    - "\uB098\uC640 \uAC19\uC558\uB2E4\uACE0?"
+    - "\uB2F9\uC2E0\uB3C4\u2026 \uB3C4\uC804\uC790\uC600\uB2E4\uB294 \uAC74\uAC00?"
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uBCF4\uC2A4"
     lines:
-    - "\uC774\uACF3\uC5D0 \uB3C4\uCC29\uD588\uACE0."
-    - "\uB05D\uC5D0 \uC788\uB294 \uC790\uC640 \uC2F8\uC6E0\uC9C0."
-    - "\uC8FD\uACE0."
-    - "\uB3CC\uC544\uC624\uACE0."
-    - "\uB610 \uC2F8\uC6E0\uC5B4."
+    - "\uADF8\uB798. \uB098\uB3C4 \uC885\uACB0\uC744 \uC55E\uB450\uACE0 \uC788\uC5C8\uB2E4.
+      \uADF8 \uC55E\uC744 \uB9C9\uACE0 \uC788\uB358 \uC790\uB97C \uC4F0\uB7EC\uB728\uB9AC\uBA74
+      \uC774 \uBAA8\uB4E0 \uAC83\uC774 \uB05D\uB0A0 \uAC70\uB77C \uC0DD\uAC01\uD588\uC9C0."
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uB098"
     lines:
-    - "\u2026\uB2F9\uC2E0\uB3C4 \uB3C4\uC804\uC790\uC600\uB2E4\uB294 \uAC74\uAC00?"
+    - "\uADF8\uB7F0\uB370 \uC65C \uB2F9\uC2E0\uC774 \uC5EC\uAE30 \uC788\uC9C0?"
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uBCF4\uC2A4"
     lines:
-    - "\uADF8\uB798."
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uB098"
-    lines:
-    - "\uADF8\uB7FC \uB2F9\uC2E0\uC774 \uC4F0\uB7EC\uB728\uB9B0 \uC790\uB294?"
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uBCF4\uC2A4"
-    lines:
-    - "\uC9C0\uAE08\uC758 \uB098\uC640 \uAC19\uC740 \uC0AC\uB78C\uC774\uC5C8\uC9C0."
-    - "\uC544\uB9C8 \uADF8 \uC0AC\uB78C \uC804\uC5D0\uB3C4 \uB204\uAD70\uAC00 \uC788\uC5C8\uC744
-      \uAC70\uB2E4."
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uB098"
-    lines:
-    - "\uADF8\uB807\uB2E4\uBA74\u2026"
-    - "\uB0B4 \uC6C0\uC9C1\uC784\uC744 \uC54C\uACE0 \uC788\uC5C8\uB358 \uAC83\uB3C4
-      \uADF8 \uB54C\uBB38\uC778\uAC00?"
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uBCF4\uC2A4"
-    lines:
-    - "\uADF8\uAC74 \uC790\uB124 \uB54C\uBB38\uC774\uC9C0."
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uB098"
-    lines:
-    - "\uB098?"
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uBCF4\uC2A4"
-    lines:
-    - "\uC8FD\uC5B4\uC11C \uB3CC\uC544\uC62C \uB54C\uB9C8\uB2E4."
-    - "\uBAA8\uB4E0 \uAC83\uC774 \uC790\uB124\uC640 \uD568\uAED8 \uB3CC\uC544\uAC14\uB2E4\uACE0
-      \uC0DD\uAC01\uD588\uB098?"
-    - "\uC544\uB2C8."
-    - "\uB098\uB97C \uB05D\uB0B4\uACA0\uB2E4\uB294 \uC758\uC9C0."
-    - "\uB2E4\uC2DC \uC77C\uC5B4\uC11C\uAC8C \uD55C \uADF8 \uC758\uC9C0\uB294 \uC790\uB124\uC5D0\uAC8C
-      \uB3CC\uC544\uAC14\uB2E4."
-    - "\uD558\uC9C0\uB9CC \uC790\uB124\uAC00 \uC5B4\uB5BB\uAC8C \uC2F8\uC6E0\uB294\uC9C0\uB294\u2026"
-    - "\uC774\uACF3\uC5D0 \uB0A8\uC558\uC5B4."
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uB098"
-    lines:
-    - "\uADF8\uB798\uC11C \uB0B4 \uACF5\uACA9\uC744\u2026"
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uBCF4\uC2A4"
-    lines:
-    - "\uC790\uB124\uAC00 \uB098\uB97C \uBC30\uC6B4 \uB9CC\uD07C."
-    - "\uB098\uB3C4 \uC790\uB124\uB97C \uBC30\uC6E0\uB2E4."
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uB098"
-    lines:
-    - "\uADF8\uB7FC \uB098\uB97C \uACC4\uC18D \uC774\uACF3\uC73C\uB85C \uB3CC\uB824\uBCF4\uB0B4
-      \uC900 \uC0AC\uB78C\uC740?"
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uBCF4\uC2A4"
-    lines:
-    - "\u2026\uC544\uC9C1 \uADF8\uACF3\uC5D0 \uC788\uB098."
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uB098"
-    lines:
-    - "\uC54C\uACE0 \uC788\uB294 \uC0AC\uB78C\uC774\uC57C?"
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uBCF4\uC2A4"
-    lines:
-    - "\uC624\uB798\uC804\uC5D0 \uB098\uC640 \uC2F8\uC6E0\uB358 \uC0AC\uB78C\uC774\uC9C0."
-    - "\uBA87 \uBC88\uC744 \uC4F0\uB7EC\uB728\uB838\uB294\uC9C0\uB294 \uAE30\uC5B5\uB098\uC9C0
-      \uC54A\uC544."
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uB098"
-    lines:
-    - "\uADF8\uB7F0\uB370 \uC65C \uC9C0\uAE08\uC740 \uB3CC\uC544\uC624\uC9C0 \uBABB\uD558\uC9C0?"
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uBCF4\uC2A4"
-    lines:
-    - "\uB108\uBB34 \uB9CE\uC774 \uB0A8\uACBC\uC73C\uB2C8\uAE4C."
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uB098"
-    lines:
-    - "\u2026\uBB58?"
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uBCF4\uC2A4"
-    lines:
-    - "\uC790\uAE30 \uC790\uC2E0\uC744."
-    - "\uC8FD\uC744 \uB54C\uB9C8\uB2E4 \uC2F8\uC6C0\uC758 \uD754\uC801\uB9CC \uC774\uACF3\uC5D0
-      \uB0A8\uB294 \uAC74 \uC544\uB2C8\uC57C."
-    - "\uB3CC\uC544\uC624\uB294 \uCABD\uC5D0\uC11C\uB3C4 \uC870\uAE08\uC529 \uC783\uB294\uB2E4."
-    - "\uCC98\uC74C\uC5D0\uB294 \uC774\uB984\uC744 \uC78A\uACE0."
-    - "\uADF8\uB2E4\uC74C\uC5D0\uB294 \uC65C \uC2F8\uC6B0\uACE0 \uC788\uC5C8\uB294\uC9C0\uB97C
-      \uC78A\uC9C0."
-    - "\uADF8\uB798\uB3C4 \uB9F9\uC138\uB97C \uAE30\uC5B5\uD558\uB294 \uB3D9\uC548\uC5D0\uB294
-      \uB2E4\uC2DC \uB3CC\uC544\uC628\uB2E4."
-    - "\uD558\uC9C0\uB9CC \uC8FD\uC74C\uC744 \uBC18\uBCF5\uD558\uB2E4 \uBCF4\uBA74
-      \uADF8 \uB9F9\uC138\uB9C8\uC800 \uB2F3\uC544\uAC00\uC9C0."
-    - "\uC804\uC7A5\uC73C\uB85C \uB3CC\uC544\uAC08 \uB9CC\uD07C\uC758 \uC774\uC720\uB294
-      \uC783\uC5C8\uC9C0\uB9CC."
-    - "\uC644\uC804\uD788 \uB193\uC544\uBC84\uB9AC\uC9C0\uB3C4 \uBABB\uD55C \uC790\uB294\u2026
-      \uADF8\uACF3\uC5D0 \uB0A8\uAC8C \uB41C\uB2E4."
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uB098"
-    lines:
-    - "\uB9F9\uC138?"
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uBCF4\uC2A4"
-    lines:
-    - "\uB05D\uC744 \uBCF4\uACA0\uB2E4\uB294 \uAC83."
-    - "\uC4F0\uB7EC\uC838\uB3C4 \uB2E4\uC2DC \uC774\uACF3\uC5D0 \uC624\uACA0\uB2E4\uB294
-      \uAC83."
-    - "\uADF8\uAC8C \uBB34\uC5C7\uC774\uB4E0 \uC0C1\uAD00\uC5C6\uC5B4."
-    - "\uC790\uB124\uB294 \uC8FD\uC5C8\uB294\uB370\uB3C4 \uB2E4\uC2DC \uC654\uC5B4."
-    - "\uB610 \uC8FD\uC5C8\uB294\uB370\uB3C4 \uB3CC\uC544\uC654\uACE0."
-    - "\uB204\uAC00 \uAC15\uC694\uD55C \uAC83\uB3C4 \uC544\uB2CC\uB370 \uB9D0\uC774\uC57C."
-    - "\uB9E4\uBC88 \uC790\uB124\uAC00 \uC120\uD0DD\uD55C \uAC70\uB2E4."
-    - "\uB2E4\uC2DC \uB3CC\uC544\uC624\uB294 \uAC83\uC744."
-    - "\uB05D\uC744 \uBCF4\uB294 \uAC83\uC744."
+    - "\uADF8 \uC804\uC5D0 \uC790\uB124\uB3C4 \uB290\uB07C\uC9C0 \uC54A\uC558\uB098.
+      \uC2F8\uC6B8\uC218\uB85D \uB0B4\uAC00 \uC790\uB124\uC758 \uC6C0\uC9C1\uC784\uC744
+      \uC54C\uACE0 \uC788\uB2E4\uB294 \uAC78."
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uB098"
@@ -944,29 +818,73 @@ MonoBehaviour:
     pauseAfter: 0
   - speakerName: "\uBCF4\uC2A4"
     lines:
-    - "\uADF8\uAC8C \uC790\uB124\uC758 \uB9F9\uC138\uC600\uACA0\uC9C0."
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uBCF4\uC2A4"
-    lines:
-    - "\uB098\uB3C4 \uADF8\uB7AC\uC5B4."
-    - "\uC4F0\uB7EC\uC9C0\uBA74 \uB2E4\uC2DC \uC624\uBA74 \uB41C\uB2E4\uACE0 \uC0DD\uAC01\uD588\uC9C0."
-    - "\uC2E4\uC218\uD558\uBA74 \uB2E4\uC74C\uC5D0\uB294 \uB2E4\uB974\uAC8C \uD558\uBA74
-      \uB410\uACE0."
-    - "\uADF8\uC790\uB97C \uC4F0\uB7EC\uB728\uB9AC\uBA74 \uB3CC\uC544\uAC08 \uC218
-      \uC788\uC744 \uAC70\uB77C\uACE0 \uC0DD\uAC01\uD588\uC5B4."
+    - "\uC8FD\uB294\uB2E4\uACE0 \uBAA8\uB4E0 \uAC83\uC774 \uCC98\uC74C\uC73C\uB85C
+      \uB3CC\uC544\uAC00\uB294 \uAC74 \uC544\uB2C8\uC57C. \uBAB8\uC740 \uB3CC\uC544\uC624\uC9C0\uB9CC,
+      \uADF8\uACF3\uC5D0\uC11C \uC788\uC5C8\uB358 \uC77C\uAE4C\uC9C0 \uC0AC\uB77C\uC9C0\uB294
+      \uAC83\uC740 \uC544\uB2C8\uC9C0. \uC790\uB124\uAC00 \uC5B4\uB5BB\uAC8C \uC2F8\uC6E0\uB294\uC9C0,
+      \uC5B4\uB514\uC11C \uD53C\uD588\uACE0 \uC5B4\uB5A4 \uC21C\uAC04\uC5D0 \uAC80\uC744
+      \uD718\uB458\uB800\uB294\uC9C0. \uADF8 \uD754\uC801\uC740 \uC774\uACF3\uC5D0
+      \uB0A8\uB294\uB2E4."
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uB098"
     lines:
-    - "\uADF8\uB7F0\uB370?"
+    - "\uADF8\uB798\uC11C \uB0B4 \uC6C0\uC9C1\uC784\uC744\u2026"
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uBCF4\uC2A4"
     lines:
-    - "\uC4F0\uB7EC\uB728\uB838\uC9C0."
-    - "\uB9C8\uCE68\uB0B4."
-    - "\uADF8\uB7F0\uB370 \uC544\uBB34\uAC83\uB3C4 \uB05D\uB098\uC9C0 \uC54A\uC558\uC5B4."
+    - "\uC790\uB124\uAC00 \uB098\uB97C \uBC30\uC6B4 \uB9CC\uD07C, \uB098\uB3C4 \uC790\uB124\uB97C
+      \uBC30\uC6E0\uB2E4."
+    pauseBefore: 0
+    pauseAfter: 0
+  - speakerName: "\uB098"
+    lines:
+    - "\uC8FD\uC5B4\uB3C4 \uB2E4\uC2DC \uB3CC\uC544\uC624\uB294 \uAC83\uC774 \uC774
+      \uC138\uACC4\uC758 \uBC95\uCE59\uC778\uAC00?"
+    pauseBefore: 0
+    pauseAfter: 0
+  - speakerName: "\uBCF4\uC2A4"
+    lines:
+    - "\uADF8\uB798. \uC774 \uC138\uACC4\uC5D0 \uB4E4\uC5B4\uC628 \uC790\uC5D0\uAC8C\uB294
+      \uD558\uB098\uC758 \uB9F9\uC138\uAC00 \uC8FC\uC5B4\uC9C4\uB2E4."
+    pauseBefore: 0
+    pauseAfter: 0
+  - speakerName: "\uB098"
+    lines:
+    - "\uB9F9\uC138?"
+    pauseBefore: 0
+    pauseAfter: 0
+  - speakerName: "\uBCF4\uC2A4"
+    lines:
+    - "\uB05D\uC5D0 \uB3C4\uB2EC\uD560 \uB54C\uAE4C\uC9C0 \uB2E4\uC2DC \uB3CC\uC544\uC624\uAC8C
+      \uB9CC\uB4DC\uB294 \uAC83. \uC4F0\uB7EC\uC838\uB3C4 \uB3CC\uC544\uC624\uACE0,
+      \uAE38\uC744 \uC783\uC5B4\uB3C4 \uB2E4\uC2DC \uB05D\uC744 \uD5A5\uD558\uAC8C
+      \uD558\uC9C0. \uC790\uB124\uB3C4 \uADF8 \uB9F9\uC138\uB85C \uC778\uD574 \uC9C0\uAE08\uAE4C\uC9C0
+      \uC774\uACF3\uC73C\uB85C \uB3CC\uC544\uC628 \uAC70\uB2E4."
+    pauseBefore: 0
+    pauseAfter: 0
+  - speakerName: "\uB098"
+    lines:
+    - "\u2026\u2026"
+    pauseBefore: 0
+    pauseAfter: 0
+  - speakerName: "\uBCF4\uC2A4"
+    lines:
+    - "\uB098\uB3C4 \uADF8\uB7AC\uB2E4. \uBA87 \uBC88\uC744 \uC8FD\uC5B4\uB3C4 \uB3CC\uC544\uC654\uACE0,
+      \uACB0\uAD6D \uB0B4 \uC55E\uC758 \uC790\uB97C \uC4F0\uB7EC\uB728\uB824 \uC885\uACB0\uC744
+      \uB9C8\uC8FC\uD588\uC9C0."
+    pauseBefore: 0
+    pauseAfter: 0
+  - speakerName: "\uB098"
+    lines:
+    - "\uADF8\uB7FC \uB05D\uB09C \uAC70 \uC544\uB2CC\uAC00?"
+    pauseBefore: 0
+    pauseAfter: 0
+  - speakerName: "\uBCF4\uC2A4"
+    lines:
+    - "\uB098\uB3C4 \uADF8\uB807\uAC8C \uBBFF\uC5C8\uB2E4. \uD558\uC9C0\uB9CC \uC885\uACB0\uC744
+      \uBCF4\uB824\uB358 \uC21C\uAC04\u2026 \uB3CC\uC544\uAC08 \uC218 \uC5C6\uC5C8\uB2E4."
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uB098"
@@ -976,13 +894,23 @@ MonoBehaviour:
     pauseAfter: 0
   - speakerName: "\uBCF4\uC2A4"
     lines:
-    - "\uB05D\uAE4C\uC9C0 \uAC00\uC838\uC628 \uB9F9\uC138\uB294\u2026"
-    - "\uB05D\uC5D0 \uB3C4\uB2EC\uD588\uB2E4\uACE0 \uC0AC\uB77C\uC9C0\uB294 \uAC8C
-      \uC544\uB2C8\uC5C8\uAC70\uB4E0."
-    - "\uB05D\uB0BC \uB300\uC0C1\uC774 \uC0AC\uB77C\uC9C0\uC790."
-    - "\uADF8 \uB9F9\uC138\uAC00 \uB05D \uADF8 \uC790\uCCB4\uB97C \uBD99\uB4E4\uC5C8\uC5B4."
-    - "\uADF8\uB9AC\uACE0 \uADF8 \uB9F9\uC138\uB97C \uAC00\uC9C4 \uB098\uB3C4 \uD568\uAED8
-      \uB0A8\uC558\uC9C0."
+    - "\uADF8\uC81C\uC57C \uC54C\uC558\uC9C0. \uB9F9\uC138\uC758 \uBAA9\uC801\uC740
+      \uC774\uACF3\uC5D0\uC11C \uB098\uAC00\uB294 \uAC83\uC774 \uC544\uB2C8\uC5C8\uB2E4.
+      \uB05D\uC5D0 \uB3C4\uB2EC\uD558\uB294 \uAC83. \uADF8\uAC8C \uC804\uBD80\uC600\uB358
+      \uAC70\uB2E4. \uADF8\uB9AC\uACE0 \uB0B4\uAC00 \uB9C8\uCE68\uB0B4 \uB05D\uC5D0
+      \uB3C4\uB2EC\uD588\uC744 \uB54C, \uB354 \uC774\uC0C1 \uD5A5\uD574\uC57C \uD560
+      \uACF3\uC740 \uC5C6\uC5C8\uB2E4."
+    pauseBefore: 0
+    pauseAfter: 0
+  - speakerName: "\uB098"
+    lines:
+    - "\u2026\u2026"
+    pauseBefore: 0
+    pauseAfter: 0
+  - speakerName: "\uBCF4\uC2A4"
+    lines:
+    - "\uADF8\uB798\uC11C \uB9F9\uC138\uB294 \uB098\uB97C \uB05D\uC5D0 \uB0A8\uACBC\uB2E4.
+      \uB0B4\uAC00 \uC4F0\uB7EC\uB728\uB9B0 \uC790\uAC00 \uC788\uB358 \uC790\uB9AC\uC5D0."
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uB098"
@@ -992,90 +920,90 @@ MonoBehaviour:
     pauseAfter: 0
   - speakerName: "\uBCF4\uC2A4"
     lines:
-    - "\uC9C0\uAE08\uC740."
-    - "\uC885\uACB0\uC740 \uC0AC\uB78C\uC758 \uC774\uB984\uC774 \uC544\uB2C8\uC57C."
-    - "\uD558\uB098\uC758 \uC5ED\uD560\uC77C \uBFD0\uC774\uC9C0."
-    - "\uC774\uC57C\uAE30\uC758 \uB05D\uC5D0 \uB3C4\uB2EC\uD588\uC744 \uB54C."
-    - "\uADF8 \uB05D\uC5D0 \uB0A8\uB294 \uC790."
-    - "\uC6B0\uB9AC\uB294 \uADF8\uAC78 \uC885\uACB0\uC774\uB77C \uBD88\uB800\uB2E4."
+    - "\uC9C0\uAE08\uC740. \uC885\uACB0\uC740 \uB204\uAD70\uAC00\uC758 \uC774\uB984\uC774
+      \uC544\uB2C8\uB2E4. \uC774 \uC138\uACC4\uC758 \uB05D\uC5D0 \uB3C4\uB2EC\uD55C
+      \uC790\uAC00 \uB9E1\uAC8C \uB418\uB294 \uC790\uB9AC\uC77C \uBFD0\uC774\uC9C0."
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uB098"
     lines:
-    - "\uC7A0\uAE50."
-    - "\uB2F9\uC2E0\uB3C4 \uC774\uC804\uC758 \uC885\uACB0\uC744 \uC4F0\uB7EC\uB728\uB838\uB2E4\uACE0
-      \uD588\uC9C0."
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uBCF4\uC2A4"
-    lines:
-    - "\uADF8\uB798."
-    pauseBefore: 0
-    pauseAfter: 0
-  - speakerName: "\uB098"
-    lines:
-    - "\uADF8\uB9AC\uACE0 \uADF8 \uC21C\uAC04\u2026"
-    - "\uB2F9\uC2E0\uC774 \uC774\uACF3\uC5D0 \uB0A8\uAC8C \uB410\uACE0."
-    - "\u2026\uADF8\uB7FC \uB0B4\uAC00 \uB2F9\uC2E0\uC744 \uC4F0\uB7EC\uB728\uB9AC\uBA74."
+    - "\uC7A0\uAE50. \uB2F9\uC2E0\uC774 \uADF8 \uC790\uB9AC\uC5D0 \uB0A8\uC558\uB2E4\uBA74\u2026
+      \uB0B4\uAC00 \uB2F9\uC2E0\uC744 \uC4F0\uB7EC\uB728\uB9AC\uBA74\u2026"
     pauseBefore: 0
     pauseAfter: 0.6
+  - speakerName: "\uBCF4\uC2A4"
+    lines:
+    - "\u2026\u2026"
+    pauseBefore: 0
+    pauseAfter: 0
   - speakerName: "\uB098"
     lines:
-    - "\uC544\uB2C8."
-    - "\uB098\uB294 \uB3CC\uC544\uAC08 \uAC70\uC57C."
+    - "\uC544\uB2C8. \uB098\uB294 \uB3CC\uC544\uAC08 \uAC70\uC57C."
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uBCF4\uC2A4"
     lines:
-    - "\uB098\uB3C4 \uADF8\uB807\uAC8C \uB9D0\uD588\uB2E4."
+    - "\uB098\uB3C4 \uADF8\uB7EC\uACE0 \uC2F6\uC5C8\uB2E4."
     pauseBefore: 0
     pauseAfter: 1.5
   - speakerName: "\uB098"
     lines:
-    - "\u2026\uADF8\uB7FC \uC774\uAC8C \uC5B4\uB5BB\uAC8C \uB05D\uC774\uB77C\uB294
-      \uAC70\uC9C0?"
+    - "\u2026\u2026"
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uBCF4\uC2A4"
     lines:
-    - "\uB05D\uC740 \uBE44\uC5B4 \uC788\uC744 \uC218 \uC5C6\uB098 \uBCF4\uB354\uAD70."
-    - "\uB098\uB3C4 \uC624\uB7AB\uB3D9\uC548 \uADF8 \uC774\uC720\uB97C \uC0DD\uAC01\uD588\uC5B4."
-    - "\uADF8\uB7EC\uB2E4 \uC54C\uAC8C \uB410\uC9C0."
-    - "\uC774\uC57C\uAE30\uB294 \uC2A4\uC2A4\uB85C \uB05D\uB098\uB294 \uAC8C \uC544\uB2C8\uC57C."
-    - "\uB204\uAD70\uAC00\uAC00 \uB05D\uC744 \uB9E1\uB294 \uAC70\uC57C."
+    - "\uD558\uC9C0\uB9CC \uB9F9\uC138\uB294 \uB05D\uC5D0 \uB3C4\uB2EC\uD55C \uC790\uB97C
+      \uB3CC\uB824\uBCF4\uB0B4\uC9C0 \uC54A\uC558\uC5B4. \uB05D\uC5D0 \uB3C4\uB2EC\uD558\uAE30
+      \uC704\uD574 \uC874\uC7AC\uD558\uB358 \uB9F9\uC138\uAC00 \uADF8 \uC21C\uAC04
+      \uB098\uB97C \uC774\uACF3\uC5D0 \uB0A8\uACBC\uC9C0. \uB2E4\uC74C\uC73C\uB85C
+      \uB05D\uAE4C\uC9C0 \uC624\uB294 \uC790\uAC00 \uB098\uD0C0\uB0A0 \uB54C\uAE4C\uC9C0."
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uB098"
     lines:
-    - "\u2026\uADF8\uB798\uC11C \uC544\uAE4C \uB9C8\uCE68\uB0B4\uB77C\uACE0 \uD55C
-      \uAC74\uAC00."
+    - "\uADF8\uB798\uC11C\u2026 \uCC98\uC74C\uC5D0 \uB9D0\uD55C \u300C\uB9C8\uCE68\uB0B4\u300D\uAC00\u2026"
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uBCF4\uC2A4"
     lines:
-    - "\uADF8\uB798."
+    - "\uADF8\uB798. \uB05D\uAE4C\uC9C0 \uC624\uB294 \uC790\uB97C \uAE30\uB2E4\uB838\uB2E4.
+      \uADF8\uB9AC\uACE0 \uC790\uB124\uAC00 \uC5EC\uAE30\uAE4C\uC9C0 \uC654\uC9C0."
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uB098"
     lines:
-    - "\uB098\uB97C \uAE30\uB2E4\uB838\uB358 \uAC74\uAC00?"
+    - "\u2026\u2026"
     pauseBefore: 0
     pauseAfter: 0
   - speakerName: "\uBCF4\uC2A4"
     lines:
-    - "\uC544\uB2C8."
-    - "\uB05D\uAE4C\uC9C0 \uC624\uB294 \uC790\uB97C \uAE30\uB2E4\uB838\uB2E4."
+    - "\uC774\uC81C \uC120\uD0DD\uD558\uAC8C. \uC5EC\uAE30\uC11C \uBA48\uCD94\uB4E0,
+      \uB05D\uC744 \uBCF4\uB4E0."
     pauseBefore: 0
     pauseAfter: 0
-  - speakerName: "\uBCF4\uC2A4"
-    lines:
-    - "\uC774\uC81C \uC120\uD0DD\uD558\uAC8C."
-    - "\uC5EC\uAE30\uC11C \uBA48\uCD94\uB4E0, \uB05D\uC744 \uBCF4\uB4E0."
-    pauseBefore: 0
-    pauseAfter: 0
-  finalBlowPromptRoot: {fileID: 0}
-  finalBlowPromptLabel: {fileID: 0}
+  finalBlowPromptRoot: {fileID: 221981073}
+  finalBlowPromptLabel: {fileID: 1359112655}
   finalBlowPromptText: "[E] \uCD5C\uD6C4\uC758 \uC77C\uACA9"
+  finalStrikeImpactDelay: 0.35
+  bossDeathDelayAfterStrike: 0.4
+  bossDeathAnimationFallbackDuration: 3
+  finalDeathSpeakerName: "\uBCF4\uC2A4"
+  finalDeathLines:
+  - "\uADF8 \uB9F9\uC138\uB97C\u2026"
+  - "\uB05D\uAE4C\uC9C0 \uD3EC\uAE30\uD558\uC9C0 \uC54A\uB294\uAC00."
+  - "\uCC38\uC73C\uB85C \uAC00\uB828\uD558\uAD70."
+  - "\uADF8\uB7FC\uC5D0\uB3C4 \uB05D\uC744 \uC120\uD0DD\uD55C \uC80A\uC740 \uB300\uC801\uC790\uC5EC."
+  - "\uACBD\uC758\uB97C \uD45C\uD558\uC9C0."
+  combatUiRoot: {fileID: 508529658}
+  controlReturnDelay: 0.8
+  epilogueFreeMoveDuration: 12
+  playerVisualRenderer: {fileID: 822000434}
+  playerSilhouetteDelay: 3
+  playerSilhouetteDuration: 1.5
+  silhouetteHoldDuration: 1
+  endingFade: {fileID: 493275642}
+  endingFadeDuration: 1.5
 --- !u!4 &199636551
 Transform:
   m_ObjectHideFlags: 0
@@ -1243,6 +1171,42 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: c3fae1c80aadb5345bd26cb53335ab88, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::Hurtbox
+--- !u!1 &221981073
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 221981074}
+  m_Layer: 5
+  m_Name: FinalBlowPrompt
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &221981074
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 221981073}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 1359112654}
+  m_Father: {fileID: 1628079792}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &222304601
 GameObject:
   m_ObjectHideFlags: 0
@@ -1969,7 +1933,7 @@ MonoBehaviour:
   hitFlash: {fileID: 1266593683}
   hitReaction: {fileID: 402595769}
   hitVfxSpawner: {fileID: 402595770}
-  finalEndingController: {fileID: 0}
+  finalEndingController: {fileID: 199636550}
   deathEventFallbackDelay: 3
 --- !u!114 &402595765
 MonoBehaviour:
@@ -3035,143 +2999,6 @@ CanvasRenderer:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 563218835}
-  m_CullTransparentMesh: 1
---- !u!1 &592750854
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 592750855}
-  - component: {fileID: 592750857}
-  - component: {fileID: 592750856}
-  m_Layer: 5
-  m_Name: SpeakerText
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &592750855
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 592750854}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children: []
-  m_Father: {fileID: 1155443143}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0.5, y: 0.5}
-  m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 200, y: 50}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &592750856
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 592750854}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_text: New Text
-  m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_fontSharedMaterials: []
-  m_fontMaterial: {fileID: 0}
-  m_fontMaterials: []
-  m_fontColor32:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
-  m_enableVertexGradient: 0
-  m_colorMode: 3
-  m_fontColorGradient:
-    topLeft: {r: 1, g: 1, b: 1, a: 1}
-    topRight: {r: 1, g: 1, b: 1, a: 1}
-    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
-    bottomRight: {r: 1, g: 1, b: 1, a: 1}
-  m_fontColorGradientPreset: {fileID: 0}
-  m_spriteAsset: {fileID: 0}
-  m_tintAllSprites: 0
-  m_StyleSheet: {fileID: 0}
-  m_TextStyleHashCode: -1183493901
-  m_overrideHtmlColors: 0
-  m_faceColor:
-    serializedVersion: 2
-    rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
-  m_fontWeight: 400
-  m_enableAutoSizing: 0
-  m_fontSizeMin: 18
-  m_fontSizeMax: 72
-  m_fontStyle: 0
-  m_HorizontalAlignment: 1
-  m_VerticalAlignment: 256
-  m_textAlignment: 65535
-  m_characterSpacing: 0
-  m_characterHorizontalScale: 1
-  m_wordSpacing: 0
-  m_lineSpacing: 0
-  m_lineSpacingMax: 0
-  m_paragraphSpacing: 0
-  m_charWidthMaxAdj: 0
-  m_TextWrappingMode: 1
-  m_wordWrappingRatios: 0.4
-  m_overflowMode: 0
-  m_linkedTextComponent: {fileID: 0}
-  parentLinkedComponent: {fileID: 0}
-  m_enableKerning: 0
-  m_ActiveFontFeatures: 6e72656b
-  m_enableExtraPadding: 0
-  checkPaddingRequired: 0
-  m_isRichText: 1
-  m_EmojiFallbackSupport: 1
-  m_parseCtrlCharacters: 1
-  m_isOrthographic: 1
-  m_isCullingEnabled: 0
-  m_horizontalMapping: 0
-  m_verticalMapping: 0
-  m_uvLineOffset: 0
-  m_geometrySortingOrder: 0
-  m_IsTextObjectScaleStatic: 0
-  m_VertexBufferAutoSizeReduction: 0
-  m_useMaxVisibleDescender: 1
-  m_pageToDisplay: 1
-  m_margin: {x: 0, y: 0, z: 0, w: 0}
-  m_isUsingLegacyAnimationComponent: 0
-  m_isVolumetricText: 0
-  m_hasFontAssetChanged: 0
-  m_baseMaterial: {fileID: 0}
-  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
---- !u!222 &592750857
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 592750854}
   m_CullTransparentMesh: 1
 --- !u!1 &608967534
 GameObject:
@@ -4507,83 +4334,6 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1141143832}
   m_CullTransparentMesh: 1
---- !u!1 &1155443142
-GameObject:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  serializedVersion: 6
-  m_Component:
-  - component: {fileID: 1155443143}
-  - component: {fileID: 1155443145}
-  - component: {fileID: 1155443144}
-  m_Layer: 5
-  m_Name: FinalDialoguePanel
-  m_TagString: Untagged
-  m_Icon: {fileID: 0}
-  m_NavMeshLayer: 0
-  m_StaticEditorFlags: 0
-  m_IsActive: 1
---- !u!224 &1155443143
-RectTransform:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1155443142}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
-  m_LocalScale: {x: 1, y: 1, z: 1}
-  m_ConstrainProportionsScale: 0
-  m_Children:
-  - {fileID: 592750855}
-  - {fileID: 119774463}
-  m_Father: {fileID: 1628079792}
-  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 0, y: 0}
-  m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1155443144
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1155443142}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
-  m_Material: {fileID: 0}
-  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
-  m_RaycastTarget: 1
-  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
-  m_Maskable: 1
-  m_OnCullStateChanged:
-    m_PersistentCalls:
-      m_Calls: []
-  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
-  m_Type: 1
-  m_PreserveAspect: 0
-  m_FillCenter: 1
-  m_FillMethod: 4
-  m_FillAmount: 1
-  m_FillClockwise: 1
-  m_FillOrigin: 0
-  m_UseSpriteMesh: 0
-  m_PixelsPerUnitMultiplier: 1
---- !u!222 &1155443145
-CanvasRenderer:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1155443142}
-  m_CullTransparentMesh: 1
 --- !u!1 &1189955494
 GameObject:
   m_ObjectHideFlags: 0
@@ -5276,6 +5026,220 @@ SpriteRenderer:
   m_SpriteTileMode: 0
   m_WasSpriteAssigned: 1
   m_SpriteSortPoint: 0
+--- !u!1 &1359112653
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1359112654}
+  - component: {fileID: 1359112656}
+  - component: {fileID: 1359112655}
+  m_Layer: 5
+  m_Name: PromptText
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1359112654
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1359112653}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 221981074}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 200, y: 50}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1359112655
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1359112653}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: "[E] \uCD5C\uD6C4\uC758 \uC77C\uACA9"
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 0fde3fa71cc426e40bf538c15ca17b84, type: 2}
+  m_sharedMaterial: {fileID: 4434108283929152692, guid: 0fde3fa71cc426e40bf538c15ca17b84, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 25
+  m_fontSizeBase: 25
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 2
+  m_VerticalAlignment: 512
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 0
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
+--- !u!222 &1359112656
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1359112653}
+  m_CullTransparentMesh: 1
+--- !u!1 &1536201626
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1536201627}
+  - component: {fileID: 1536201629}
+  - component: {fileID: 1536201628}
+  m_Layer: 5
+  m_Name: DialoguePanel
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 0
+--- !u!224 &1536201627
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1536201626}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 20.03935}
+  m_LocalScale: {x: 0.50097996, y: 0.50097996, z: 0.50097996}
+  m_ConstrainProportionsScale: 0
+  m_Children:
+  - {fileID: 2053628552}
+  - {fileID: 181760108}
+  m_Father: {fileID: 1628079792}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 1, y: 1}
+  m_AnchoredPosition: {x: 0, y: 40.078735}
+  m_SizeDelta: {x: 958.2219, y: 480}
+  m_Pivot: {x: 0.5, y: 1}
+--- !u!114 &1536201628
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1536201626}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fe87c0e1cc204ed48ad3b37840f39efc, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: UnityEngine.UI::UnityEngine.UI.Image
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 0.392}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_Sprite: {fileID: 10907, guid: 0000000000000000f000000000000000, type: 0}
+  m_Type: 1
+  m_PreserveAspect: 0
+  m_FillCenter: 1
+  m_FillMethod: 4
+  m_FillAmount: 1
+  m_FillClockwise: 1
+  m_FillOrigin: 0
+  m_UseSpriteMesh: 0
+  m_PixelsPerUnitMultiplier: 1
+--- !u!222 &1536201629
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1536201626}
+  m_CullTransparentMesh: 1
 --- !u!1 &1545142652
 GameObject:
   m_ObjectHideFlags: 0
@@ -5854,8 +5818,8 @@ RectTransform:
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_ConstrainProportionsScale: 0
   m_Children:
-  - {fileID: 2117135111}
-  - {fileID: 1155443143}
+  - {fileID: 1536201627}
+  - {fileID: 221981074}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
@@ -6848,6 +6812,143 @@ Transform:
   - {fileID: 1941254823}
   m_Father: {fileID: 2060518841}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &2053628551
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 2053628552}
+  - component: {fileID: 2053628553}
+  - component: {fileID: 2053628554}
+  m_Layer: 5
+  m_Name: SpeakerName
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &2053628552
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2053628551}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1536201627}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0, y: 1}
+  m_AnchorMax: {x: 0, y: 1}
+  m_AnchoredPosition: {x: 300, y: -150}
+  m_SizeDelta: {x: 500, y: 60}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!222 &2053628553
+CanvasRenderer:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2053628551}
+  m_CullTransparentMesh: 1
+--- !u!114 &2053628554
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2053628551}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Unity.TextMeshPro::TMPro.TextMeshProUGUI
+  m_Material: {fileID: 0}
+  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_RaycastTarget: 1
+  m_RaycastPadding: {x: 0, y: 0, z: 0, w: 0}
+  m_Maskable: 1
+  m_OnCullStateChanged:
+    m_PersistentCalls:
+      m_Calls: []
+  m_text: New Text
+  m_isRightToLeft: 0
+  m_fontAsset: {fileID: 11400000, guid: 0fde3fa71cc426e40bf538c15ca17b84, type: 2}
+  m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
+  m_fontSharedMaterials: []
+  m_fontMaterial: {fileID: 0}
+  m_fontMaterials: []
+  m_fontColor32:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontColor: {r: 1, g: 1, b: 1, a: 1}
+  m_enableVertexGradient: 0
+  m_colorMode: 3
+  m_fontColorGradient:
+    topLeft: {r: 1, g: 1, b: 1, a: 1}
+    topRight: {r: 1, g: 1, b: 1, a: 1}
+    bottomLeft: {r: 1, g: 1, b: 1, a: 1}
+    bottomRight: {r: 1, g: 1, b: 1, a: 1}
+  m_fontColorGradientPreset: {fileID: 0}
+  m_spriteAsset: {fileID: 0}
+  m_tintAllSprites: 0
+  m_StyleSheet: {fileID: 0}
+  m_TextStyleHashCode: -1183493901
+  m_overrideHtmlColors: 0
+  m_faceColor:
+    serializedVersion: 2
+    rgba: 4294967295
+  m_fontSize: 36
+  m_fontSizeBase: 36
+  m_fontWeight: 400
+  m_enableAutoSizing: 0
+  m_fontSizeMin: 18
+  m_fontSizeMax: 72
+  m_fontStyle: 0
+  m_HorizontalAlignment: 1
+  m_VerticalAlignment: 256
+  m_textAlignment: 65535
+  m_characterSpacing: 0
+  m_characterHorizontalScale: 1
+  m_wordSpacing: 0
+  m_lineSpacing: 0
+  m_lineSpacingMax: 0
+  m_paragraphSpacing: 0
+  m_charWidthMaxAdj: 0
+  m_TextWrappingMode: 1
+  m_wordWrappingRatios: 0.4
+  m_overflowMode: 0
+  m_linkedTextComponent: {fileID: 0}
+  parentLinkedComponent: {fileID: 0}
+  m_enableKerning: 0
+  m_ActiveFontFeatures: 6e72656b
+  m_enableExtraPadding: 0
+  checkPaddingRequired: 0
+  m_isRichText: 1
+  m_EmojiFallbackSupport: 1
+  m_parseCtrlCharacters: 1
+  m_isOrthographic: 1
+  m_isCullingEnabled: 0
+  m_horizontalMapping: 0
+  m_verticalMapping: 0
+  m_uvLineOffset: 0
+  m_geometrySortingOrder: 0
+  m_IsTextObjectScaleStatic: 0
+  m_VertexBufferAutoSizeReduction: 0
+  m_useMaxVisibleDescender: 1
+  m_pageToDisplay: 1
+  m_margin: {x: 0, y: 0, z: 0, w: 0}
+  m_isUsingLegacyAnimationComponent: 0
+  m_isVolumetricText: 0
+  m_hasFontAssetChanged: 1
+  m_baseMaterial: {fileID: 0}
+  m_maskOffset: {x: 0, y: 0, z: 0, w: 0}
 --- !u!1 &2060518839
 GameObject:
   m_ObjectHideFlags: 0
@@ -6925,16 +7026,16 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 2117135110}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
   m_LocalPosition: {x: 0, y: 0, z: 0}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
-  m_Father: {fileID: 1628079792}
+  m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 481, y: 270.5}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2117135112
@@ -6949,9 +7050,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 726458c070036504d9932708e15b6921, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::AfterlifeDialogueController
-  dialoguePanel: {fileID: 0}
-  speakerText: {fileID: 0}
-  dialogueText: {fileID: 0}
+  dialoguePanel: {fileID: 1536201626}
+  speakerText: {fileID: 2053628554}
+  dialogueText: {fileID: 181760106}
   charactersPerSecond: 45
 --- !u!1001 &262622909235133753
 PrefabInstance:
@@ -7069,3 +7170,4 @@ SceneRoots:
   - {fileID: 47288452}
   - {fileID: 1924903224}
   - {fileID: 199636551}
+  - {fileID: 2117135111}

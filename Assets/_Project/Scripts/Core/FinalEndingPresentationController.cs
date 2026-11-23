@@ -42,102 +42,83 @@ public class FinalEndingPresentationController : MonoBehaviour
     [SerializeField] private AfterlifeDialogueController dialogueController;
     [SerializeField, Min(0f)] private float finalKneelDelay = 0.2f;
     [SerializeField] private FinalDialogueBeat[] finalDialogueBeats =
+        CreateDefaultFinalDialogue();
+
+    private static FinalDialogueBeat[] CreateDefaultFinalDialogue()
     {
-        new FinalDialogueBeat("보스", 1f, "마침내…"),
-        new FinalDialogueBeat("나", 0f, "…뭐가 말이지?"),
-        new FinalDialogueBeat("보스", 0f, "끝까지 왔군."),
-        new FinalDialogueBeat("나", 0f, "끝?", "당신을 쓰러뜨리면 끝나는 거 아닌가."),
-        new FinalDialogueBeat("보스", 0f, "나도 그렇게 생각했어."),
-        new FinalDialogueBeat("나", 0f, "…무슨 뜻이지?"),
-        new FinalDialogueBeat("보스", 0f, "나도 자네와 같았으니까."),
-        new FinalDialogueBeat("나", 0f, "나와 같았다고?"),
-        new FinalDialogueBeat("보스", 0f,
-            "이곳에 도착했고.", "끝에 있는 자와 싸웠지.",
-            "죽고.", "돌아오고.", "또 싸웠어."),
-        new FinalDialogueBeat("나", 0f, "…당신도 도전자였다는 건가?"),
-        new FinalDialogueBeat("보스", 0f, "그래."),
-        new FinalDialogueBeat("나", 0f, "그럼 당신이 쓰러뜨린 자는?"),
-        new FinalDialogueBeat("보스", 0f,
-            "지금의 나와 같은 사람이었지.",
-            "아마 그 사람 전에도 누군가 있었을 거다."),
-        new FinalDialogueBeat("나", 0f,
-            "그렇다면…", "내 움직임을 알고 있었던 것도 그 때문인가?"),
-        new FinalDialogueBeat("보스", 0f, "그건 자네 때문이지."),
-        new FinalDialogueBeat("나", 0f, "나?"),
-        new FinalDialogueBeat("보스", 0f,
-            "죽어서 돌아올 때마다.",
-            "모든 것이 자네와 함께 돌아갔다고 생각했나?",
-            "아니.", "나를 끝내겠다는 의지.",
-            "다시 일어서게 한 그 의지는 자네에게 돌아갔다.",
-            "하지만 자네가 어떻게 싸웠는지는…", "이곳에 남았어."),
-        new FinalDialogueBeat("나", 0f, "그래서 내 공격을…"),
-        new FinalDialogueBeat("보스", 0f,
-            "자네가 나를 배운 만큼.", "나도 자네를 배웠다."),
-        new FinalDialogueBeat("나", 0f,
-            "그럼 나를 계속 이곳으로 돌려보내 준 사람은?"),
-        new FinalDialogueBeat("보스", 0f, "…아직 그곳에 있나."),
-        new FinalDialogueBeat("나", 0f, "알고 있는 사람이야?"),
-        new FinalDialogueBeat("보스", 0f,
-            "오래전에 나와 싸웠던 사람이지.",
-            "몇 번을 쓰러뜨렸는지는 기억나지 않아."),
-        new FinalDialogueBeat("나", 0f, "그런데 왜 지금은 돌아오지 못하지?"),
-        new FinalDialogueBeat("보스", 0f, "너무 많이 남겼으니까."),
-        new FinalDialogueBeat("나", 0f, "…뭘?"),
-        new FinalDialogueBeat("보스", 0f,
-            "자기 자신을.", "죽을 때마다 싸움의 흔적만 이곳에 남는 건 아니야.",
-            "돌아오는 쪽에서도 조금씩 잃는다.", "처음에는 이름을 잊고.",
-            "그다음에는 왜 싸우고 있었는지를 잊지.",
-            "그래도 맹세를 기억하는 동안에는 다시 돌아온다.",
-            "하지만 죽음을 반복하다 보면 그 맹세마저 닳아가지.",
-            "전장으로 돌아갈 만큼의 이유는 잃었지만.",
-            "완전히 놓아버리지도 못한 자는… 그곳에 남게 된다."),
-        new FinalDialogueBeat("나", 0f, "맹세?"),
-        new FinalDialogueBeat("보스", 0f,
-            "끝을 보겠다는 것.", "쓰러져도 다시 이곳에 오겠다는 것.",
-            "그게 무엇이든 상관없어.", "자네는 죽었는데도 다시 왔어.",
-            "또 죽었는데도 돌아왔고.", "누가 강요한 것도 아닌데 말이야.",
-            "매번 자네가 선택한 거다.", "다시 돌아오는 것을.",
-            "끝을 보는 것을."),
-        new FinalDialogueBeat("나", 0f, "……"),
-        new FinalDialogueBeat("보스", 0f, "그게 자네의 맹세였겠지."),
-        new FinalDialogueBeat("보스", 0f,
-            "나도 그랬어.", "쓰러지면 다시 오면 된다고 생각했지.",
-            "실수하면 다음에는 다르게 하면 됐고.",
-            "그자를 쓰러뜨리면 돌아갈 수 있을 거라고 생각했어."),
-        new FinalDialogueBeat("나", 0f, "그런데?"),
-        new FinalDialogueBeat("보스", 0f,
-            "쓰러뜨렸지.", "마침내.", "그런데 아무것도 끝나지 않았어."),
-        new FinalDialogueBeat("나", 0f, "왜?"),
-        new FinalDialogueBeat("보스", 0f,
-            "끝까지 가져온 맹세는…", "끝에 도달했다고 사라지는 게 아니었거든.",
-            "끝낼 대상이 사라지자.", "그 맹세가 끝 그 자체를 붙들었어.",
-            "그리고 그 맹세를 가진 나도 함께 남았지."),
-        new FinalDialogueBeat("나", 0f, "…그래서 당신이 종결인가?"),
-        new FinalDialogueBeat("보스", 0f,
-            "지금은.", "종결은 사람의 이름이 아니야.",
-            "하나의 역할일 뿐이지.", "이야기의 끝에 도달했을 때.",
-            "그 끝에 남는 자.", "우리는 그걸 종결이라 불렀다."),
-        new FinalDialogueBeat("나", 0f,
-            "잠깐.", "당신도 이전의 종결을 쓰러뜨렸다고 했지."),
-        new FinalDialogueBeat("보스", 0f, "그래."),
-        new FinalDialogueBeat("나", 0.6f,
-            "그리고 그 순간…", "당신이 이곳에 남게 됐고.",
-            "…그럼 내가 당신을 쓰러뜨리면."),
-        new FinalDialogueBeat("나", 0f, "아니.", "나는 돌아갈 거야."),
-        new FinalDialogueBeat("보스", 1.5f, "나도 그렇게 말했다."),
-        new FinalDialogueBeat("나", 0f, "…그럼 이게 어떻게 끝이라는 거지?"),
-        new FinalDialogueBeat("보스", 0f,
-            "끝은 비어 있을 수 없나 보더군.",
-            "나도 오랫동안 그 이유를 생각했어.", "그러다 알게 됐지.",
-            "이야기는 스스로 끝나는 게 아니야.", "누군가가 끝을 맡는 거야."),
-        new FinalDialogueBeat("나", 0f, "…그래서 아까 마침내라고 한 건가."),
-        new FinalDialogueBeat("보스", 0f, "그래."),
-        new FinalDialogueBeat("나", 0f, "나를 기다렸던 건가?"),
-        new FinalDialogueBeat("보스", 0f,
-            "아니.", "끝까지 오는 자를 기다렸다."),
-        new FinalDialogueBeat("보스", 0f,
-            "이제 선택하게.", "여기서 멈추든, 끝을 보든.")
-    };
+        return new[]
+        {
+            new FinalDialogueBeat("보스", 1f, "마침내…"),
+            new FinalDialogueBeat("나", 0f, "……"),
+            new FinalDialogueBeat("보스", 0f, "끝까지 왔군."),
+            new FinalDialogueBeat("나", 0f, "당신을 쓰러뜨리면 끝나는 거 아닌가."),
+            new FinalDialogueBeat("보스", 0f, "나도 그렇게 생각했다."),
+            new FinalDialogueBeat("나", 0f, "…무슨 뜻이지?"),
+            new FinalDialogueBeat("보스", 0f,
+                "나도 처음부터 이곳에 있던 건 아니야. 자네처럼 이곳에 들어왔고, 앞을 막는 자와 싸웠다. 쓰러지고 다시 돌아오기를 몇 번이고 반복했지."),
+            new FinalDialogueBeat("나", 0f, "당신도… 도전자였다는 건가?"),
+            new FinalDialogueBeat("보스", 0f,
+                "그래. 나도 종결을 앞두고 있었다. 그 앞을 막고 있던 자를 쓰러뜨리면 이 모든 것이 끝날 거라 생각했지."),
+            new FinalDialogueBeat("나", 0f, "그런데 왜 당신이 여기 있지?"),
+            new FinalDialogueBeat("보스", 0f,
+                "그 전에 자네도 느끼지 않았나. 싸울수록 내가 자네의 움직임을 알고 있다는 걸."),
+            new FinalDialogueBeat("나", 0f, "……"),
+            new FinalDialogueBeat("보스", 0f,
+                "죽는다고 모든 것이 처음으로 돌아가는 건 아니야. 몸은 돌아오지만, 그곳에서 있었던 일까지 사라지는 것은 아니지. 자네가 어떻게 싸웠는지, 어디서 피했고 어떤 순간에 검을 휘둘렀는지. 그 흔적은 이곳에 남는다."),
+            new FinalDialogueBeat("나", 0f, "그래서 내 움직임을…"),
+            new FinalDialogueBeat("보스", 0f, "자네가 나를 배운 만큼, 나도 자네를 배웠다."),
+            new FinalDialogueBeat("나", 0f, "죽어도 다시 돌아오는 것이 이 세계의 법칙인가?"),
+            new FinalDialogueBeat("보스", 0f, "그래. 이 세계에 들어온 자에게는 하나의 맹세가 주어진다."),
+            new FinalDialogueBeat("나", 0f, "맹세?"),
+            new FinalDialogueBeat("보스", 0f,
+                "끝에 도달할 때까지 다시 돌아오게 만드는 것. 쓰러져도 돌아오고, 길을 잃어도 다시 끝을 향하게 하지. 자네도 그 맹세로 인해 지금까지 이곳으로 돌아온 거다."),
+            new FinalDialogueBeat("나", 0f, "……"),
+            new FinalDialogueBeat("보스", 0f,
+                "나도 그랬다. 몇 번을 죽어도 돌아왔고, 결국 내 앞의 자를 쓰러뜨려 종결을 마주했지."),
+            new FinalDialogueBeat("나", 0f, "그럼 끝난 거 아닌가?"),
+            new FinalDialogueBeat("보스", 0f,
+                "나도 그렇게 믿었다. 하지만 종결을 보려던 순간… 돌아갈 수 없었다."),
+            new FinalDialogueBeat("나", 0f, "왜?"),
+            new FinalDialogueBeat("보스", 0f,
+                "그제야 알았지. 맹세의 목적은 이곳에서 나가는 것이 아니었다. 끝에 도달하는 것. 그게 전부였던 거다. 그리고 내가 마침내 끝에 도달했을 때, 더 이상 향해야 할 곳은 없었다."),
+            new FinalDialogueBeat("나", 0f, "……"),
+            new FinalDialogueBeat("보스", 0f,
+                "그래서 맹세는 나를 끝에 남겼다. 내가 쓰러뜨린 자가 있던 자리에."),
+            new FinalDialogueBeat("나", 0f, "…그래서 당신이 종결인가?"),
+            new FinalDialogueBeat("보스", 0f,
+                "지금은. 종결은 누군가의 이름이 아니다. 이 세계의 끝에 도달한 자가 맡게 되는 자리일 뿐이지."),
+            new FinalDialogueBeat("나", 0.6f,
+                "잠깐. 당신이 그 자리에 남았다면… 내가 당신을 쓰러뜨리면…"),
+            new FinalDialogueBeat("보스", 0f, "……"),
+            new FinalDialogueBeat("나", 0f, "아니. 나는 돌아갈 거야."),
+            new FinalDialogueBeat("보스", 1.5f, "나도 그러고 싶었다."),
+            new FinalDialogueBeat("나", 0f, "……"),
+            new FinalDialogueBeat("보스", 0f,
+                "하지만 맹세는 끝에 도달한 자를 돌려보내지 않았어. 끝에 도달하기 위해 존재하던 맹세가 그 순간 나를 이곳에 남겼지. 다음으로 끝까지 오는 자가 나타날 때까지."),
+            new FinalDialogueBeat("나", 0f, "그래서… 처음에 말한 「마침내」가…"),
+            new FinalDialogueBeat("보스", 0f,
+                "그래. 끝까지 오는 자를 기다렸다. 그리고 자네가 여기까지 왔지."),
+            new FinalDialogueBeat("나", 0f, "……"),
+            new FinalDialogueBeat("보스", 0f, "이제 선택하게. 여기서 멈추든, 끝을 보든.")
+        };
+    }
+
+#if UNITY_EDITOR
+    [ContextMenu("Apply Default Final Dialogue")]
+    private void ApplyDefaultFinalDialogue()
+    {
+        UnityEditor.Undo.RecordObject(this, "Apply Default Final Dialogue");
+        finalDialogueBeats = CreateDefaultFinalDialogue();
+
+        UnityEditor.EditorUtility.SetDirty(this);
+
+        if (!Application.isPlaying && gameObject.scene.IsValid())
+        {
+            UnityEditor.SceneManagement.EditorSceneManager
+                .MarkSceneDirty(gameObject.scene);
+        }
+    }
+#endif
 
     [Header("Final Blow Prompt")]
     [SerializeField] private GameObject finalBlowPromptRoot;
