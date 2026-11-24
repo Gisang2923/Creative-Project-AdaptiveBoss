@@ -30,6 +30,10 @@ public class TitleScreenController : MonoBehaviour
     {
         Time.timeScale = 1f;
 
+        EnsureHoverScale(startButton);
+        EnsureHoverScale(settingsButton);
+        EnsureHoverScale(exitButton);
+
         if (settingsPanel != null)
             settingsPanel.SetActive(false);
 
@@ -148,5 +152,14 @@ public class TitleScreenController : MonoBehaviour
             EventSystem.current.SetSelectedGameObject(button.gameObject);
 
         button.Select();
+    }
+
+    private static void EnsureHoverScale(Button button)
+    {
+        if (button != null &&
+            button.GetComponent<TitleButtonHoverScale>() == null)
+        {
+            button.gameObject.AddComponent<TitleButtonHoverScale>();
+        }
     }
 }
