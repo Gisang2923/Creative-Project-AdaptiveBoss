@@ -777,6 +777,12 @@ public class BossAction : MonoBehaviour
 
         nextHeavyHoldTime = -1f;
 
+        if (!Mathf.Approximately(holdTime, heavyBaseHoldTime))
+        {
+            GameProgression.Instance?
+                .MarkAct2AdaptiveBehaviorExperienced();
+        }
+
         bossAnimator?.SetPlaybackSpeed(0f);
 
         yield return StartCoroutine(
@@ -1066,6 +1072,12 @@ public class BossAction : MonoBehaviour
                 : chargePostPassDelay;
 
         nextChargePostPassDelay = -1f;
+
+        if (!Mathf.Approximately(postPassDelay, chargePostPassDelay))
+        {
+            GameProgression.Instance?
+                .MarkAct2AdaptiveBehaviorExperienced();
+        }
 
 
         // =====================================

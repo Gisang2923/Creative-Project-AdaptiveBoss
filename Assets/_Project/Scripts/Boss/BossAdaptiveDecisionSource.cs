@@ -1341,6 +1341,9 @@ public class BossAdaptiveDecisionSource : MonoBehaviour
         if (responseAction !=
             AdaptiveResponseAction.None)
         {
+            GameProgression.Instance?
+                .MarkAct2AdaptiveBehaviorExperienced();
+
             lastAdaptiveResponse =
                 responseAction;
 

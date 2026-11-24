@@ -36,6 +36,9 @@ public class AfterlifeNPC : MonoBehaviour
         Act2TruthNpcIntro,
         Act2TruthPlayer,
         Act2TruthNpcConclusion,
+        Act2TruthPlayerQuestion,
+        Act2TruthNpcAdvice,
+        Act2NormalDefeat,
         Act2RepeatDefeat,
 
         Finished
@@ -61,110 +64,203 @@ public class AfterlifeNPC : MonoBehaviour
     private string speakerName = "???";
 
     [SerializeField, TextArea(2, 4)]
-    private string[] firstDialogueLines;
+    private string[] firstDialogueLines = CreateDefaultFirstDialogueLines();
 
     [SerializeField, TextArea(2, 4)]
-    private string[] act1RecoveryDialogueLines =
-    {
-        "다시 돌아왔군."
-    };
+    private string[] act1RecoveryDialogueLines = CreateDefaultAct1RecoveryLines();
 
     [SerializeField]
     private Act1RecoveryDialogueEntry[] act1RecoveryDialogueByStage =
         Array.Empty<Act1RecoveryDialogueEntry>();
 
     [SerializeField, TextArea(2, 4)]
-    private string[] farewellDialogueLines;
+    private string[] farewellDialogueLines = CreateDefaultFarewellLines();
 
     [SerializeField, TextArea(2, 4)]
-    private string[] maxStatsLines =
-    {
-        "더 올릴 능력치가 없다."
-    };
+    private string[] maxStatsLines = CreateDefaultMaxStatsLines();
     [Header("Act1 Clear Event")]
     [SerializeField]
     private string playerSpeakerName =
         "나";
 
     [SerializeField, TextArea(2, 4)]
-    private string[] clearPlayerLines =
-    {
-        "왜... 다시 여기로 온 거죠?",
-        "분명 그자를 쓰러뜨렸는데."
-    };
+    private string[] clearPlayerLines = CreateDefaultClearPlayerLines();
 
     [SerializeField, TextArea(2, 4)]
-    private string[] clearNpcLines =
-    {
-        "이런 적은 없었는데...",
-        "어째서 이러는 거지?",
-        "잠시 기다리게.",
-        "내가 정상적으로 돌아갈 수 있도록 해보겠네."
-    };
+    private string[] clearNpcLines = CreateDefaultClearNpcLines();
 
     [SerializeField, TextArea(2, 4)]
-    private string[] returnFailedLines =
-    {
-        "...안 되는군.",
-        "아무래도 다시 한 번 그놈을 처리해야 할 것 같아.",
-        "그대에게는 어려운 일은 아니겠지?"
-    };
+    private string[] returnFailedLines = CreateDefaultReturnFailedLines();
 
-    [Header("Act2 First Defeat Event")]
+    [Header("Act2 Anomaly Discovery Event")]
     [SerializeField, TextArea(2, 4)]
-    private string[] act2DiscoveryPlayerLines =
-    {
-        "저 사람... 이상해요.",
-        "제가 어떻게 움직일지 알고 있는 것 같아요.",
-        "쫓아가면 먼저 빠지고...",
-        "제가 공격하려는 순간도 기다리고 있어요."
-    };
+    private string[] act2DiscoveryPlayerLines = CreateDefaultAct2DiscoveryPlayerLines();
 
     [SerializeField, TextArea(2, 4)]
-    private string[] act2DiscoveryNpcLines =
-    {
-        "...잠깐.",
-        "자네가 쫓아가면 먼저 물러난다고?",
-        "...그 움직임을 알고 있네.",
-        "나도 그렇게 싸웠으니까."
-    };
+    private string[] act2DiscoveryNpcLines = CreateDefaultAct2DiscoveryNpcLines();
 
-    [Header("Act2 Truth Discovery Event")]
+    [Header("Act2 Anomaly Confirmation Event")]
     [SerializeField, TextArea(2, 4)]
-    private string[] act2TruthNpcIntroLines =
-    {
-        "...잠깐.",
-        "이제 알 것 같군.",
-        "저자는 처음부터 저렇게 싸웠던 게 아니야.",
-        "우리에게서 배운 거였어."
-    };
+    private string[] act2TruthNpcIntroLines = CreateDefaultAct2ConfirmationNpcIntroLines();
 
     [SerializeField, TextArea(2, 4)]
-    private string[] act2TruthPlayerLines =
-    {
-        "우리에게서요?"
-    };
+    private string[] act2TruthPlayerLines = CreateDefaultAct2ConfirmationPlayerLines();
 
     [SerializeField, TextArea(2, 4)]
-    private string[] act2TruthNpcConclusionLines =
-    {
-        "그래.",
-        "우리가 죽을 때마다,",
-        "그자에게 무언가를 남기고 있었던 거야.",
-        "내 움직임도,",
-        "그리고 지금은 자네의 움직임도.",
-        "강해지는 것만으로는 부족하겠군.",
-        "놈이 알고 있는 자네와",
-        "다른 사람이 되게."
-    };
+    private string[] act2TruthNpcConclusionLines = CreateDefaultAct2ConfirmationNpcConclusionLines();
+
+    [SerializeField, TextArea(2, 4)]
+    private string[] act2TruthPlayerQuestionLines = CreateDefaultAct2ConfirmationPlayerQuestionLines();
+
+    [SerializeField, TextArea(2, 4)]
+    private string[] act2TruthNpcAdviceLines = CreateDefaultAct2ConfirmationNpcAdviceLines();
+
+    [Header("Act2 Normal Defeat")]
+    [SerializeField, TextArea(2, 4)]
+    private string[] act2NormalDefeatLines = CreateDefaultAct2NormalDefeatLines();
 
     [Header("Act2 Repeat Defeat")]
     [SerializeField, TextArea(2, 4)]
-    private string[] act2RepeatDefeatLines =
+    private string[] act2RepeatDefeatLines = CreateDefaultAct2RepeatDefeatLines();
+
+    private static string[] CreateDefaultFirstDialogueLines() => new[]
     {
-        "다시 왔군.",
-        "아직 놈이 알고 있는 방식대로 움직이고 있는 건가."
+        "눈을 떴군.",
+        "놀랄 것 없네. 이곳은 다시 나아가기 전 잠시 머무는 곳일세.",
+        "나는 이곳에 온 자가 다시 나아갈 수 있도록 돕고 있지.",
+        "준비가 되면 말하게."
     };
+
+    private static string[] CreateDefaultAct1RecoveryLines() => new[]
+    {
+        "다시 돌아왔군.",
+        "아직 끝난 것은 아닌 모양이네.",
+        "준비가 되면 다시 가게."
+    };
+
+    private static string[] CreateDefaultFarewellLines() => new[]
+    {
+        "준비가 됐다면 다시 가게.",
+        "이번에는 조금 더 나아갈 수 있겠지."
+    };
+
+    private static string[] CreateDefaultMaxStatsLines() => new[]
+    {
+        "지금 자네에게 더 보탤 것은 없군."
+    };
+
+    private static string[] CreateDefaultClearPlayerLines() => new[]
+    {
+        "왜… 다시 여기로 온 거죠?",
+        "분명 그 사람을 쓰러뜨렸는데."
+    };
+
+    private static string[] CreateDefaultClearNpcLines() => new[]
+    {
+        "……이상하군.",
+        "원래라면 자네가 다시 이곳에 올 이유는 없네.",
+        "잠시 있어보게. 다시 돌려보낼 수 있는지 확인해보지."
+    };
+
+    private static string[] CreateDefaultReturnFailedLines() => new[]
+    {
+        "……안 되는군.",
+        "돌아갈 길은 남아 있어.",
+        "다만 자네가 향해야 할 곳이 달라진 모양이군.",
+        "이유는 나도 모르겠네.",
+        "다시 가보게. 그곳에서 확인하는 수밖에 없겠어."
+    };
+
+    private static string[] CreateDefaultAct2DiscoveryPlayerLines() => new[]
+    {
+        "저 사람… 이상해요.",
+        "같은 사람을 상대하고 있는데, 싸울수록 조금씩 이질감이 들어요."
+    };
+
+    private static string[] CreateDefaultAct2DiscoveryNpcLines() => new[]
+    {
+        "이질감이라…",
+        "저자는 원래 그런 식으로 달라지는 존재가 아니네.",
+        "싸움의 방식에는 정해진 결이 있어. 몇 번을 다시 마주해도 그 틀을 쉽게 벗어나지는 않지.",
+        "자네가 느낀 것이 단순한 착각인지, 아니면 정말 저쪽이 달라지고 있는 건지…",
+        "한 번 더 확인해보게."
+    };
+
+    private static string[] CreateDefaultAct2ConfirmationNpcIntroLines() => new[]
+    {
+        "이번에도 같은 이질감이 있었나?"
+    };
+
+    private static string[] CreateDefaultAct2ConfirmationPlayerLines() => new[]
+    {
+        "네.",
+        "처음에는 착각한 줄 알았는데… 아닌 것 같아요."
+    };
+
+    private static string[] CreateDefaultAct2ConfirmationNpcConclusionLines() => new[]
+    {
+        "……그렇다면 이상하군.",
+        "저자는 싸울수록 달라지고 있어.",
+        "그런 일은 원래 일어나지 않네."
+    };
+
+    private static string[] CreateDefaultAct2ConfirmationPlayerQuestionLines() => new[]
+    {
+        "그럼 어떻게 해야 하죠?"
+    };
+
+    private static string[] CreateDefaultAct2ConfirmationNpcAdviceLines() => new[]
+    {
+        "원인은 나도 모르겠네.",
+        "다만 상대가 달라지고 있다면, 자네도 같은 방식만 고집해서는 안 되겠지.",
+        "이번에는 자네 쪽에서도 변화를 줘보게."
+    };
+
+    private static string[] CreateDefaultAct2NormalDefeatLines() => new[]
+    {
+        "또 돌아왔군.",
+        "서두르지 말게.",
+        "이번에는 조금 더 보고 움직여보게."
+    };
+
+    private static string[] CreateDefaultAct2RepeatDefeatLines() => new[]
+    {
+        "또 돌아왔군.",
+        "상대가 달라진다면 자네도 달라져야 하네.",
+        "같은 답만 고집하지 말게."
+    };
+
+#if UNITY_EDITOR
+    [ContextMenu("Apply Default NPC Dialogue")]
+    private void ApplyDefaultNpcDialogue()
+    {
+        UnityEditor.Undo.RecordObject(this, "Apply Default NPC Dialogue");
+
+        firstDialogueLines = CreateDefaultFirstDialogueLines();
+        act1RecoveryDialogueLines = CreateDefaultAct1RecoveryLines();
+        farewellDialogueLines = CreateDefaultFarewellLines();
+        maxStatsLines = CreateDefaultMaxStatsLines();
+        clearPlayerLines = CreateDefaultClearPlayerLines();
+        clearNpcLines = CreateDefaultClearNpcLines();
+        returnFailedLines = CreateDefaultReturnFailedLines();
+        act2DiscoveryPlayerLines = CreateDefaultAct2DiscoveryPlayerLines();
+        act2DiscoveryNpcLines = CreateDefaultAct2DiscoveryNpcLines();
+        act2TruthNpcIntroLines = CreateDefaultAct2ConfirmationNpcIntroLines();
+        act2TruthPlayerLines = CreateDefaultAct2ConfirmationPlayerLines();
+        act2TruthNpcConclusionLines = CreateDefaultAct2ConfirmationNpcConclusionLines();
+        act2TruthPlayerQuestionLines = CreateDefaultAct2ConfirmationPlayerQuestionLines();
+        act2TruthNpcAdviceLines = CreateDefaultAct2ConfirmationNpcAdviceLines();
+        act2NormalDefeatLines = CreateDefaultAct2NormalDefeatLines();
+        act2RepeatDefeatLines = CreateDefaultAct2RepeatDefeatLines();
+
+        UnityEditor.EditorUtility.SetDirty(this);
+
+        if (!Application.isPlaying && gameObject.scene.IsValid())
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.MarkSceneDirty(gameObject.scene);
+        }
+    }
+#endif
 
     [Header("UI")]
     [SerializeField]
@@ -208,6 +304,14 @@ public class AfterlifeNPC : MonoBehaviour
         {
             state =
                 NpcState.Act1RecoveryDialogue;
+        }
+        else if (progression != null &&
+                 progression.CurrentPhase == GamePhase.Act2Adaptive &&
+                 progression.PendingGrowthPoints > 0 &&
+                 !progression.HasConfirmedAct2Anomaly)
+        {
+            state =
+                NpcState.Act2NormalDefeat;
         }
         else if (progression != null &&
                  progression.CurrentPhase == GamePhase.Act2Adaptive &&
@@ -465,6 +569,36 @@ public class AfterlifeNPC : MonoBehaviour
 
                 break;
 
+            case NpcState.Act2TruthPlayerQuestion:
+
+                dialogueController
+                    .StartDialogue(
+                        playerSpeakerName,
+                        act2TruthPlayerQuestionLines
+                    );
+
+                break;
+
+            case NpcState.Act2TruthNpcAdvice:
+
+                dialogueController
+                    .StartDialogue(
+                        speakerName,
+                        act2TruthNpcAdviceLines
+                    );
+
+                break;
+
+            case NpcState.Act2NormalDefeat:
+
+                dialogueController
+                    .StartDialogue(
+                        speakerName,
+                        act2NormalDefeatLines
+                    );
+
+                break;
+
             case NpcState.Act2RepeatDefeat:
 
                 dialogueController
@@ -535,6 +669,28 @@ public class AfterlifeNPC : MonoBehaviour
         if (state ==
             NpcState.Act2TruthNpcConclusion)
         {
+            state =
+                NpcState.Act2TruthPlayerQuestion;
+
+            StartCurrentDialogue();
+
+            return;
+        }
+
+        if (state ==
+            NpcState.Act2TruthPlayerQuestion)
+        {
+            state =
+                NpcState.Act2TruthNpcAdvice;
+
+            StartCurrentDialogue();
+
+            return;
+        }
+
+        if (state ==
+            NpcState.Act2TruthNpcAdvice)
+        {
             GameProgression progression =
                 GameProgression.Instance;
 
@@ -542,6 +698,17 @@ public class AfterlifeNPC : MonoBehaviour
                 .CompleteAct2TruthDialogue();
 
             progression?
+                .ClaimGrowthPoint();
+
+            EnterMenuReady();
+
+            return;
+        }
+
+        if (state ==
+            NpcState.Act2NormalDefeat)
+        {
+            GameProgression.Instance?
                 .ClaimGrowthPoint();
 
             EnterMenuReady();
@@ -884,6 +1051,8 @@ public class AfterlifeNPC : MonoBehaviour
                 NpcState.Act2DiscoveryPlayer ||
             state ==
                 NpcState.Act2TruthNpcIntro ||
+            state ==
+                NpcState.Act2NormalDefeat ||
             state ==
                 NpcState.Act2RepeatDefeat)
         {

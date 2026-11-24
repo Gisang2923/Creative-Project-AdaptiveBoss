@@ -61,6 +61,8 @@ public class GameProgression : MonoBehaviour
     [SerializeField]
     private bool act2TruthDialogueShown = false;
     [SerializeField]
+    private bool act2AdaptiveBehaviorExperiencedThisRun = false;
+    [SerializeField]
     private bool afterlifeNpcMet = false;
     public int PendingGrowthPoints =>
         pendingGrowthPoints;
@@ -105,6 +107,9 @@ public class GameProgression : MonoBehaviour
         currentPhase == GamePhase.Act2Adaptive &&
         act2TruthDialoguePending &&
         !act2TruthDialogueShown;
+
+    public bool HasConfirmedAct2Anomaly =>
+        act2TruthDialogueShown;
 
     public bool HasMetAfterlifeNpc =>
         afterlifeNpcMet;
@@ -162,18 +167,21 @@ public class GameProgression : MonoBehaviour
         {
             act2DefeatCount++;
 
-            if (act2DefeatCount == 1 &&
+            if (act2AdaptiveBehaviorExperiencedThisRun &&
                 !act2FirstDefeatDialoguePending &&
                 !act2FirstDefeatDialogueShown)
             {
                 act2FirstDefeatDialoguePending = true;
             }
-            else if (act2DefeatCount == 2 &&
+            else if (act2AdaptiveBehaviorExperiencedThisRun &&
+                     act2FirstDefeatDialogueShown &&
                      !act2TruthDialoguePending &&
                      !act2TruthDialogueShown)
             {
                 act2TruthDialoguePending = true;
             }
+
+            act2AdaptiveBehaviorExperiencedThisRun = false;
         }
 
         if (currentPhase ==
@@ -362,6 +370,13 @@ public class GameProgression : MonoBehaviour
 
         return true;
     }
+    public void MarkAct2AdaptiveBehaviorExperienced()
+    {
+        if (currentPhase == GamePhase.Act2Adaptive)
+        {
+            act2AdaptiveBehaviorExperiencedThisRun = true;
+        }
+    }
     public void CompleteAct2FirstDefeatDialogue()
     {
         if (!HasPendingAct2FirstDefeatDialogue)
@@ -433,6 +448,8 @@ public class GameProgression : MonoBehaviour
             GamePhase.Act2Adaptive
         );
 
+        act2AdaptiveBehaviorExperiencedThisRun = false;
+
         NotifyChanged();
 
         Debug.Log(
@@ -468,6 +485,7 @@ public class GameProgression : MonoBehaviour
         act2FirstDefeatDialogueShown = false;
         act2TruthDialoguePending = false;
         act2TruthDialogueShown = false;
+        act2AdaptiveBehaviorExperiencedThisRun = false;
         afterlifeNpcMet = false;
         NotifyChanged();
 
