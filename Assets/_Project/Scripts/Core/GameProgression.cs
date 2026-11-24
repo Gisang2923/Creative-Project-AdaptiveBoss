@@ -457,15 +457,10 @@ public class GameProgression : MonoBehaviour
             "Act2 Adaptive Started"
         );
     }
-#if UNITY_EDITOR
 
-    [ContextMenu(
-        "DEBUG/Reset Progression"
-    )]
-    private void ResetProgressionForDebug()
+    public void ResetForNewGame()
     {
-        currentPhase =
-            GamePhase.FirstEncounter;
+        currentPhase = GamePhase.FirstEncounter;
 
         attackLevel = 0;
         healthLevel = 0;
@@ -487,12 +482,18 @@ public class GameProgression : MonoBehaviour
         act2TruthDialogueShown = false;
         act2AdaptiveBehaviorExperiencedThisRun = false;
         afterlifeNpcMet = false;
-        NotifyChanged();
 
-        OnPhaseChanged?
-            .Invoke(
-                currentPhase
-            );
+        NotifyChanged();
+        OnPhaseChanged?.Invoke(currentPhase);
+    }
+#if UNITY_EDITOR
+
+    [ContextMenu(
+        "DEBUG/Reset Progression"
+    )]
+    private void ResetProgressionForDebug()
+    {
+        ResetForNewGame();
 
         Debug.Log(
             "[Progression] Debug Reset"

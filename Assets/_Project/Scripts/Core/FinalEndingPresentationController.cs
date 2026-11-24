@@ -3,6 +3,7 @@ using System.Collections;
 using TMPro;
 using UnityEngine;
 using UnityEngine.InputSystem;
+using UnityEngine.SceneManagement;
 
 public class FinalEndingPresentationController : MonoBehaviour
 {
@@ -154,6 +155,7 @@ public class FinalEndingPresentationController : MonoBehaviour
     [Header("Ending Fade")]
     [SerializeField] private CanvasGroup endingFade;
     [SerializeField, Min(0f)] private float endingFadeDuration = 1.5f;
+    [SerializeField, Min(0f)] private float blackScreenHoldDuration = 1.5f;
 
     private PlayerAnimator playerAnimator;
     private PlayerCombat playerCombat;
@@ -163,6 +165,7 @@ public class FinalEndingPresentationController : MonoBehaviour
     private bool dialogueEnded;
     private bool dialogueSubscribed;
     private bool finalBlowStarted;
+    private bool titleTransitionStarted;
     private int promptShownFrame;
     private Color playerOriginalColor;
 
@@ -409,6 +412,13 @@ public class FinalEndingPresentationController : MonoBehaviour
         yield return WaitUnscaled(silhouetteHoldDuration);
 
         yield return FadeToBlack();
+        yield return WaitUnscaled(blackScreenHoldDuration);
+
+        if (titleTransitionStarted)
+            yield break;
+
+        titleTransitionStarted = true;
+        SceneManager.LoadScene("TitleScreen");
     }
 
     private IEnumerator FadePlayerToSilhouette()

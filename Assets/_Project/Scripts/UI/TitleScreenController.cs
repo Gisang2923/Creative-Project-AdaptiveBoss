@@ -23,6 +23,7 @@ public class TitleScreenController : MonoBehaviour
     [Header("Transition")]
     [SerializeField] private CanvasGroup fadeCanvasGroup;
     [SerializeField, Min(0f)] private float fadeDuration = 0.45f;
+    [SerializeField, Min(0f)] private float returnFadeInDuration = 0.6f;
 
     private bool transitionStarted;
 
@@ -43,11 +44,18 @@ public class TitleScreenController : MonoBehaviour
             masterVolumeSlider.onValueChanged.AddListener(SetMasterVolume);
         }
 
+        bool returningFromEnding =
+            GameProgression.Instance != null &&
+            GameProgression.Instance.IsCompleted;
+
         if (fadeCanvasGroup != null)
         {
-            fadeCanvasGroup.alpha = 0f;
-            fadeCanvasGroup.blocksRaycasts = false;
+            fadeCanvasGroup.alpha = returningFromEnding ? 1f : 0f;
+            fadeCanvasGroup.blocksRaycasts = returningFromEnding;
             fadeCanvasGroup.interactable = false;
+
+            if (returningFromEnding)
+                StartCoroutine(FadeInFromEndingRoutine());
         }
     }
 
@@ -140,7 +148,26 @@ public class TitleScreenController : MonoBehaviour
             fadeCanvasGroup.alpha = 1f;
         }
 
+        GameProgression.Instance?.ResetForNewGame();
         SceneManager.LoadScene(firstSceneName);
+    }
+
+    private IEnumerator FadeInFromEndingRoutine()
+    {
+        transitionStarted = true;
+
+        float elapsed = 0f;
+        while (elapsed < returnFadeInDuration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            fadeCanvasGroup.alpha = 1f -
+                Mathf.Clamp01(elapsed / returnFadeInDuration);
+            yield return null;
+        }
+
+        fadeCanvasGroup.alpha = 0f;
+        fadeCanvasGroup.blocksRaycasts = false;
+        transitionStarted = false;
     }
 
     private static void SelectButton(Button button)
