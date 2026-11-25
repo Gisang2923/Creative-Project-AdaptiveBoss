@@ -134,6 +134,9 @@ public class AfterlifeGrowthUI : MonoBehaviour
             return;
         }
 
+        if (!progression.StatsUpgradeUnlocked)
+            return;
+
         playerMovement =
             movement;
 

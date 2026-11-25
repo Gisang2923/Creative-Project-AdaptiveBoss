@@ -7,7 +7,7 @@ public class GameProgression : MonoBehaviour
 
     public const int MaxAttackLevel = 5;
     public const int MaxHealthLevel = 5;
-    public const int MaxFearRecoveryStage = 8;
+    public const int MaxFearRecoveryStage = 4;
     public const int PrecisionUnlockStage = 4;
 
     [Header("Game Phase")]
@@ -45,9 +45,6 @@ public class GameProgression : MonoBehaviour
     private int pendingGrowthPoints = 0;
 
     [Header("Presentation State")]
-    [SerializeField]
-    private bool firstRecoveryLineShown = false;
-
     [SerializeField]
     private int lastPresentedFearRecoveryStage = 0;
     [SerializeField]
@@ -124,6 +121,14 @@ public class GameProgression : MonoBehaviour
     public bool AreAllStatsMax =>
         attackLevel >= MaxAttackLevel &&
         healthLevel >= MaxHealthLevel;
+    public bool StatsUpgradeUnlocked =>
+        currentPhase == GamePhase.Act2Adaptive ||
+        (currentPhase == GamePhase.Act1 &&
+         fearRecoveryStage >= MaxFearRecoveryStage);
+    public bool WillAdvanceFearRecovery =>
+        currentPhase == GamePhase.Act1 &&
+        fearRecoveryPending &&
+        fearRecoveryStage < MaxFearRecoveryStage;
     public event Action OnProgressionChanged;
     public event Action<GamePhase> OnPhaseChanged;
 
@@ -137,6 +142,14 @@ public class GameProgression : MonoBehaviour
         }
 
         Instance = this;
+
+        // Existing serialized progress can contain stages from the old 0-8 scale.
+        fearRecoveryStage = Mathf.Clamp(
+            fearRecoveryStage, 0, MaxFearRecoveryStage
+        );
+        lastPresentedFearRecoveryStage = Mathf.Clamp(
+            lastPresentedFearRecoveryStage, 0, MaxFearRecoveryStage
+        );
 
         DontDestroyOnLoad(
             gameObject
@@ -153,12 +166,18 @@ public class GameProgression : MonoBehaviour
 
         defeatCount++;
 
-        // 실제 GP를 바로 주지 않고
-        // 사후세계 NPC에게 받을 보상으로 저장
-        pendingGrowthPoints++;
+        // The first three required defeats grant no GP. The Stage 3 defeat
+        // grants the first point when the NPC confirms Stage 4.
+        if (currentPhase != GamePhase.FirstEncounter &&
+            (currentPhase != GamePhase.Act1 ||
+             fearRecoveryStage >= MaxFearRecoveryStage - 1))
+        {
+            pendingGrowthPoints++;
+        }
 
         if (currentPhase == GamePhase.FirstEncounter ||
-            currentPhase == GamePhase.Act1)
+            (currentPhase == GamePhase.Act1 &&
+             fearRecoveryStage < MaxFearRecoveryStage))
         {
             fearRecoveryPending = true;
         }
@@ -225,7 +244,9 @@ public class GameProgression : MonoBehaviour
     public void RegisterVictory()
     {
         if (currentPhase ==
-            GamePhase.Completed)
+            GamePhase.Completed ||
+            (currentPhase == GamePhase.Act1 &&
+             fearRecoveryStage < MaxFearRecoveryStage))
         {
             return;
         }
@@ -309,52 +330,25 @@ public class GameProgression : MonoBehaviour
         return true;
     }
 
-    public bool TryConsumeFearRecoveryBattleReaction(
-        out int level,
-        out bool isFirstRecovery)
+    public bool ShouldPresentFearRecoveryMessage(int stage)
     {
-        level = fearRecoveryStage;
-        isFirstRecovery = false;
+        return currentPhase == GamePhase.Act1 &&
+            stage > 0 &&
+            stage <= MaxFearRecoveryStage &&
+            stage == fearRecoveryStage &&
+            stage > lastPresentedFearRecoveryStage;
+    }
 
-        if (currentPhase !=
-            GamePhase.Act1)
-        {
+    public bool TryMarkFearRecoveryMessagePresented(int stage)
+    {
+        if (!ShouldPresentFearRecoveryMessage(stage))
             return false;
-        }
 
-        if (fearRecoveryStage <= 0)
-            return false;
-
-
-        // 첫 강제 사망 이후
-        // 첫 정상 전투 진입
-        if (!firstRecoveryLineShown)
-        {
-            firstRecoveryLineShown = true;
-
-            lastPresentedFearRecoveryStage =
-                fearRecoveryStage;
-
-            isFirstRecovery = true;
-
-            return true;
-        }
-
-
-        // 이전 전투 이후
-        // 회복 단계가 실제로 증가했을 때만 출력
-        if (fearRecoveryStage <=
-            lastPresentedFearRecoveryStage)
-        {
-            return false;
-        }
-
-
-        lastPresentedFearRecoveryStage =
-            fearRecoveryStage;
-
+        // Commit only after the AfterLife UI reports that it displayed the text.
+        lastPresentedFearRecoveryStage = stage;
         return true;
     }
+
     public bool TryConsumeAct2Intro()
     {
         if (currentPhase !=
@@ -399,14 +393,7 @@ public class GameProgression : MonoBehaviour
     }
     private bool CanSpendPoint()
     {
-        return
-            growthPoints > 0 &&
-            currentPhase !=
-                GamePhase.FirstEncounter &&
-            currentPhase !=
-                GamePhase.Act1Cleared &&
-            currentPhase !=
-                GamePhase.Completed;
+        return growthPoints > 0 && StatsUpgradeUnlocked;
     }
 
     private void SetPhase(
@@ -473,7 +460,6 @@ public class GameProgression : MonoBehaviour
         act2DefeatCount = 0;
         victoryCount = 0;
 
-        firstRecoveryLineShown = false;
         lastPresentedFearRecoveryStage = 0;
         act2IntroShown = false;
         act2FirstDefeatDialoguePending = false;

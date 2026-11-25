@@ -3472,25 +3472,37 @@ MonoBehaviour:
   fearFadeDuration: 0.1
   fearWeightsByStage:
   - 1
-  - 0.92
-  - 0.82
-  - 0.7
-  - 0.58
-  - 0.45
-  - 0.32
-  - 0.16
+  - 0.6
+  - 0.3
   - 0
+  - 0
+  stage1VisionRadius: 0.2
+  stage2VisionRadius: 0.38
+  stage1VisionSoftness: 0.55
+  stage2VisionSoftness: 0.65
+  visionOutsideDarkness: 0.92
+  visionEntryDuration: 0.5
+  injuryVignetteColor: {r: 0.35, g: 0.02, b: 0.04, a: 1}
+  injuryClearRadius: 0.4
+  injuryEdgeSoftness: 0.55
+  stage3InjuryStrength: 0.55
+  lowHealthThreshold: 0.3
+  criticalHealthThreshold: 0.15
+  lowHealthStrength: 0.45
+  criticalHealthStrength: 0.68
+  criticalPulseSpeed: 1.2
+  criticalPulseAmount: 0.04
+  injuryRecoveryFadeDuration: 0.25
   initialHoldDuration: 1
   readyDuration: 2.11
-  fearRecoveryReactionDuration: 1.2
   act2IntroHoldDuration: 0.6
   act2BossLineDuration: 1.4
   act2BossLine: "\uB610 \uC654\uAD70."
   firstLineDuration: 1.5
   beforeReadyDelay: 0.4
   afterFearDelay: 0.2
-  breathLineDuration: 0.9
-  cannotBreatheLineDuration: 1.1
+  breathLineDuration: 2.2
+  cannotBreatheLineDuration: 1.8
   beforeExecutionDelay: 1
 --- !u!4 &755130690
 Transform:
@@ -5864,7 +5876,6 @@ MonoBehaviour:
   act2DefeatCount: 0
   victoryCount: 0
   pendingGrowthPoints: 0
-  firstRecoveryLineShown: 0
   lastPresentedFearRecoveryStage: 0
   act2IntroShown: 0
   act2FirstDefeatDialoguePending: 0

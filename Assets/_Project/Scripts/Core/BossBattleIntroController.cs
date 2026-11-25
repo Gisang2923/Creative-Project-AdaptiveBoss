@@ -2,7 +2,6 @@ using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
 using UnityEngine.Rendering;
-using UnityEngine.Serialization;
 
 public class BossBattleIntroController : MonoBehaviour
 {
@@ -52,10 +51,30 @@ public class BossBattleIntroController : MonoBehaviour
     [SerializeField]
     private float[] fearWeightsByStage =
     {
-        1.00f, 0.92f, 0.82f,
-        0.70f, 0.58f, 0.45f,
-        0.32f, 0.16f, 0.00f
+        1.00f, 0.60f, 0.30f, 0.00f, 0.00f
     };
+
+    [Header("World Binding Vision")]
+    [SerializeField, Range(0f, 1f)] private float stage1VisionRadius = 0.20f;
+    [SerializeField, Range(0f, 1f)] private float stage2VisionRadius = 0.38f;
+    [SerializeField, Range(0f, 1f)] private float stage1VisionSoftness = 0.55f;
+    [SerializeField, Range(0f, 1f)] private float stage2VisionSoftness = 0.65f;
+    [SerializeField, Range(0f, 1f)] private float visionOutsideDarkness = 0.92f;
+    [SerializeField, Min(0.01f)] private float visionEntryDuration = 0.5f;
+
+    [Header("Injury Vignette")]
+    [SerializeField] private Color injuryVignetteColor =
+        new Color(0.35f, 0.02f, 0.04f, 1f);
+    [SerializeField, Range(0f, 1f)] private float injuryClearRadius = 0.4f;
+    [SerializeField, Range(0.01f, 1f)] private float injuryEdgeSoftness = 0.55f;
+    [SerializeField, Range(0f, 1f)] private float stage3InjuryStrength = 0.55f;
+    [SerializeField, Range(0f, 1f)] private float lowHealthThreshold = 0.3f;
+    [SerializeField, Range(0f, 1f)] private float criticalHealthThreshold = 0.15f;
+    [SerializeField, Range(0f, 1f)] private float lowHealthStrength = 0.45f;
+    [SerializeField, Range(0f, 1f)] private float criticalHealthStrength = 0.68f;
+    [SerializeField, Min(0f)] private float criticalPulseSpeed = 1.2f;
+    [SerializeField, Range(0f, 0.2f)] private float criticalPulseAmount = 0.04f;
+    [SerializeField, Min(0.01f)] private float injuryRecoveryFadeDuration = 0.25f;
 
 
     [Header("Normal Intro")]
@@ -64,10 +83,6 @@ public class BossBattleIntroController : MonoBehaviour
 
     [SerializeField]
     private float readyDuration = 2.11f;
-
-    [SerializeField]
-    [FormerlySerializedAs("mentalReactionDuration")]
-    private float fearRecoveryReactionDuration = 1.2f;
 
     [Header("Act2 First Intro")]
     [SerializeField]
@@ -90,10 +105,10 @@ public class BossBattleIntroController : MonoBehaviour
     private float afterFearDelay = 0.2f;
 
     [SerializeField]
-    private float breathLineDuration = 0.9f;
+    private float breathLineDuration = 2.2f;
 
     [SerializeField]
-    private float cannotBreatheLineDuration = 1.1f;
+    private float cannotBreatheLineDuration = 1.8f;
     [SerializeField]
     private float beforeExecutionDelay = 0.3f;
 
@@ -101,6 +116,10 @@ public class BossBattleIntroController : MonoBehaviour
 
     private bool introStarted;
     private bool fearTriggered;
+    private bool normalBindingApplied;
+    private WorldBindingVision bindingVision;
+    private AfterlifeWillMessage battleStatusMessage;
+    private Coroutine normalFearFade;
 
 
     private void Awake()
@@ -144,6 +163,17 @@ public class BossBattleIntroController : MonoBehaviour
     private void OnDisable()
     {
         playerAnimator?.ResumePresentationAnimation();
+        bindingVision?.HideImmediately();
+        if (normalFearFade != null)
+            StopCoroutine(normalFearFade);
+        if (fearVolume != null)
+            fearVolume.weight = 0f;
+    }
+
+    private void OnDestroy()
+    {
+        if (bindingVision != null)
+            Destroy(bindingVision.transform.parent.gameObject);
     }
 
 
@@ -169,7 +199,16 @@ public class BossBattleIntroController : MonoBehaviour
             return;
         }
 
-        ApplyFearRecoveryWeight();
+        GameProgression progression = GameProgression.Instance;
+        if (progression != null &&
+            (progression.CurrentPhase == GamePhase.Act2Adaptive ||
+             (progression.CurrentPhase == GamePhase.Act1 &&
+              progression.FearRecoveryStage >=
+                  GameProgression.MaxFearRecoveryStage)))
+        {
+            EnsureBindingVision()?.Begin(
+                progression.FearRecoveryStage, progression.CurrentPhase);
+        }
 
         StartCoroutine(
             NormalIntroRoutine()
@@ -185,7 +224,6 @@ public class BossBattleIntroController : MonoBehaviour
     {
         GameProgression progression =
             GameProgression.Instance;
-
 
         // =====================================
         // Act2 First Encounter Check
@@ -243,40 +281,6 @@ public class BossBattleIntroController : MonoBehaviour
 
 
         // =====================================
-        // Fear Recovery Reaction
-        //
-        // Act2 첫 등장에서는 생략
-        // =====================================
-
-        if (!isFirstAct2Intro &&
-            progression != null &&
-            playerBubble != null &&
-            progression
-                .TryConsumeFearRecoveryBattleReaction(
-                    out int fearRecoveryStage,
-                    out bool isFirstRecovery
-                ))
-        {
-            string reactionLine =
-                GetFearRecoveryReactionLine(
-                    fearRecoveryStage,
-                    isFirstRecovery
-                );
-
-
-            if (!string.IsNullOrEmpty(
-                    reactionLine))
-            {
-                yield return playerBubble
-                    .ShowForSeconds(
-                        reactionLine,
-                        fearRecoveryReactionDuration
-                    );
-            }
-        }
-
-
-        // =====================================
         // Boss Ready
         // =====================================
 
@@ -286,6 +290,15 @@ public class BossBattleIntroController : MonoBehaviour
         yield return new WaitForSeconds(
             readyDuration
         );
+
+        // The Ready animation event is authoritative; retain a fallback if
+        // that event is missing from a variant of the animation.
+        if (!normalBindingApplied &&
+            progression != null &&
+            progression.CurrentPhase == GamePhase.Act1)
+        {
+            ApplyNormalBinding();
+        }
 
 
         // =====================================
@@ -312,38 +325,6 @@ public class BossBattleIntroController : MonoBehaviour
             "[INTRO] Normal Battle Start"
         );
     }
-    private string GetFearRecoveryReactionLine(
-        int fearRecoveryStage,
-        bool isFirstRecovery)
-    {
-        // 첫 강제 사망 이후
-        // 두 번째 조우 전용 독백
-        if (isFirstRecovery)
-        {
-            return
-                "움직여... 이번엔 움직일 수 있어.";
-        }
-
-
-        switch (fearRecoveryStage)
-        {
-            case 2:
-                return
-                    "호흡이... 조금씩 돌아오고 있어.";
-
-            case 3:
-                return
-                    "몸이... 더는 굳지 않아.";
-
-            case 4:
-                return
-                    "조금씩... 선명해지고 있어.";
-
-            default:
-                return null;
-        }
-    }
-
     private void ApplyFearRecoveryWeight()
     {
         if (fearVolume == null)
@@ -376,9 +357,30 @@ public class BossBattleIntroController : MonoBehaviour
             return;
         }
 
-        fearVolume.weight = Mathf.Clamp01(
-            fearWeightsByStage[stage]
-        );
+        float targetWeight = Mathf.Clamp01(fearWeightsByStage[stage]);
+        if (stage == 1 || stage == 2)
+            normalFearFade = StartCoroutine(
+                FadeNormalFearVolume(targetWeight));
+        else
+            fearVolume.weight = targetWeight;
+    }
+
+    private IEnumerator FadeNormalFearVolume(float targetWeight)
+    {
+        float startWeight = fearVolume.weight;
+        float elapsed = 0f;
+        float duration = Mathf.Max(0.01f, visionEntryDuration);
+        while (elapsed < duration)
+        {
+            elapsed += Time.unscaledDeltaTime;
+            fearVolume.weight = Mathf.Lerp(
+                startWeight, targetWeight,
+                Mathf.SmoothStep(0f, 1f, elapsed / duration));
+            yield return null;
+        }
+
+        fearVolume.weight = targetWeight;
+        normalFearFade = null;
     }
 
     private void FaceBoss()
@@ -415,7 +417,7 @@ public class BossBattleIntroController : MonoBehaviour
         {
             yield return playerBubble
                 .ShowForSeconds(
-                    "생각보다... 평범한데?",
+                    "생각보다… 평범한데?",
                     firstLineDuration
                 );
         }
@@ -462,12 +464,12 @@ public class BossBattleIntroController : MonoBehaviour
         );
 
 
-        // 4. 공포 상태의 독백
+        // 4. 구속이 발동한 뒤의 독백
         if (playerBubble != null)
         {
             yield return playerBubble
                 .ShowForSeconds(
-                    "숨이...",
+                    "…어째서 몸이 움직이지 않는 거지?",
                     breathLineDuration
                 );
         }
@@ -482,7 +484,7 @@ public class BossBattleIntroController : MonoBehaviour
         {
             yield return playerBubble
                 .ShowForSeconds(
-                    "안 쉬어져...",
+                    "움직여… 내 몸이잖아.",
                     cannotBreatheLineDuration
                 );
         }
@@ -552,15 +554,19 @@ public class BossBattleIntroController : MonoBehaviour
 
     public void TriggerFearMoment()
     {
-        if (fearTriggered)
+        GameProgression progression = GameProgression.Instance;
+        if (progression == null)
             return;
 
-        if (GameProgression.Instance == null ||
-            !GameProgression.Instance
-                .IsFirstEncounter)
+        if (!progression.IsFirstEncounter)
         {
+            if (progression.CurrentPhase == GamePhase.Act1)
+                ApplyNormalBinding();
             return;
         }
+
+        if (fearTriggered)
+            return;
 
         fearTriggered = true;
         playerAnimator?.FreezePresentationAnimation();
@@ -575,6 +581,109 @@ public class BossBattleIntroController : MonoBehaviour
                 FadeFearVolume()
             );
         }
+    }
+
+    private void ApplyNormalBinding()
+    {
+        if (normalBindingApplied)
+            return;
+
+        GameProgression progression = GameProgression.Instance;
+        if (progression == null || progression.CurrentPhase != GamePhase.Act1)
+            return;
+
+        normalBindingApplied = true;
+        ApplyFearRecoveryWeight();
+
+        int stage = progression.FearRecoveryStage;
+        EnsureBindingVision()?.Begin(stage, progression.CurrentPhase);
+
+        string status = null;
+        switch (stage)
+        {
+            case 1:
+                status = "세계의 구속\n본래의 능력이 제한되고 있습니다.\n공격 불가 · 최대 체력 제한 · 시야 제한";
+                break;
+            case 2:
+                status = "세계의 구속\n공격 능력이 회복되었습니다.\n최대 체력 제한 · 시야 제한";
+                break;
+            case 3:
+                status = "세계의 구속\n시야에 대한 구속이 해제되었습니다.\n최대 체력 제한";
+                break;
+            case 4:
+                status = "세계의 구속 해제\n본래의 능력이 모두 회복되었습니다.\n모든 구속 효과 해제";
+                break;
+        }
+
+        if (status != null)
+            GetBattleStatusMessage()?.TryShowText(stage, status);
+    }
+
+    private WorldBindingVision EnsureBindingVision()
+    {
+        if (bindingVision != null)
+            return bindingVision;
+        if (playerMovement == null)
+            return null;
+
+        Health playerHealth = playerMovement.GetComponent<Health>();
+        if (playerHealth == null)
+        {
+            Debug.LogError("[World Binding] Player Health is missing.");
+            return null;
+        }
+
+        bindingVision = WorldBindingVision.Create();
+        if (bindingVision == null)
+            return null;
+
+        WorldBindingVision.Settings settings =
+            new WorldBindingVision.Settings
+            {
+                Stage1Radius = stage1VisionRadius,
+                Stage2Radius = stage2VisionRadius,
+                Stage1Softness = stage1VisionSoftness,
+                Stage2Softness = stage2VisionSoftness,
+                BindingStrength = visionOutsideDarkness,
+                EntryDuration = visionEntryDuration,
+                InjuryColor = injuryVignetteColor,
+                InjuryRadius = injuryClearRadius,
+                InjurySoftness = injuryEdgeSoftness,
+                Stage3Strength = stage3InjuryStrength,
+                LowHealthThreshold = lowHealthThreshold,
+                CriticalHealthThreshold = criticalHealthThreshold,
+                LowHealthStrength = lowHealthStrength,
+                CriticalHealthStrength = criticalHealthStrength,
+                PulseSpeed = criticalPulseSpeed,
+                PulseAmount = criticalPulseAmount,
+                RecoveryFadeDuration = injuryRecoveryFadeDuration
+            };
+
+        bindingVision.Initialize(
+            GameProgression.Instance,
+            playerHealth,
+            playerMovement.transform,
+            Camera.main,
+            settings);
+        return bindingVision;
+    }
+
+    public void ShowBindingDefeatFeedback()
+    {
+        if (GameProgression.Instance == null ||
+            GameProgression.Instance.CurrentPhase != GamePhase.Act1)
+            return;
+
+        GetBattleStatusMessage()?.TryShowText(100,
+            "세계의 구속\n종결 앞에서 몸이 다시 멈춥니다.", 1.5f);
+    }
+
+    private AfterlifeWillMessage GetBattleStatusMessage()
+    {
+        if (battleStatusMessage == null && playerBubble != null)
+            battleStatusMessage = AfterlifeWillMessage.GetOrCreate(
+                playerBubble.DialogueText);
+        return battleStatusMessage;
     }
 
 

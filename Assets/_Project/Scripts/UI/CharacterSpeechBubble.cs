@@ -20,6 +20,8 @@ public class CharacterSpeechBubble : MonoBehaviour
     [SerializeField]
     private Camera targetCamera;
 
+    public TMP_Text DialogueText => dialogueText;
+
 
     [Header("Position")]
     [SerializeField]

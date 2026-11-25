@@ -22,6 +22,7 @@ public class BossDamageReceiver : DamageReceiver
     private bool isDead;
     private bool finalEndingActive;
     private bool finalDeathAnimationEnded;
+    private bool bindingDefeatPending;
 
     public bool IsDead => isDead;
 
@@ -62,8 +63,30 @@ public class BossDamageReceiver : DamageReceiver
     public override void TakeDamage(
         DamageInfo damageInfo)
     {
-        if (isDead || finalEndingActive)
+        if (isDead || finalEndingActive || bindingDefeatPending)
             return;
+
+        bool triggerBindingDefeat = false;
+        GameProgression progression = GameProgression.Instance;
+        if (progression != null &&
+            progression.CurrentPhase == GamePhase.Act1)
+        {
+            int stage = progression.FearRecoveryStage;
+            if (stage <= 1)
+            {
+                // Counter damage does not pass through PlayerProgressionRuntime.
+                damageInfo.Damage = 0;
+            }
+            else if (stage < GameProgression.MaxFearRecoveryStage &&
+                     health != null &&
+                     damageInfo.Damage > 0 &&
+                     damageInfo.Damage >= health.CurrentHealth)
+            {
+                damageInfo.Damage = Mathf.Max(0, health.CurrentHealth - 1);
+                bindingDefeatPending = true;
+                triggerBindingDefeat = true;
+            }
+        }
 
 
         bool wasPrecisionStunned =
@@ -123,6 +146,13 @@ public class BossDamageReceiver : DamageReceiver
                 damageInfo.HitDirection
             );
         }
+
+        if (triggerBindingDefeat)
+        {
+            StartCoroutine(BindingDefeatRoutine(damageInfo.Attacker));
+            return;
+        }
+
         // 데미지 처리 중 사망했다면 종료
         if (isDead || finalEndingActive)
             return;
@@ -154,6 +184,25 @@ public class BossDamageReceiver : DamageReceiver
             bossController
                 .EnterPrecisionStun();
         }
+    }
+
+    private IEnumerator BindingDefeatRoutine(GameObject attacker)
+    {
+        FindFirstObjectByType<BossBattleIntroController>()?
+            .ShowBindingDefeatFeedback();
+
+        yield return new WaitForSecondsRealtime(0.65f);
+
+        PlayerDamageReceiver player = attacker != null
+            ? attacker.GetComponentInParent<PlayerDamageReceiver>()
+            : null;
+        if (player == null)
+            player = FindFirstObjectByType<PlayerDamageReceiver>();
+
+        if (player != null)
+            player.ForceDefeatByWorldBinding();
+        else
+            Debug.LogError("[World Binding] Player not found for defeat.");
     }
 
     private void HandleDeath()

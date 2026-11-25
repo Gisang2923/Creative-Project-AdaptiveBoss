@@ -201,6 +201,26 @@ public class PlayerDamageReceiver : DamageReceiver
             HitRoutine()
         );
     }
+
+    public void ForceDefeatByWorldBinding()
+    {
+        if (health == null || health.IsDead)
+            return;
+
+        // Use the usual death presentation, bypassing dodge and temporary
+        // invincibility only for the Act1 binding defeat.
+        health.TakeDamage(new DamageInfo(
+            Mathf.Max(1, health.CurrentHealth),
+            Vector2.zero,
+            0f,
+            null,
+            "WorldBinding",
+            false
+        ));
+
+        if (health.IsDead)
+            HandleDeath();
+    }
     public void OnGetUpEnd()
     {
         if (!isGettingUp)

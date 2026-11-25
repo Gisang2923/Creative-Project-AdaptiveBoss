@@ -31,6 +31,7 @@ public class AfterlifeDialogueController : MonoBehaviour
     private int openedFrame;
 
     public bool IsOpen => isOpen;
+    public TMP_Text DialogueText => dialogueText;
 
     public event Action OnDialogueEnded;
 

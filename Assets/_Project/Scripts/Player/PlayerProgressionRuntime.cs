@@ -178,6 +178,16 @@ public class PlayerProgressionRuntime :
                 1
             );
 
+        if (progression.CurrentPhase == GamePhase.Act1 &&
+            progression.FearRecoveryStage <
+                GameProgression.MaxFearRecoveryStage)
+        {
+            baseMaxHealth = Mathf.Max(
+                1,
+                Mathf.CeilToInt(baseMaxHealth * 0.01f)
+            );
+        }
+
         health.SetMaxHealth(
             baseMaxHealth,
             true
@@ -213,6 +223,12 @@ public class PlayerProgressionRuntime :
 
         if (progression == null)
             return baseDamage;
+
+        if (progression.CurrentPhase == GamePhase.Act1 &&
+            progression.FearRecoveryStage <= 1)
+        {
+            return 0;
+        }
 
         float attackLevelMultiplier =
             GetAttackLevelMultiplier(

@@ -23,6 +23,7 @@ public class AfterlifeNPC : MonoBehaviour
         MenuOpen,
 
         Growth,
+        GrowthLocked,
         MaxStats,
         Farewell,
 
@@ -71,13 +72,32 @@ public class AfterlifeNPC : MonoBehaviour
 
     [SerializeField]
     private Act1RecoveryDialogueEntry[] act1RecoveryDialogueByStage =
-        Array.Empty<Act1RecoveryDialogueEntry>();
+    {
+        new Act1RecoveryDialogueEntry
+        {
+            stage = 2,
+            lines = CreateDefaultStage2RecoveryLines()
+        },
+        new Act1RecoveryDialogueEntry
+        {
+            stage = 3,
+            lines = CreateDefaultStage3RecoveryLines()
+        },
+        new Act1RecoveryDialogueEntry
+        {
+            stage = GameProgression.MaxFearRecoveryStage,
+            lines = CreateDefaultStage4RecoveryLines()
+        }
+    };
 
     [SerializeField, TextArea(2, 4)]
     private string[] farewellDialogueLines = CreateDefaultFarewellLines();
 
     [SerializeField, TextArea(2, 4)]
     private string[] maxStatsLines = CreateDefaultMaxStatsLines();
+
+    [SerializeField, TextArea(2, 4)]
+    private string[] growthLockedLines = CreateDefaultGrowthLockedLines();
     [Header("Act1 Clear Event")]
     [SerializeField]
     private string playerSpeakerName =
@@ -126,16 +146,45 @@ public class AfterlifeNPC : MonoBehaviour
     private static string[] CreateDefaultFirstDialogueLines() => new[]
     {
         "눈을 떴군.",
-        "놀랄 것 없네. 이곳은 다시 나아가기 전 잠시 머무는 곳일세.",
-        "나는 이곳에 온 자가 다시 나아갈 수 있도록 돕고 있지.",
-        "준비가 되면 말하게."
+        "나는 자네를 그곳으로 돌려보내는 역할을 맡았네.",
+        "다시 나아가겠는가?",
+        "나아갈 의지가 있다면, 나는 자네가 다시 도전할 준비를 돕겠네."
     };
 
     private static string[] CreateDefaultAct1RecoveryLines() => new[]
     {
         "다시 돌아왔군.",
-        "아직 끝난 것은 아닌 모양이네.",
-        "준비가 되면 다시 가게."
+        "아직 나아갈 의지가 남아 있는가?",
+        "그렇다면 준비하게. 나는 자네가 다시 나아갈 수 있도록 도울 것이니."
+    };
+
+    private static string[] CreateDefaultStage2RecoveryLines() => new[]
+    {
+        "다시 돌아왔군.",
+        "처음 왔을 때보다 상태가 조금 나아진 것 같군.",
+        "다시 나아갈 의지가 있다면 돌려보내겠네."
+    };
+
+    private static string[] CreateDefaultStage3RecoveryLines() => new[]
+    {
+        "돌아왔군.",
+        "무슨 일이 있었는지는 모르겠지만, 자네가 조금씩 달라지고 있는 것은 알겠네.",
+        "아직 끝을 보려는 마음은 변함없는가?"
+    };
+
+    private static string[] CreateDefaultStage4RecoveryLines() => new[]
+    {
+        "……이제야 자네가 본래의 모습을 되찾은 것 같군.",
+        "처음 이곳에 왔을 때와는 확실히 다르네.",
+        "그렇다면 나도 자네에게 조금 더 도움을 줄 수 있겠어.",
+        "자네가 쌓아온 경험을 바탕으로, 그 힘을 더욱 단련하도록 돕겠네.",
+        "무엇을 강화할지는 자네가 선택하게."
+    };
+
+    private static string[] CreateDefaultGrowthLockedLines() => new[]
+    {
+        "아직은 힘을 더 단련할 때가 아니네.",
+        "다시 나아갈 준비를 마치면 그때 도와주겠네."
     };
 
     private static string[] CreateDefaultFarewellLines() => new[]
@@ -238,8 +287,27 @@ public class AfterlifeNPC : MonoBehaviour
 
         firstDialogueLines = CreateDefaultFirstDialogueLines();
         act1RecoveryDialogueLines = CreateDefaultAct1RecoveryLines();
+        act1RecoveryDialogueByStage = new[]
+        {
+            new Act1RecoveryDialogueEntry
+            {
+                stage = 2,
+                lines = CreateDefaultStage2RecoveryLines()
+            },
+            new Act1RecoveryDialogueEntry
+            {
+                stage = 3,
+                lines = CreateDefaultStage3RecoveryLines()
+            },
+            new Act1RecoveryDialogueEntry
+            {
+                stage = GameProgression.MaxFearRecoveryStage,
+                lines = CreateDefaultStage4RecoveryLines()
+            }
+        };
         farewellDialogueLines = CreateDefaultFarewellLines();
         maxStatsLines = CreateDefaultMaxStatsLines();
+        growthLockedLines = CreateDefaultGrowthLockedLines();
         clearPlayerLines = CreateDefaultClearPlayerLines();
         clearNpcLines = CreateDefaultClearNpcLines();
         returnFailedLines = CreateDefaultReturnFailedLines();
@@ -268,6 +336,8 @@ public class AfterlifeNPC : MonoBehaviour
 
     private PlayerMovement
         currentPlayerMovement;
+
+    private AfterlifeWillMessage willMessage;
 
     private bool playerInRange;
 
@@ -299,7 +369,8 @@ public class AfterlifeNPC : MonoBehaviour
         }
         else if (progression != null &&
                  progression.CurrentPhase == GamePhase.Act1 &&
-                 progression.PendingGrowthPoints > 0 &&
+                 (progression.WillAdvanceFearRecovery ||
+                  progression.PendingGrowthPoints > 0) &&
                  progression.HasMetAfterlifeNpc)
         {
             state =
@@ -474,6 +545,13 @@ public class AfterlifeNPC : MonoBehaviour
                         maxStatsLines
                     );
 
+                break;
+
+            case NpcState.GrowthLocked:
+                dialogueController.StartDialogue(
+                    speakerName,
+                    growthLockedLines
+                );
                 break;
 
             case NpcState.Farewell:
@@ -772,8 +850,8 @@ public class AfterlifeNPC : MonoBehaviour
             return;
         }
 
-        if (state ==
-            NpcState.MaxStats)
+        if (state == NpcState.MaxStats ||
+            state == NpcState.GrowthLocked)
         {
             EnterMenuReady();
 
@@ -836,29 +914,60 @@ public class AfterlifeNPC : MonoBehaviour
         GameProgression progression =
             GameProgression.Instance;
 
-        if (progression != null &&
-            progression.ClaimGrowthPoint())
+        int previousStage = progression != null
+            ? progression.FearRecoveryStage
+            : 0;
+        bool advanced = false;
+
+        if (progression != null)
         {
-            progression.AdvanceFearRecovery();
+            advanced = progression.AdvanceFearRecovery();
+            progression.ClaimGrowthPoint();
         }
 
         EnterMenuReady();
+
+        if (!advanced ||
+            progression.FearRecoveryStage <= previousStage ||
+            dialogueController == null ||
+            dialogueController.IsOpen)
+        {
+            return;
+        }
+
+        int stage = progression.FearRecoveryStage;
+        if (!progression.ShouldPresentFearRecoveryMessage(stage))
+            return;
+
+        if (willMessage == null)
+        {
+            willMessage = AfterlifeWillMessage.GetOrCreate(
+                dialogueController.DialogueText
+            );
+        }
+
+        willMessage?.TryShow(stage, HandleWillMessageDisplayed);
     }
+
+    private void HandleWillMessageDisplayed(int stage)
+    {
+        GameProgression.Instance?
+            .TryMarkFearRecoveryMessagePresented(stage);
+    }
+
     private string[] GetAct1RecoveryDialogueLines()
     {
         GameProgression progression =
             GameProgression.Instance;
 
         if (progression == null ||
+            !progression.WillAdvanceFearRecovery ||
             act1RecoveryDialogueByStage == null)
         {
             return act1RecoveryDialogueLines;
         }
 
-        int nextStage = Mathf.Min(
-            progression.FearRecoveryStage + 1,
-            GameProgression.MaxFearRecoveryStage
-        );
+        int nextStage = progression.FearRecoveryStage + 1;
 
         foreach (Act1RecoveryDialogueEntry entry in
                  act1RecoveryDialogueByStage)
@@ -936,6 +1045,15 @@ public class AfterlifeNPC : MonoBehaviour
 
         GameProgression progression =
             GameProgression.Instance;
+
+
+        if (progression != null &&
+            !progression.StatsUpgradeUnlocked)
+        {
+            state = NpcState.GrowthLocked;
+            StartCurrentDialogue();
+            return;
+        }
 
 
         if (progression != null &&
