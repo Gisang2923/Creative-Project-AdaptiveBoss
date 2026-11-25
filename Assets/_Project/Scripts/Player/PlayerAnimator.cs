@@ -1,4 +1,6 @@
 using UnityEngine;
+using UnityEngine.Animations;
+using UnityEngine.Playables;
 
 public class PlayerAnimator : MonoBehaviour
 {
@@ -81,6 +83,9 @@ public class PlayerAnimator : MonoBehaviour
     private float presentationPreviousSpeed;
     private bool presentationFrozen;
     private bool finalStrikePresentation;
+    private PlayableGraph upgradeGraph;
+    private bool upgradePresentation;
+    private float upgradeEndTime;
 
     private void Awake()
     {
@@ -94,11 +99,18 @@ public class PlayerAnimator : MonoBehaviour
 
     private void Update()
     {
+        if (upgradePresentation &&
+            (!upgradeGraph.IsValid() || Time.unscaledTime >= upgradeEndTime))
+        {
+            StopUpgradeAnimation();
+        }
+
         UpdateMovementAnimation();
     }
 
     private void OnDisable()
     {
+        StopUpgradeAnimation();
         ResumePresentationAnimation();
         ClearFinalStrikePresentation();
     }
@@ -107,12 +119,13 @@ public class PlayerAnimator : MonoBehaviour
     {
         if (damageReceiver != null && damageReceiver.IsDead)
         {
+            StopUpgradeAnimation();
             ResumePresentationAnimation();
             ClearFinalStrikePresentation();
             PlayState(Death);
             return;
         }
-        if (presentationFrozen || finalStrikePresentation)
+        if (presentationFrozen || finalStrikePresentation || upgradePresentation)
             return;
         if (damageReceiver != null &&
             damageReceiver.IsKnockedDown)
@@ -269,6 +282,7 @@ public class PlayerAnimator : MonoBehaviour
         if (animator == null || presentationFrozen)
             return;
 
+        StopUpgradeAnimation();
         presentationPreviousSpeed = animator.speed;
         animator.speed = 0f;
         presentationFrozen = true;
@@ -290,6 +304,7 @@ public class PlayerAnimator : MonoBehaviour
         if (animator == null)
             return false;
 
+        StopUpgradeAnimation();
         ResumePresentationAnimation();
 
         bool hasFinalStrike =
@@ -313,6 +328,52 @@ public class PlayerAnimator : MonoBehaviour
 
         finalStrikePresentation = false;
         currentState = -1;
+    }
+
+    public void PlayUpgradeAnimation(AnimationClip clip)
+    {
+        if (clip == null || clip.length <= 0f || animator == null ||
+            !isActiveAndEnabled || !animator.isActiveAndEnabled ||
+            presentationFrozen || finalStrikePresentation ||
+            (damageReceiver != null && damageReceiver.IsDead))
+        {
+            return;
+        }
+
+        StopUpgradeAnimation();
+
+        upgradeGraph = PlayableGraph.Create("Player Upgrade Animation");
+        upgradeGraph.SetTimeUpdateMode(DirectorUpdateMode.UnscaledGameTime);
+
+        AnimationClipPlayable clipPlayable =
+            AnimationClipPlayable.Create(upgradeGraph, clip);
+        AnimationPlayableOutput output =
+            AnimationPlayableOutput.Create(upgradeGraph, "Upgrade", animator);
+        output.SetSourcePlayable(clipPlayable);
+
+        upgradePresentation = true;
+        upgradeEndTime = Time.unscaledTime + clip.length;
+        upgradeGraph.Play();
+    }
+
+    public void StopUpgradeAnimation()
+    {
+        if (!upgradePresentation && !upgradeGraph.IsValid())
+            return;
+
+        if (upgradeGraph.IsValid())
+            upgradeGraph.Destroy();
+
+        upgradePresentation = false;
+        upgradeEndTime = 0f;
+        currentState = -1;
+
+        if (animator != null && animator.isActiveAndEnabled &&
+            !presentationFrozen && !finalStrikePresentation &&
+            (damageReceiver == null || !damageReceiver.IsDead))
+        {
+            animator.Play(Idle, 0, 0f);
+        }
     }
 
     public void PlayPerfectDodge()

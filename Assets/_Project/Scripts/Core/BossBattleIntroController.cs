@@ -76,6 +76,14 @@ public class BossBattleIntroController : MonoBehaviour
     [SerializeField, Range(0f, 0.2f)] private float criticalPulseAmount = 0.04f;
     [SerializeField, Min(0.01f)] private float injuryRecoveryFadeDuration = 0.25f;
 
+    [Header("Heal Vignette")]
+    [SerializeField] private Color healVignetteColor =
+        new Color(0.03f, 0.45f, 0.12f, 1f);
+    [SerializeField, Range(0f, 1f)] private float healVignetteStrength = 0.55f;
+    [SerializeField, Min(0f)] private float healVignetteFadeInDuration = 0.08f;
+    [SerializeField, Min(0f)] private float healVignetteHoldDuration = 0.15f;
+    [SerializeField, Min(0f)] private float healVignetteFadeOutDuration = 0.7f;
+
 
     [Header("Normal Intro")]
     [SerializeField]
@@ -656,7 +664,12 @@ public class BossBattleIntroController : MonoBehaviour
                 CriticalHealthStrength = criticalHealthStrength,
                 PulseSpeed = criticalPulseSpeed,
                 PulseAmount = criticalPulseAmount,
-                RecoveryFadeDuration = injuryRecoveryFadeDuration
+                RecoveryFadeDuration = injuryRecoveryFadeDuration,
+                HealColor = healVignetteColor,
+                HealStrength = healVignetteStrength,
+                HealFadeInDuration = healVignetteFadeInDuration,
+                HealHoldDuration = healVignetteHoldDuration,
+                HealFadeOutDuration = healVignetteFadeOutDuration
             };
 
         bindingVision.Initialize(

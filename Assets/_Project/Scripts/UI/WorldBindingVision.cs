@@ -23,6 +23,11 @@ public sealed class WorldBindingVision : MaskableGraphic
         public float PulseSpeed;
         public float PulseAmount;
         public float RecoveryFadeDuration;
+        public Color HealColor;
+        public float HealStrength;
+        public float HealFadeInDuration;
+        public float HealHoldDuration;
+        public float HealFadeOutDuration;
     }
 
     private enum VignetteMode { None, Binding, Stage3Injury, LowHealth }
@@ -37,6 +42,7 @@ public sealed class WorldBindingVision : MaskableGraphic
     private Material runtimeMaterial;
     private GameProgression progression;
     private Health playerHealth;
+    private PlayerHeal playerHeal;
     private Transform player;
     private Camera worldCamera;
     private Settings settings;
@@ -48,6 +54,10 @@ public sealed class WorldBindingVision : MaskableGraphic
     private float healthRatio = 1f;
     private bool critical;
     private bool entering;
+    private bool healing;
+    private float healElapsed;
+    private float healBlend;
+    private float healStartBlend;
 
     public static WorldBindingVision Create()
     {
@@ -102,6 +112,10 @@ public sealed class WorldBindingVision : MaskableGraphic
             playerHealth.OnHealthChanged += HandleHealthChanged;
             HandleHealthChanged(
                 playerHealth.CurrentHealth, playerHealth.MaxHealth);
+
+            playerHeal = playerHealth.GetComponent<PlayerHeal>();
+            if (playerHeal != null)
+                playerHeal.OnHealthRestored += HandleHealRestored;
         }
 
         if (progression != null)
@@ -150,6 +164,10 @@ public sealed class WorldBindingVision : MaskableGraphic
     {
         mode = VignetteMode.None;
         entering = false;
+        healing = false;
+        healElapsed = 0f;
+        healBlend = 0f;
+        healStartBlend = 0f;
         currentStrength = 0f;
         targetStrength = 0f;
         if (runtimeMaterial != null)
@@ -165,12 +183,13 @@ public sealed class WorldBindingVision : MaskableGraphic
     protected override void OnDisable()
     {
         Canvas.willRenderCanvases -= UpdateBeforeCanvasRender;
+        HideImmediately();
         base.OnDisable();
     }
 
     private void UpdateBeforeCanvasRender()
     {
-        if (mode == VignetteMode.None)
+        if (mode == VignetteMode.None && !healing)
             return;
 
         if (mode == VignetteMode.Binding)
@@ -200,6 +219,16 @@ public sealed class WorldBindingVision : MaskableGraphic
         UpdateShader();
     }
 
+    private void HandleHealRestored()
+    {
+        if (!isActiveAndEnabled || playerHealth == null || playerHealth.IsDead)
+            return;
+
+        healStartBlend = healBlend;
+        healing = true;
+        healElapsed = 0f;
+    }
+
     private void UpdateHealthTarget()
     {
         critical = healthRatio <= settings.CriticalHealthThreshold;
@@ -221,7 +250,7 @@ public sealed class WorldBindingVision : MaskableGraphic
 
     private void LateUpdate()
     {
-        if (mode == VignetteMode.None || runtimeMaterial == null)
+        if ((mode == VignetteMode.None && !healing) || runtimeMaterial == null)
             return;
 
         if (mode == VignetteMode.Binding)
@@ -248,6 +277,34 @@ public sealed class WorldBindingVision : MaskableGraphic
             currentStrength = Mathf.MoveTowards(
                 currentStrength, Mathf.Clamp01(desired),
                 Time.unscaledDeltaTime / fadeDuration);
+        }
+
+        if (healing)
+        {
+            healElapsed += Time.unscaledDeltaTime;
+            float fadeIn = Mathf.Max(0f, settings.HealFadeInDuration);
+            float holdEnd = fadeIn + Mathf.Max(0f, settings.HealHoldDuration);
+            float fadeOut = Mathf.Max(0f, settings.HealFadeOutDuration);
+
+            if (healElapsed < fadeIn)
+            {
+                healBlend = Mathf.Lerp(healStartBlend, 1f,
+                    Mathf.SmoothStep(0f, 1f, healElapsed / fadeIn));
+            }
+            else if (healElapsed < holdEnd)
+            {
+                healBlend = 1f;
+            }
+            else if (healElapsed < holdEnd + fadeOut)
+            {
+                healBlend = 1f - Mathf.SmoothStep(0f, 1f,
+                    (healElapsed - holdEnd) / fadeOut);
+            }
+            else
+            {
+                healing = false;
+                healBlend = 0f;
+            }
         }
 
         UpdateShader();
@@ -324,7 +381,6 @@ public sealed class WorldBindingVision : MaskableGraphic
             softness = settings.Stage2Softness;
         }
 
-        softness = Mathf.Max(0.001f, softness);
         if (binding && entering)
         {
             float t = Mathf.Clamp01(
@@ -333,15 +389,29 @@ public sealed class WorldBindingVision : MaskableGraphic
                 GetEntryRadius(aspect, softness), radius, t);
         }
 
+        float strength = Mathf.Clamp01(currentStrength);
+        Color vignetteColor = binding ? Color.black : settings.InjuryColor;
+        if (healing)
+        {
+            center = Vector2.Lerp(center, new Vector2(0.5f, 0.5f), healBlend);
+            radius = Mathf.Lerp(radius, settings.InjuryRadius, healBlend);
+            softness = Mathf.Lerp(softness, settings.InjurySoftness, healBlend);
+            strength = Mathf.Lerp(strength,
+                Mathf.Clamp01(settings.HealStrength), healBlend);
+            vignetteColor = Color.Lerp(vignetteColor,
+                settings.HealColor, healBlend);
+        }
+
+        softness = Mathf.Max(0.001f, softness);
+
         runtimeMaterial.SetVector(CenterId,
             new Vector4(center.x, center.y, 0f, 0f));
         runtimeMaterial.SetFloat(AspectId, aspect);
         runtimeMaterial.SetFloat(RadiusId, radius);
         runtimeMaterial.SetFloat(SoftnessId, softness);
         runtimeMaterial.SetFloat(StrengthId,
-            Mathf.Clamp01(currentStrength));
-        runtimeMaterial.SetColor(ColorId,
-            binding ? Color.black : settings.InjuryColor);
+            strength);
+        runtimeMaterial.SetColor(ColorId, vignetteColor);
     }
 
     protected override void OnPopulateMesh(VertexHelper helper)
@@ -368,6 +438,8 @@ public sealed class WorldBindingVision : MaskableGraphic
         Canvas.willRenderCanvases -= UpdateBeforeCanvasRender;
         if (playerHealth != null)
             playerHealth.OnHealthChanged -= HandleHealthChanged;
+        if (playerHeal != null)
+            playerHeal.OnHealthRestored -= HandleHealRestored;
         if (progression != null)
             progression.OnPhaseChanged -= HandlePhaseChanged;
         if (runtimeMaterial != null)

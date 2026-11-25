@@ -34,6 +34,10 @@ public class AfterlifeGrowthUI : MonoBehaviour
     [SerializeField]
     private Button attackPlusButton;
 
+    [Header("Player Upgrade Animation Clips")]
+    [SerializeField] private AnimationClip attackUpgradeAnimationClip;
+    [SerializeField] private AnimationClip healthUpgradeAnimationClip;
+
     [Header("Health")]
     [SerializeField]
     private Button healthMinusButton;
@@ -48,6 +52,7 @@ public class AfterlifeGrowthUI : MonoBehaviour
     private GameProgression progression;
 
     private PlayerMovement playerMovement;
+    private PlayerAnimator playerAnimator;
 
     private Transform playerTransform;
 
@@ -90,6 +95,17 @@ public class AfterlifeGrowthUI : MonoBehaviour
     {
         progression =
             GameProgression.Instance;
+    }
+
+    private void OnDisable()
+    {
+        playerAnimator?.StopUpgradeAnimation();
+
+        if (IsOpen)
+        {
+            statusPanel.SetActive(false);
+            playerMovement?.SetInputLocked(false);
+        }
     }
 
     private void LateUpdate()
@@ -139,6 +155,9 @@ public class AfterlifeGrowthUI : MonoBehaviour
 
         playerMovement =
             movement;
+        playerAnimator = movement != null
+            ? movement.GetComponent<PlayerAnimator>()
+            : null;
 
         playerTransform =
             movement != null
@@ -194,6 +213,7 @@ public class AfterlifeGrowthUI : MonoBehaviour
         pendingAttack++;
 
         RefreshUI();
+        playerAnimator?.PlayUpgradeAnimation(attackUpgradeAnimationClip);
     }
 
     private void RemoveAttack()
@@ -227,6 +247,7 @@ public class AfterlifeGrowthUI : MonoBehaviour
         pendingHealth++;
 
         RefreshUI();
+        playerAnimator?.PlayUpgradeAnimation(healthUpgradeAnimationClip);
     }
 
     private void RemoveHealth()
@@ -309,6 +330,8 @@ public class AfterlifeGrowthUI : MonoBehaviour
     {
         if (progression == null)
             return;
+
+        playerAnimator?.StopUpgradeAnimation();
 
         for (int i = 0;
              i < pendingAttack;

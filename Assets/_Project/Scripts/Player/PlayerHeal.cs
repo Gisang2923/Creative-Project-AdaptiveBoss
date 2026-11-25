@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using UnityEngine;
 using UnityEngine.InputSystem;
@@ -26,6 +27,7 @@ public class PlayerHeal : MonoBehaviour
 
     public bool IsHealing => isHealing;
     public int RemainingHealCount => remainingHealCount;
+    public event Action OnHealthRestored;
 
     private void Awake()
     {
@@ -99,7 +101,10 @@ public class PlayerHeal : MonoBehaviour
             yield break;
         }
 
+        int healthBeforeHeal = health.CurrentHealth;
         health.Heal(healAmount);
+        if (!health.IsDead && health.CurrentHealth > healthBeforeHeal)
+            OnHealthRestored?.Invoke();
         remainingHealCount--;
         playerSFX?
             .StopHealing();
